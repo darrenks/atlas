@@ -1,0 +1,7 @@
+#!/bin/sh
+ruby test/test_parse.rb
+ruby test/test_behavior.rb
+ruby test/test_examples.rb
+ruby test/1d_functional_test.rb
+ruby test/1d_error_functional_test.rb
+ruby test/test_parse2.rb

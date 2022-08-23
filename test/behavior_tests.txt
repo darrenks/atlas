@@ -1,0 +1,215 @@
+# test atoms
+4 -> 4 : Int
+45 -> 45
+
+"" -> "" : [Char]
+"hi" -> "hi"
+"#" -> "#"
+!;"\n\\" -> ["\n","\\"]
+!;"\x02\x20\xaa" -> ["\x02"," ","\xaa"]
+
+# test utf8 encoding chars
+!;"├───╯" -> ["├","─","─","─","╯"]
+
+'a -> 'a
+'\n -> '\n
+'\0 -> '\0
+'\ -> '\\
+'" -> '"
+'' -> ''
+#'-> asdf
+-'\xff '\0 -> 255
+'\xff -> '\xff
++'\0 5 -> '\x05
+
+# disallowed since not needed
+# '\" -> '\"'
+# '\' -> '''
+
+############ test basic ops
+~5 -> -5
+~~5 -> 5
++1 2 -> 3
++1 ["a" -> 'b
+# leading 0 is separate number
+-012 -> -12
+$ -> [] : [Int]
+
+:5 $ -> [5]
+:5 6 -> AtlasTypeError
+:5 :6 $ -> [5,6]
+
+
+[ :5 :6 $ -> 5
+[ $ -> DynamicError
+] :5 :6 $ -> 6
+] $ -> DynamicError
+) :5 :6 $ -> [6]
+) :5 $ -> []
+) $ -> DynamicError
+
+######### test vars
++ a=5 a -> 10
+
+######## test infinite list
+a=: 1 a -> [1,1,1,1,1,1,...
+a=: '- a -> "-------------...
+
+############## test zips
+!$ -> [] : [[Int]]
+!!$ -> [] : [[[Int]]]
+!" -> [] : [[Char]]
+!!" -> [] : [[[Char]]]
+
++1 :3 :4 $ -> [4,5]
++ : :3 :4 $ : :5 :7 $ !$ 1 -> [[4,5],[6,8]]
++1 "asdf" -> "bteg"
++"asdf" 1 -> "bteg"
++1 $ -> [] : [Int]
++:1 :2 $ :4 :6 :8 $ -> [5,8]
++:4 :6 :8 $ :1 :2 $ -> [5,8]
+
+* 4 5 -> 20
+
+- 4 1 -> 3
+- "asdf" 1 -> "`rce"
+- "abcd" "aaa" -> [0,1,2]
+
+/ 10 5 -> 2
+/ 9 5 -> 1
+/ 11 ~5 -> -3
+/ 10 ~5 -> -2
+/ ~11 5 -> -3
+/ ~10 5 -> -2
+/ ~10 ~5 -> 2
+/ ~9 ~5 -> 1
+/ 1 0 -> DynamicError
+/ 0 0 -> DynamicError
+
+% 10 5 -> 0
+% 9 5 -> 4
+% 11 ~5 -> -4
+% 10 ~5 -> 0
+% ~11 5 -> 4
+% ~10 5 -> 0
+% ~10 ~5 -> 0
+% ~9 ~5 -> -4
+% "abcd" 2 -> [1,0,1,0]
+% 5 0 -> 0
+
+~:4 : 5 $ -> [-4,-5]
+
+[ :"abcd" :"xzy" !" -> "abcd"
+![ :"abcd" :"xzy" !" -> "ax"
+!] :"abcd" :"xzy" !" -> "dy"
+!![ :"abcd" :"xzy" !" -> AtlasTypeError
+
+) :"abcd" :"xzy" !" -> ["xzy"]
+!) :"abcd" :"xzy" !" -> ["bcd","zy"]
+) 'c -> AtlasTypeError
+
+:"abc" :"def" :"xzy" !" -> ["abc","def","xzy"]
+!:"abc" :"def" :"xzy" !" -> ["adef","bxzy"]
+!!:"abc" :"def" :"xzy" !" -> AtlasTypeError
+
+? 0 2 3 -> 3
+? 1 2 3 -> 2
+? $ 2 3 -> 3
+? : 0 $ 2 3 -> 2
+? [" " 2 3 -> 3
+? ["a" 2 3 -> 2
+
+? 1 'a "b" -> AtlasTypeError
+#!? "a " '1 "23" -> "13"
+!? "a " "1" :"2" :"3" !" -> ["1","3"]
+
+# todo why stack level too deep error? inspect not lazy enough?
+# should we just remove auto replicate and rely on negative thing? yes
+
+!? "a b " "fghi" "jklm" -> "fkhm"
+!? "a b " 1 0 -> [1,0,1,0]
+
+!` :1 :2 $ -> ["1","2"]
+
+{ 4 "asdfg" -> "asdf"
+{ 0 "" -> ""
+{ 1 "" -> ""
+{ :1 :2 $ "asdf" -> ["a","as"]
+!{ 2 :"abc" :"123" !" -> ["ab","12"]
+
+######### more advanced circular programming
+a=:1 + 1 a -> [1,2,3,4,5...
+a=:1 b=:1 +a b -> [1,1,2,3,5,8,13,21...
+b=+ :0 b a=:1 + 1 a -> [1,3,6,10,15...
+a=+1 a -> InfiniteLoopError
+
+### test more ops and zips
+, 1 -> [1,1,1,1...
+!{5 !, "hi" -> ["hhhhh","iiiii"]
+
+; 1 -> [1]
+!; "hi" ->["h","i"]
+} 2 "asdfg" -> "dfg"
+!} 2 :"abc" :"123" !" -> ["c","3"]
+
+_ :"hi" :"there" !" -> "hithere"
+!_ : :"hi" :"there" !" : :"asdf" :"123" !" !!" -> ["hithere","asdf123"]
+{5 _ ,;1 -> [1,1,1,1,1]
+
+@ "abc" "123" -> "abc123"
+@ "abc" _,"123" -> "abc123123...
+@ _,"abc" "123" -> "abcabcabc...
+!@ "abc" "123" -> AtlasTypeError
+!@ :"a" ;"b" :"1" ;"2" -> ["a1","b2"]
+@ 'a "b" -> AtlasTypeError
+
+eq 1 2 -> 0
+eq 1 1 -> 1
+eq 'a 'a -> 1
+eq 'd 100 -> AtlasTypeError
+eq"abc""abc" -> 1
+eq"abc""abd" -> 0
+eq"abc" 'a -> [1,0,0]
+!eq"abc" 'a -> AtlasTypeError
+!eq "abc""abd" -> [1,1,0]
+
+( "asdf" -> "asd"
+!( :"abc" :"123" !" -> ["ab","12"]
+
+\ :"abc" :"123" !" -> ["a1","b2","c3"]
+\ :"abc" :"12" :"xyz" !" -> ["a1x","b2y","c"]
+!\ : :"abc" :"123" !" : :"xyz" :"789" !" !!" -> [["a1","b2","c3"],["x7","y8","z9"]]
+
+\ "abcd" -> AtlasTypeError
+\ 4 -> AtlasTypeError
+# only for now... todo want [["a","b","c"],["1","2","3"]] I think
+!\ :"abc" :"123" !" -> AtlasTypeError
+
+~ "45" -> 45
+~ " 45" -> 45
+~ "45 50" -> 45
+~ "" -> 0
+~ " " -> 0
+~ "-a" -> 0
+~ "-45" -> -45
+~ "--45" -> 45
+~ "- 45" -> 45
+
+~ '5 -> AtlasTypeError
+!~ '5 -> AtlasTypeError
+
+~ :"1 2" :"3 4" !" -> [1,3]
+
+!~ "" -> []
+!~ "45 50" -> [45,50]
+!~ "a45 50 a" -> [45,50]
+!~ :"1 2" :"3 4" !" -> [[1,2],[3,4]]
+
+# complicated test (primes)
+_ !? % + 1 v1=: 1 * v2=: 2 + 1 v2 v1 v2 $ !; v2 -> [2,3,5,7,11...
+
+# aliases of special zip
+!read "4 5 6" -> [4,5,6]
+
+# zips that require faith
+!] a=!:,0 +a : :1:2;3 ;:4:5;6 -> [6,15]
