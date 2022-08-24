@@ -2,6 +2,8 @@
 
 Most of this is TODO or old for now
 
+Note I implement some ops that are actually in Atlas, just to prove that you can.
+
 ### Integer Comparisons
 Since integers are defined as truthy if >0, we can just use subtraction and if/else (`?`) to achieve the desired effect.
 

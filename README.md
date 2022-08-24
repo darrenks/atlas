@@ -83,14 +83,14 @@ I have tested with ruby 2.7.2 and 3.0.0
 |`(` | init| `[a] -> [a]`|
 |`{` | take| `Int [a] -> [a]`|
 |`}` | drop| `Int [a] -> [a]`|
-|`?` | if/else| `a b b -> b`|
+|`?` | if| `a b b -> b`|
 |`,` | repeat| `a -> [a]`|
 |`;` | single| `a -> [a]`|
 |`_` | concat| `[[a]] -> [a]`|
 |`\` | transpose| `[[a]] -> [[a]]`|
 |`=` | eq| `a a -> Int`|
 |`~` | read| `Str -> Int`|
-|` `` ` | show| `a -> Str`|
+|`` ` `` | show| `a -> Str`|
 |`+` | add| `Num Num -> Num`|
 |`*` | mult| `Num Num -> Num`|
 |`-` | sub| `Num Num -> Num`|
@@ -124,10 +124,10 @@ There are 3 types in Atlas.
 
 Strings are just lists of characters.
 
-`123` this is an integer
-`'x` this is char of the letter x
-`"abc"` this is a string
-`:1:2;3` this is the list [1,2,3] (1d syntax)
+-   `123` this is an integer
+-   `'x` this is char of the letter x
+-   `"abc"` this is a string
+-   `:1:2;3` this is the list [1,2,3] (1d syntax)
 
 Some escapes are possible in chars/strings:
 
