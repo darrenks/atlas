@@ -8,7 +8,7 @@ require "./narrow.rb"
 require "stringio"
 
 def doit(source)
-  tokens = lex(source)
+  tokens = lex2d(source)
   to1d(narrow(tokens,StringIO.new))[0]*" "
 end
 

@@ -64,10 +64,10 @@ def rec(tokens, context)
     tokens.shift # the =
     t = tokens.shift
   end
-  if t.behavior == nil
+  if t.impl == nil && t.poly_impl == nil
     return Var.new(t.token)
   end
   ret.op = t
-  ret.args = t.n_arg.times.map{rec(tokens, context)}
+  ret.args = t.narg.times.map{rec(tokens, context)}
   ret
 end

@@ -11,8 +11,8 @@ def parse2d(tokens,error_stream=STDERR)
   each_uniq_token(tokens){|t|
     inputs << t if t.token.str=="I"
     outputs << t if t.token.str=="O"
-    total_in_count += t.n_arg
-    total_out_count += t.n_ret
+    total_in_count += t.narg
+    total_out_count += t.nret
   }
 
   if outputs.size > 1
@@ -118,7 +118,7 @@ def surround_with_spaces(tokens)
 end
 
 def create_space(x,y)
-  Op.new("space",0,0,nil,Token.new(" ",x,y))
+  Op2d.new(sym:"space",narg:0,nret:0,token:Token.new(" ",x,y))
 end
 def create_output(x,y)
   Ops["O"].dup.tap{|t| t.token = Token.new("O",x,y) }
@@ -128,7 +128,7 @@ def create_input(x,y)
 end
 def create_zipped_input(x,y)
   # make it [!I] so that it is size 1 for adjacency purposes, a nasty hack
-  Ops["!I"].dup.tap{|t| t.token = Token.new(["!I"],x,y) }
+  Ops["zI"].dup.tap{|t| t.token = Token.new(["zI"],x,y) }
 end
 
 def each_uniq_token(tokens)
@@ -150,7 +150,7 @@ def try_all_options(froms,tos)
   tried_something = false
   if tos.size == 1
     to=tos[0]
-    froms.combination(to.n_arg - to.ins.size){|selected_froms|
+    froms.combination(to.narg - to.ins.size){|selected_froms|
       selected_froms.each{|from|
         if can_connect(from,to)
           connect(from, to)
@@ -161,7 +161,7 @@ def try_all_options(froms,tos)
   else
     raise "internal error" if froms.size != 1
     from=froms[0]
-    tos.combination(from.n_ret - from.outs.size){|selected_tos|
+    tos.combination(from.nret - from.outs.size){|selected_tos|
       selected_tos.each{|to|
         if can_connect(from,to)
           connect(from, to)
@@ -224,6 +224,18 @@ class Op
     token.line_no
   end
 end
+class Op2d # todo so bad
+  attr_accessor :ins
+  attr_accessor :outs
+  attr_accessor :ast_memo
+  def x
+    token.char_no
+  end
+  def y
+    token.line_no
+  end
+end
+
 
 def replace(a,t,u)
   a.map{|v|
@@ -302,7 +314,7 @@ end
 
 def lookat_outputs(g,t)
   # find outgoing connections
-  needed_outputs = t.n_ret - t.outs.size
+  needed_outputs = t.nret - t.outs.size
   if needed_outputs > 0
     adjacent_inputtable = adjacents(g,t).select{|n|can_connect(t,n)}.uniq # todo this is relying on struct properties that could be circular?
     if needed_outputs > adjacent_inputtable.size
@@ -321,7 +333,7 @@ end
 
 def lookat_inputs(g,t) # dual of lookat_outputs (todo unduplicate code?)
   # find incoming connections
-  needed_inputs = t.n_arg - t.ins.size
+  needed_inputs = t.narg - t.ins.size
   if needed_inputs > 0
     adjacent_outputtable = adjacents(g,t).select{|n|can_connect(n,t)}.uniq
     if needed_inputs > adjacent_outputtable.size
@@ -357,11 +369,11 @@ def can_connect(from,to)
 end
 
 def can_input(to)
-  to.n_arg - to.ins.size > 0
+  to.narg - to.ins.size > 0
 end
 
 def can_output(from)
-  from.n_ret - from.outs.size > 0
+  from.nret - from.outs.size > 0
 end
 
 def adjacents(tokens,node)
@@ -391,7 +403,7 @@ def connect_arrow_outs(tokens,from)
   if d
     dx,dy=*Directions[d]
     to = tokens[y+dy][x+dx]
-    if to.n_arg - to.ins.size > 0
+    if to.narg - to.ins.size > 0
       connect(from,to)
     else
       raise ParseError.new("arrow pointing to token that can't take more inputs", from.token)

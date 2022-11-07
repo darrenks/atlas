@@ -1,216 +1,316 @@
 require_relative "./type.rb"
 require_relative "./escape.rb"
 require_relative "./error.rb"
+require_relative "./lazylib.rb"
 
-Op=Struct.new(
-  :alias,
-  :n_arg,
-  :n_ret,
-  :behavior,
-  :token)
-class Op
+class Op < Struct.new(
+    :name,
+    :sym, # optional
+    :type,
+    :poly_impl,
+    :impl,
+    :token,
+    keyword_init: true)
+  def initialize(args)
+    if args[:type]
+      args[:type] = case raw_spec = args[:type]
+      when Hash
+        raw_spec.map{|raw_arg,ret|
+          specs = (x=case raw_arg
+            when Array
+              if raw_arg.size == 1
+                [raw_arg]
+              else
+                raw_arg
+              end
+            else
+              [raw_arg]
+            end).map{|a_raw_arg| Op.parse_raw_arg_spec(a_raw_arg) }
+          FnType.new(specs,ret)
+        }
+      when Type, Array
+        [FnType.new([],raw_spec)]
+      else
+        raise "unknown fn type format"
+      end
+    end
+    super(args)
+  end
+
+  def explicit_zip_level
+    str[/^!*/].size
+  end
+
+  def self.parse_raw_arg_spec(raw,list_nest_depth=0)
+    case raw
+    when Symbol
+      VarTypeSpec.new(raw,list_nest_depth)
+    when Array
+      raise if raw.size != 1
+      Op.parse_raw_arg_spec(raw[0],list_nest_depth+1)
+    when Type
+      ExactTypeSpec.new(raw.dim+list_nest_depth, [->t{t==raw}])
+    when TypeSpec
+      raw
+    else
+      p raw
+      error
+    end
+  end
+
+  def narg
+    type[0].specs.size
+  end
+  def nret
+    sym=="O" ? 0 : 1 # todo...
+  end
+
   def str
     token.str
   end
+  def get_impl(arg_types)
+    ans = if impl != nil
+      impl
+    elsif poly_impl != nil
+      poly_impl[*arg_types]
+    else
+      raise "ops must specify impl or poly_impl"
+    end
+    return ans if Proc === ans
+    return lambda{ ans }
+  end
 end
 
-#
-#   :impl, # curried fn to return impl based on arg types
-#   :type, # fn to determine return type
-#   :static, # returns [[min dims],allowed zip level,auto zip level]
-#   :type_checker, # optional post pass function for type validity
-
-alias lazy lambda
-def eager
-  lambda{|*args|yield(*args.map{|a|a.value})}
-end
-def ut_eager # untyped eager
-  lambda{|*_|lambda{|*args|yield(*args.map{|a|a.value})}}
-end
-def ut_lazy(&b)
-  lambda{|*_|b}
-end
-Inf = 1000 # for max zip level
-
-def create_op(alias_,n_arg,n_ret,impl,type,static,type_checker=nil)
-  Op.new(alias_,n_arg,n_ret,lambda{|from|[impl,type,static,type_checker]})
+class Op2d < Struct.new(:sym, :narg, :nret, :token, keyword_init: true)
 end
 
-def scalar_bin_op(alias_,type_table,&block)
-  Op.new(alias_,2,1,lambda{|from|[
-    ut_eager(&block[from]),
-    eager{|a,b|
-      ret = type_table[      [[false,false],[false,true],[true,false],[true,true]].index([a.is_char,b.is_char])]
-      raise AtlasTypeError.new"type error in scalar_bin_op, todo improve msg",from if ret.nil?
-      ret
-    },
-    eager{|a,b| [[0,0],0,[a,b].max] }]})
-end
-
-Ops = {
-  "+" => scalar_bin_op("add",[Int,Char,Char,nil]){|from|lambda{|a,b|a+b}},
-  "*" => scalar_bin_op("mult",[Int,nil,nil,nil]){|from|lambda{|a,b|a*b}},
-  "-" => scalar_bin_op("sub",[Int,nil,Char,Int]){|from|lambda{|a,b|a-b}},
-  "/" => scalar_bin_op("div",[Int,nil,nil,nil]){|from|lambda{|a,b|if b==0
-    raise DynamicError.new("div 0",from)
-  else
-    a/b
-  end}},
-  "%" => scalar_bin_op("mod",[Int,nil,Int,nil]){|from|lambda{|a,b|b==0?0:a%b}},
-  "~" => create_op("neg",1,1,
-    eager{|t| t.is_char ?
-      eager{|a| read_int(a)[0] } :
-      eager{|a| -a }},
-    eager{|a| Int },
-    eager{|a| a.is_char ? [[1],0,a-1] : [[0],0,a] }),  "!~" => Op.new("!read",1,1,lambda{|from|[
-    ut_eager{|a| split_non_digits(a) },
-    eager{|a| raise AtlasTypeError.new "!~ only on strs",from if !a.is_char; Int.list_of },
-    eager{|a| [[1],0,a-1] }]}),
-  "$" => create_op("nil",0,1,
-    ut_eager{ [] },
-    lambda{ Int.list_of },
-    lambda{ [[],Inf,0] }),
-  "\"" => create_op("string",0,1, # only used with z" (no matching " needed)
-    ut_eager{ [] },
-    lambda{ Str },
-    lambda{ [[],Inf,0] }),
-  # cons (todo vec)
-  ":" => Op.new("cons",2,1,lambda{|from|[
-    ut_lazy{|a,b| [a,b] },
-    lazy{|a,b| a.value.list_of },
-    lazy{|a,b| #err maybe;
-      [[0,0],a.value,0] },
-    lambda{|a,b|raise AtlasTypeError.new("cons dims type mismatch %p %p" % [a, b],from) if a+1 != b}]} ), #todo relax when better type inference for circular programs (need to know resulting dim right away)
-  ")" => Op.new("tail",1,1,lambda{|from|[
-    ut_eager{|a|
-      raise DynamicError.new "tail empty list",from if a==[]
-      a[1].value },
-    eager{|a| a },
-    eager{|a| [[1],a-1,0] }]}),
-  "[" => Op.new("head",1,1,lambda{|from|[
-    ut_eager{|a|
-      raise DynamicError.new "head empty list",from if a==[]
-      a[0].value },
-    eager{|a| a.elem },
-    eager{|a| [[1],a-1,0] }]}),
-  "]" => Op.new("last",1,1,lambda{|from|[
-    ut_eager{|a| last(a,from) },
-    eager{|a| a.elem },
-    eager{|a| [[1],a-1,0] }]}),
-  "?" => Op.new("if",3,1,lambda{|from|[
-    eager{|ta,tb,tc|
-      if ta == Int
-        lazy{|a,b,c| a.value > 0 ? b.value : c.value }
-      elsif ta == Char
-        lazy{|a,b,c| a.value.chr[/\S/] ? b.value : c.value }
-      else # List
-        lazy{|a,b,c| a.value != [] ? b.value : c.value }
+OpsList = [
+  Op.new(
+    name: "cons",
+    sym: ":",
+    type: { [A,[A]] => [A] },
+      # Change cons special case to check if non auto vecable, and ret can be determined already.
+    impl: -> a,b { [a,b] },
+  ), Op.new(
+    name: "head",
+    sym: "[",
+    type: { ([A]) => A },
+    impl: -> a {
+      raise DynamicError.new "head on empty list",nil if a.value==[]
+      a.value[0].value
+    }
+  ), Op.new(
+    name: "last",
+    sym: "]",
+    type: { [A] => A },
+    impl: -> a {
+      raise DynamicError.new "last on empty list",nil if a.value==[]
+      last(a.value, nil ) # todo for errors
+    }
+  ), Op.new(
+    name: "tail",
+    sym: ")",
+    type: { no_nil([A]) => [A] },
+    impl: -> a {
+      raise DynamicError.new "tail on empty list",nil if a.value==[]
+      a.value[1].value}
+  ), Op.new(
+    name: "init",
+    sym: "(",
+    type: { no_nil([A]) => [A] },
+    impl: -> a {
+      raise DynamicError.new "init on empty list",nil if a.value==[]
+      init(a.value,nil)
+    } #todo from
+  ), Op.new(
+    name: "add",
+    sym: "+",
+    type: { [Int,Int] => Int,
+            [Int,Char] => Char,
+            [Char,Int] => Char },
+    impl: -> a,b { a.value + b.value }
+  ), Op.new(
+    name: "sub",
+    sym: "-",
+    type: { [Int,Int] => Int,
+            [Char,Int] => Char,
+            [Char,Char] => Int },
+    impl: -> a,b { a.value - b.value }
+  ), Op.new(
+    name: "mult",
+    sym: "*",
+    type: { [Int,Int] => Int },
+    impl: -> a,b { a.value * b.value }
+  ), Op.new(
+    name: "div",
+    sym: "/",
+    type: { [Int,Int] => Int },
+    impl: -> a,b {
+      if b.value==0
+        raise DynamicError.new("div 0",nil) # todo maybe too complicated to be worth it same for mod
+      else
+        a.value/b.value
       end
-    },
-    eager{|a,b,c| raise AtlasTypeError.new "trinary 2nd and 3rd types must be equal",from if b != c; b },
-    eager{|a,b,c| [[0,c-b,b-c],a,0] }]}),
+    }
+  ), Op.new(
+    name: "mod",
+    sym: "%",
+    type: { [Scalar,Int] => Int },
+    impl: -> a,b {
+      if b.value==0
+        raise DynamicError.new("mod 0",nil)
+      else
+        a.value % b.value
+      end
+    }
+  ), Op.new(
+    name: "neg",
+    sym: "~",
+    type: { Int => Int,
+            Str => Int },
+    poly_impl: -> t {
+      case t
+      when Int
+        -> a { -a.value }
+      when Str
+        -> a { read_int(a.value)[0] }
+      else
+        raise
+      end
+    }
+  ), Op.new(
+    name: "rep",
+    sym: ",",
+    type: { A => [A] },
+    impl: -> a { repeat(a) }
+  ), Op.new(
+    name: "eq",
+    sym: "=",
+    type: { [A,A] => Int },
+    poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1 : 0 } }
+  ), Op.new(
+    name: "nil",
+    sym: "$",
+    type: Nil,
+    impl: -> { [] }
+  ), Op.new(
+    name: "pad",
+    sym: "|",
+    type: { [[A],A] => [A] },
+    impl: -> a,b { pad(a,b) }
+  ), Op.new(
+    name: "const",
+    sym: "&",
+    type: { [[A],[B]] => [A],
+            [A,B] => [A],
+            [A,[B]] => [A] },
+    poly_impl: ->ta,tb { raise AtlasTypeError.new("asdf",nil) if tb.dim == 0
+        -> a,b { zipn(1,[ta.dim==0 ? Promise.new{repeat(a)} : a,b],->aa,bb{aa.value}) }
+      }
+  ), Op.new(
+    name: "if",
+    sym: "?",
+    type: { [A,B,B] => B },
+    poly_impl: -> ta,tb,tc {
+      if ta == Int
+        lambda{|a,b,c| a.value > 0 ? b.value : c.value }
+      elsif ta == Char
+        lambda{|a,b,c| a.value.chr[/\S/] ? b.value : c.value }
+      else # List
+        lambda{|a,b,c| a.value != [] ? b.value : c.value }
+      end
+    }
+  ), Op.new(
+    name: "output",
+    sym: "O",
+    type: { A => [Int] }, # lies for single output
+    poly_impl: -> t { -> a { print_value(t,a.value,t) }}
+  ), Op.new(
+    name: "input",
+    sym: "I",
+    type: Str,
+    impl: -> { ReadStdin.value }
+  ), Op.new(
+    name: "input2",
+    sym: "zI",
+    type: [Str],
+    impl: -> { lines(ReadStdin.value) }
+  ), Op.new(
+    name: "show",
+    sym: "`",
+    type: { A => Str },
+    poly_impl: -> t { -> a { inspect_value(t,a.value) } }
+  ), Op.new(
+    name: "single",
+    sym: ";",
+    type: { A => [A] },
+    impl: -> a { [a,Null] }
+  ), Op.new(
+    name: "take",
+    sym: "{",
+    type: { [Int,[A]] => [A] },
+    impl: -> a,b { take(a.value, b) }
+  ), Op.new(
+    name: "drop",
+    sym: "}",
+    type: { [Int,[A]] => [A] },
+    impl: -> a,b { drop(a.value, b) }
+  ), Op.new(
+    name: "concat",
+    sym: "_",
+    type: { [[A]] => [A] },
+    impl: -> a { concat_map(a.value,[]){|i,r,first|append(i,r)} },
+  ), Op.new( # todo make circular compatible
+    name: "append",
+    sym: "@",
+    type: { [[A],[A]] => [A] },
+    impl: -> a,b { append(a.value,b) },
+  ), Op.new(
+    name: "transpose",
+    sym: "\\",
+    type: { [[A]] => [[A]] },
+    impl: -> a { transpose(a.value) },
+  )
+]
 
-  "{" => create_op("take",2,1,
-    ut_lazy{|a,b| take(a.value, b) },
-    eager{|a,b| b},
-    eager{|a,b| [[0,1],b-1,a] }),
-
-  "}" => create_op("drop",2,1,
-    ut_lazy{|a,b| drop(a.value, b) },
-    eager{|a,b| b},
-    eager{|a,b| [[0,1],b-1,a] }),
-  "(" => Op.new("init",1,1,lambda{|from|[
-    ut_eager{|a| init(a,from) },
-    eager{|a| a },
-    eager{|a| [[1],a-1,0] }]}),
-
-  "=" => Op.new("eq",2,1,lambda{|from|[
-    eager{|ta,tb|eager{|a,b| equal(a,b,ta) ? 1 : 0 }},
-    lazy{|a,b| Int },
-    eager{|a,b| [[0,0],[a,b].min,(a-b).abs] },
-    lambda{|a,b| raise AtlasTypeError.new("equality type mismatch %p %p" % [a, b],from) if a.is_char != b.is_char}]} ),
-
-  "@" => Op.new("append",2,1,lambda{|from|[
-    ut_lazy{|a,b| append(a.value,b) },
-    lazy{|a,b| a.value },
-    eager{|a,b| [[1,1],a-1,0] },
-    lambda{|a,b| raise AtlasTypeError.new("append type mismatch %p %p" % [a, b],from) if a != b}]} ), #todo relax when better type
-
-  "_" => create_op("concat",1,1,
-    ut_eager{|a| concat_map(a,[]){|i,r,first|append(i,r)} },
-    eager{|a| a.elem},
-    eager{|a| [[2],a-2,0] }),
-
-  "," => create_op("repeat",1,1,
-    ut_lazy{|a| repeat(a) },
-    eager{|a| a.list_of },
-    eager{|a| [[0],a,0] }),
-
-  ";" => create_op("single",1,1,
-    ut_lazy{|a| [a,Null] },
-    eager{|a| a.list_of },
-    eager{|a| [[0],a,0] }),
-
-  # todo make it so that !\ :"abc" :"123" !" acts like  !\ !; :"abc" :"123" !"
-  "\\" => create_op("transpose",1,1,
-    ut_eager{|a| transpose(a) },
-    eager{|a| a },
-    eager{|a| [[2],a-2,0] }),
-
-
-  "`" => create_op("show",1,1,
-    eager{|t|eager{|a| inspect_value(t,a) }},
-    eager{|a| Str },
-    eager{|a| [[0],a,0] }),
-
-  "O" => create_op("output",1,0,
-    eager{|t|eager{|a| print_value(t,a,t) }},
-    eager{|a| Str }, # lies, its null
-    eager{|a| [[0],0,0] }), # todo later deduce spot, maybe unassigned things or topleft
- "I" => create_op("input",0,1,
-    ut_eager{ ReadStdin.value },
-    lambda{ Str },
-    lambda{ [[],0,0] }),
- "!I" => create_op("!input",0,1,
-    ut_eager{ lines(ReadStdin.value) },
-    lambda{ Str.list_of },
-    lambda{ [[],0,0] }),
+Ops = {}; OpsList.each{|op|
+  Ops[op.name] = Ops[op.sym] = op
 }
+RepOp = Ops["rep"]
 
 Ops2d = {
-  " " => Op.new("space",0,0),
-  "^" => Op.new("up",1,1),
-  "<" => Op.new("left",1,1),
-  "v" => Op.new("down",1,1),
-  ">" => Op.new("right",1,1),
-  "." => Op.new("dup",1,2),
-  "#" => Op.new("cross",2,2),
+  " " => Op2d.new(sym:"space",narg:0,nret:0),
+  "^" => Op2d.new(sym:"up",narg:1,nret:1),
+  "<" => Op2d.new(sym:"left",narg:1,nret:1),
+  "v" => Op2d.new(sym:"down",narg:1,nret:1),
+  ">" => Op2d.new(sym:"right",narg:1,nret:1),
+  "." => Op2d.new(sym:"dup",narg:1,nret:2),
+  "#" => Op2d.new(sym:"cross",narg:2,nret:2),
 }
 
-SpecialZips = Ops.keys.select{|o|o=~/^!/}
-def is_special_zip(str)
-  SpecialZips.include?(str) || SpecialZips.any?{|o|Ops[o].alias == str}
-end
-
 def create_int(str)
-  create_op("int",0,1,
-    ut_eager{str.to_i},
-    lambda{Int},
-    lambda{[[],0,0]}) # todo could zip these for coolness
+  Op.new(
+    sym: str,
+    name: str,
+    type: Int,
+    impl: str.to_i
+  )
 end
 
 def create_str(str)
-  str_parsed = parse_str(str[1...-1])
-  create_op("str",0,1,
-    ut_eager{str_to_lazy_list(str_parsed)},
-    lambda{Str},
-    lambda{[[],0,0]})
+  Op.new(
+    sym: str,
+    name: str,
+    type: Str,
+    impl: str_to_lazy_list(parse_str(str[1...-1]))
+  )
 end
 
 def create_char(str)
-  char_parsed = parse_char(str[1..-1]).ord
-  create_op("char",0,1,
-    ut_eager{char_parsed},
-    lambda{Char},
-    lambda{[[],0,0]})
+  Op.new(
+    sym: str,
+    name: str,
+    type: Char,
+    impl: parse_char(str[1..-1]).ord
+  )
 end

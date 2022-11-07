@@ -5,7 +5,7 @@ require "./to1d.rb"
 require "stringio"
 
 def doit(source)
-  tokens = lex(source)
+  tokens = lex2d(source)
   roots,err = parse2d(tokens,StringIO.new)
   raise "%d parses"%roots.size if roots.size != 1
   to1d(roots[0])[0]*" "

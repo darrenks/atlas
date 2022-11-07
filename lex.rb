@@ -12,7 +12,7 @@ D2IdRegex = /!*./m
 D1IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|.)/m
 D1CommentRegex = /\#[^\n]*/m
 
-def lex(code) # returns a grid of pos -> token
+def lex2d(code) # returns a grid of pos -> token
 	tokens = [[]]
 	ops = Ops.merge(Ops2d)
 	scan_with_pos(code,/#{AtomRegex}|#{D2IdRegex}/m){|token|
@@ -36,15 +36,18 @@ def lex1d(code) # returns a list of tokens
 	tokens = []
 
 	ops1d = Ops.dup
-	Ops.each{|key,op| ops1d[op.alias] = op }
+	Ops.each{|key,op| ops1d[op.name] = op }
 
 	scan_with_pos(code,
 	    /#{AtomRegex}|#{D1CommentRegex}|#{D1IdRegex}/m){|token|
 	  next if token.str =~ /^\#.*|^ +$/
 	  # kinda hacky to do this here, but inc these since 2d pads
 	  token.char_no += 1; token.line_no += 1
-	  op = get_op(token,ops1d) { Op.new("var",0,1,nil,nil) }
-    tokens<<op
+	  op = get_op(token,ops1d) { Op.new(
+	    name: "var",
+	    type: {A => A})
+	  }
+	  tokens << op
 	}
 	tokens
 end
@@ -70,15 +73,17 @@ def get_op(token,ops) # takens block for what to do for identifiers
     create_str(str)
   elsif str[0] == "'"
     create_char(str)
-  elsif is_special_zip(str)
-    ops[str].dup
+#   elsif is_special_zip(str)
+#     ops[str].dup
   elsif ops.include? str[/!*(.*)/m,1]
     ops[str[/!*(.*)/m,1]].dup
   elsif str != $/
     yield
   else
-    Op.new # newline
+    Newline
   end
   op.token = token
   op
 end
+
+Newline = Op.new(name: "newline")

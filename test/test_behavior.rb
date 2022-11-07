@@ -4,7 +4,6 @@ require "./parse1d.rb"
 require "./type.rb"
 require "./infer.rb"
 require "./lazylib.rb"
-require "./type_check.rb"
 
 require 'stringio'
 
@@ -12,9 +11,8 @@ def doit(source,limit)
   tokens = lex1d(source)
   root = parse1d(tokens)
   infer(root)
-  type_check(root)
 
-  type = root.args[0].args[0].type.value
+  type = root.args[0].args[0].type
   output = StringIO.new
   run(root, limit, output)
   [output.string,type.inspect]

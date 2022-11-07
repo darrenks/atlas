@@ -2,7 +2,17 @@
 
 class AtlasError < StandardError
   def initialize(message,token)
-    @token,@message = token,message
+    @message = message
+    @token = case token
+      when Token
+        token
+      when AST
+        token.op.token
+      when NilClass
+
+      else
+        raise "unknown token type %p " % token
+    end
   end
   def message
     if Token===@token
@@ -13,10 +23,15 @@ class AtlasError < StandardError
   end
 end
 
-class InfiniteLoopError < AtlasError
+class DynamicError < AtlasError
 end
 
-class DynamicError < AtlasError
+class InfiniteLoopError < DynamicError
+  attr_reader :source
+  def initialize(message,source,token)
+    @source = source
+    super(message,token)
+  end
 end
 
 class StaticError < AtlasError

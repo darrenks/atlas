@@ -6,18 +6,29 @@ $reductions = 0
 def run(root,output_limit=10000,out=STDOUT)
   $out = out
   $limit = output_limit
-  root.impl.value
+  make_promises(root)
+  root.promise.value
   #trace(root).value
+end
+
+def make_promises(node)
+  return node.promise if node.promise
+  arg_types = node.args.map{|arg|arg.type-node.zip_level}
+  args = nil
+  node.promise = Promise.new {
+    zipn(node.zip_level, args, node.op.get_impl(arg_types))
+  }
+  args = node.args.map{|arg| make_promises(arg) }
+  node.promise
 end
 
 class Promise
   def initialize(&block)
     @impl=block
-    @calculating=false
   end
   def value
     if Proc===@impl
-      raise InfiniteLoopError.new "infinite loop detected",nil if @calculating # todo fix from location
+      raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
       @calculating=true
       $reductions+=1
       @impl=@impl[]
@@ -93,34 +104,19 @@ end
 # returns value
 def zipn(n,a,f)
   return f[*a] if n <= 0 || a==[]
-#   return [] if !a.empty? && a[0].value==[]
   return [] if a.any?{|i|
     begin
       i.value==[]
-    rescue InfiniteLoopError
+    rescue InfiniteLoopError => e
+      raise e unless e.source == i
       # gotta have faith
       # solves this type of problem:   !] a=!:,0 +a !~!I
       false
     end
   }
-#   [Promise.new{ zipn(n-1,a.map{|i|i.value[0]},f) },
-#    Promise.new{ zipn(n,a.map{|i|i.value[1]},f) }]
- [ZipPromise.new(n-1,a,f,0), ZipPromise.new(n,a,f,1)]
-end
 
-class ZipPromise
-  def initialize(n,a,f,x)
-    @n=n; @a=a; @f=f; @x=x
-    @calculating=false
-  end
-  def value
-    return @memo if @memo
-    raise InfiniteLoopError.new "infinite loop detected",nil if @calculating
-    @calculating=true
-    $reductions+=1
-    a=@a.map{|i|i.value[@x]}
-    @memo = zipn(@n,a,@f)
-  end
+  [Promise.new{zipn(n-1,a.map{|i|i.value[0]},f) },
+   Promise.new{zipn(n,a.map{|i|i.value[1]},f) }]
 end
 
 def repn(n,v)
@@ -131,6 +127,13 @@ def repeat(a)
   ret = [a]
   ret << Promise.new{ret}
   ret
+end
+
+def pad(a,b)
+  [
+    Promise.new{ a.value == [] ? b.value : a.value[0].value },
+    Promise.new{ pad( Promise.new{ a.value == [] ? [] : a.value[1].value }, b) }
+  ]
 end
 
 # value -> value -> value
@@ -164,7 +167,9 @@ def inspect_value(t,value)
 end
 
 def inspect_value_h(t,value,rhs)
-  if t==Str
+  if t.base_elem == :nil
+    str_to_lazy_list("[]")
+  elsif t==Str
     [Promise.new{'"'.ord}, Promise.new{
       concat_map(value,str_to_lazy_list('"',rhs)){|v,r,first|
        str_to_lazy_list(escape_str_char(v),r)
@@ -192,8 +197,8 @@ def print_value(t,value,orig_t)
     limprint "%c" % value
   else #Array
     first = true
-    orig_dim = orig_t.dim+(t.is_char ? -1:0)
-    dim = t.dim+(t.is_char ? -1:0)
+    orig_dim = orig_t.string_dim
+    dim = t.string_dim
     separator = [""," ","\n"][dim] || "\n\n"
     separator = "\n" if orig_dim == 1 && dim == 1
     while value != []
@@ -270,4 +275,14 @@ end
 
 def to_lazy_list(l, rhs=Null, ind=0)
   ind >= l.size ? rhs.value : [Promise.new{l[ind]}, Promise.new{to_lazy_list(l, rhs, ind+1)}]
+end
+
+def atlas_catch(a)
+  begin
+    return [] if a.value == []
+    a.value[0].value
+    [a.value[0], Promise.new{ atlas_catch(a.value[1]) }]
+  rescue DynamicError
+    []
+  end
 end

@@ -30,5 +30,5 @@ def trace1d(node)
   end
   node.var_name = "v#{$vars+=1}" if node.references > 1
   args1d = node.args.map{|t| trace1d(t) }
-  (node.var_name ? [node.var_name + "="] : []) + [node.op.str] + args1d
+  (node.var_name ? [node.var_name + "="] : []) + ["!" * (node.zip_level || node.op.explicit_zip_level) + node.op.sym] + args1d
 end

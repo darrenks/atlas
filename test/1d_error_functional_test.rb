@@ -1,7 +1,7 @@
 test_cases = {
   "asdf" => "(ParseError)\n1:1 (asdf) unset identifier",
-  "/ 1 0" => "(DynamicError)\n1:1 (/) div 0",
-  "+3 !+4 3" => "(AtlasTypeError)\n1:4 (!+) cant manual zip any more dims",
+  "/ 1 0" => "(DynamicError)\n?:? div 0",
+  "+3 !+4 3" => "(AtlasTypeError)\n?:? no matches, last err=\n1:4 (!+) zip level too high",
 
 # thats probably enough but here are more ideas
 

@@ -1,64 +1,96 @@
 require_relative "./error.rb"
 
 def infer(root)
-  # todo for the ops that actually exist, is empty untyped array actually ok (to not know its dimension??)
-  trace_type(root)
-  root
+  to_check = [root]
+  to_check.each{|node| inferh(node, to_check) }
 end
 
-def trace_type(node)
-  return node.type if node.type
-  arg_types = nil
-  impl_fn,type_fn,static_fn,type_checker_fn = node.op.behavior[node.op.token]
-  node.type = Promise.new{
-    # special case for zipped reads
+def inferh(node,to_check)
+  raise AtlasTypeError.new "circular program not in right hand side of cons found, this would always result in an infinite loop", node if :PENDING == node.type
+  return if node.type
+  node.type = :PENDING
 
-    manual_zips = if is_special_zip(node.op.str)
-      0
-    else
-      node.op.str[/^!*/].size
+  if node.op.str[-1] == ":" # or can only unzipped be circular? transpose should need it = it is needed for the zip faith test
+    inferh(node.args[0], to_check)
+    raise AtlasTypeError.new "zip level too high",nil if node.op.explicit_zip_level > node.args[0].type.dim
+    node.zip_level = node.op.explicit_zip_level
+    node.type = node.args[0].type + 1
+    node.args[1].expected_type = node.type
+    to_check << node.args[1]
+    return
+  end
+  if node.op.str[-1] == "|" # or can only unzipped be circular? transpose should need it = it is needed for the zip faith test
+    inferh(node.args[1], to_check)
+    raise AtlasTypeError.new "zip level too high",nil if node.op.explicit_zip_level > node.args[1].type.dim
+    node.zip_level = node.op.explicit_zip_level
+    node.type = node.args[1].type + 1
+    node.args[0].expected_type = node.type
+    to_check << node.args[0]
+    return
+  end
+  if node.op.str[-1] == "@" # or can only unzipped be circular? transpose should need it = it is needed for the zip faith test
+    inferh(node.args[0], to_check)
+    raise AtlasTypeError.new "zip level too high",nil if node.op.explicit_zip_level > node.args[0].type.dim-1
+    node.zip_level = node.op.explicit_zip_level
+    node.type = node.args[0].type
+    node.args[1].expected_type = node.type
+    to_check << node.args[1]
+    return
+  end
+  node.args.each{|arg| inferh(arg, to_check) }
+
+  # todo +1 for K maybe others later
+
+  last_err = nil
+  node.op.type.each{|fn_type|
+    arg_types = node.args.map(&:type)
+    begin
+      node.zip_level = node.op.explicit_zip_level + z=min_zip_level(arg_types, fn_type.specs)
+      arg_types.map!{|t| t-node.zip_level }
+      vars = solve_type_vars(arg_types, fn_type.specs)
+
+      replicated_args = replicate_as_needed(fn_type, node, vars, arg_types)
+      replicated_args.each{|arg| t=arg.type;raise AtlasTypeError.new("cannot zip into nil",nil) if t.is_nil && t.dim <= node.zip_level }
+      check_constraints(fn_type.specs, replicated_args.map{|arg|arg.type - node.zip_level})
+      t = spec_to_type(fn_type.ret, vars) + node.zip_level
+#       raise AtlasTypeError.new "can't replicate this case",nil if node.type && node.type != :PENDING && node.type != t # e.g. from cons hardcoded
+      raise AtlasTypeError.new "expecting type %p, found %p" % [node.expected_type, t], nil if node.expected_type && !t.can_be(node.expected_type)
+      node.type = t
+    rescue AtlasTypeError => e
+      last_err = e
+#       p replicated_args.map(&:type)
+#       puts e.message
+      next
     end
-    min_dims,possible_zips,auto_zips,*err_fn=static_fn[*arg_types]
-    min_dims = min_dims.map{|i|[0,i].max}
-
-    # have them specify possible zips rather than calculate because some things like if/else wouldn't make sense to zip replicating first, so disable it manually (alternatively could calcuate max dim dynamically)
-
-    raise AtlasTypeError.new "cant manual zip any more dims",node.op.token if manual_zips > possible_zips.to_i
-    zip_level = auto_zips.to_i + manual_zips
-
-    # bring negative dims up to scalar dim (e.g. for trinary)
-    reps = min_dims.zip(arg_types).map{|r,t|
-      Promise.new{
-        r=[zip_level.to_i-t.value.to_i+r.to_i,0].max
-
-        # generally can't happen because max pos zip level is set
-        # What should it do if we wanted to allow it?
-        if r.to_i > zip_level
-          raise AtlasTypeError.new('rep level exceeds zip level %d %d' % [r.to_i,zip_level],node.op.token)
-        end
-        r
-      }
-    }
-
-    modified_dims = reps.zip(arg_types).map{|r,t|
-      Promise.new{t.value + (r.value.to_i - zip_level.to_i)}}
-
-    node.impl = Promise.new{
-      args = node.args.map{|t|t.impl}
-      args = reps.zip(args).map{|r,v|
-        repn(r.value,v)
-      }
-      zipn(zip_level, args, impl_fn[*modified_dims])
-    }
-
-    type_fn[*modified_dims]+zip_level
+    node.args = replicated_args
+    return
   }
-  # infer all types, even if not used by type fn (for code gen/etc)
-  arg_types = node.args.map{|t|trace_type(t)}
-  node.type
+  raise AtlasTypeError.new "no matches, last err=" + last_err.message, nil
 end
 
-class AST
-  attr_accessor :type
-  attr_accessor :impl
+def replicate_as_needed(fn_type, node, vars, arg_types)
+  all_repped = true
+  rank_deficits = rank_deficits(arg_types, fn_type.specs, vars, node.zip_level)
+  replicated_args = node.args.map.with_index{|arg,i|
+    rep_level = rank_deficits[i]
+    # should be solved so that impossible
+#        raise AtlasTypeError.new "rank is too low for argument %d" % [i+1], node if rep_level > node.zip_level
+    all_repped &&= rep_level > 0
+
+#     raise AtlasTypeError.new "can't replicate nil",nil if arg == Nil && rep_level > 0
+    implicit_repn(arg, rep_level)
+  }
+  raise AtlasTypeError.new "zip level too high", node if node.args.size > 0 && all_repped
+  replicated_args
+end
+
+def implicit_repn(arg, rep_level)
+  # not sure if this checked needed
+  raise AtlasTypeError.new "would need negative rep level", nil if rep_level < 0
+  rep_level.times { arg = implicit_rep(arg) }
+  return arg
+end
+
+def implicit_rep(arg)
+  AST.new(RepOp,[arg],arg.type+1,0)
 end
