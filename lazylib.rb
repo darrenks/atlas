@@ -23,6 +23,7 @@ def make_promises(node)
 end
 
 class Promise
+  attr_accessor :expect_non_empty
   def initialize(&block)
     @impl=block
   end
@@ -32,6 +33,7 @@ class Promise
       @calculating=true
       $reductions+=1
       @impl=@impl[]
+      raise InfiniteLoopError.new "infinite loop detected2",self,nil if expect_non_empty && @impl == []
     end
     @impl
   end
@@ -54,7 +56,7 @@ def take(n, a)
 end
 
 def drop(n, a)
-  while n>0 || a.value == []
+  while n>0 && a.value != []
     n-=1
     a=a.value[1]
   end
@@ -104,17 +106,19 @@ end
 # returns value
 def zipn(n,a,f)
   return f[*a] if n <= 0 || a==[]
+  faith = []
   return [] if a.any?{|i|
     begin
       i.value==[]
     rescue InfiniteLoopError => e
       raise e unless e.source == i
       # gotta have faith
-      # solves this type of problem:   !] a=!:,0 +a !~!I
-      false
+      # solves this type of problem: a=!:,0 +a ::1;2;:3;4
+      faith << i
+      false # not empty
     end
   }
-
+  faith.each{|i| i.expect_non_empty = true }
   [Promise.new{zipn(n-1,a.map{|i|i.value[0]},f) },
    Promise.new{zipn(n,a.map{|i|i.value[1]},f) }]
 end
@@ -167,8 +171,8 @@ def inspect_value(t,value)
 end
 
 def inspect_value_h(t,value,rhs)
-  if t.base_elem == :nil
-    str_to_lazy_list("[]")
+  if t == Nil
+    str_to_lazy_list("[]",rhs)
   elsif t==Str
     [Promise.new{'"'.ord}, Promise.new{
       concat_map(value,str_to_lazy_list('"',rhs)){|v,r,first|

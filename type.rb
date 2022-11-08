@@ -6,6 +6,7 @@ class Type
     "["*d+ base_elem.to_s.capitalize + "]"*d
   end
   def -(rhs)
+    # negative is ok during math of type solving
 #     raise AtlasTypeError.new "internal type error, can't take elem", nil if dim - rhs < 0
     Type.new(dim - rhs.to_i, base_elem)
   end
@@ -19,7 +20,7 @@ class Type
     self-1
   end
   def string_dim # dim but string = 0
-    dim + (base_elem == :char ? -1 : 0)
+    dim + (is_char ? -1 : 0)
   end
   def is_char
     base_elem == :char
@@ -105,8 +106,8 @@ def min_zip_level(arg_types, specs)
     end
   }
   vars.each{|_,uses|
-    non_nil_bases = uses.reject(&:is_nil)
-    min_use = non_nil_bases.map{|t| t.dim }.min || 1 # 1 because that means bases are nil which
+    nil_bases,non_nil_bases = uses.partition(&:is_nil)
+    min_use = non_nil_bases.map{|t| t.dim }.min || nil_bases.map{|t| t.dim }.min
     max_use = [uses.map{|t| t.dim }.max, 0].max
     min_z = [min_z, max_use-min_use].max
   }
@@ -137,7 +138,6 @@ def solve_type_vars(arg_types, specs)
       base_elems[0]
     end
 
-#     raise AtlasTypeError.new "type var would need to be negative",nil if max_min_dim < 0
     vars[name] = Type.new([max_min_dim,0].max, base_elem)
   }
   vars
@@ -166,7 +166,7 @@ def spec_to_type(spec, vars)
   when Type
     spec
   when Array
-    raise "asdfasdf" if spec.size != 1
+    raise "cannot return multiple values for now" if spec.size != 1
     spec_to_type(spec[0], vars) + 1
 #   when Constraint
 #     spec_to_type(t.spec, vars)
