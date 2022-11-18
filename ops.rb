@@ -81,9 +81,6 @@ class Op < Struct.new(
   end
 end
 
-class Op2d < Struct.new(:sym, :narg, :nret, :token, keyword_init: true)
-end
-
 OpsList = [
   Op.new(
     name: "cons",
@@ -228,8 +225,7 @@ OpsList = [
     sym: "&",
     # Example: & "abcd" "123" -> "abc"
     type: { [[A],[B]] => [A],
-            [A,B] => [A],
-            [A,[B]] => [A] },
+            [A,B] => [A] },
     poly_impl: ->ta,tb { raise AtlasTypeError.new("asdf",nil) if tb.dim == 0
         -> a,b { zipn(1,[ta.dim==0 ? Promise.new{repeat(a)} : a,b],->aa,bb{aa.value}) }
       }
@@ -325,16 +321,6 @@ Ops = {}; OpsList.each{|op|
   Ops[op.name] = Ops[op.sym] = op
 }
 RepOp = Ops["rep"]
-
-Ops2d = {
-  " " => Op2d.new(sym:"space",narg:0,nret:0),
-  "^" => Op2d.new(sym:"up",narg:1,nret:1),
-  "<" => Op2d.new(sym:"left",narg:1,nret:1),
-  "v" => Op2d.new(sym:"down",narg:1,nret:1),
-  ">" => Op2d.new(sym:"right",narg:1,nret:1),
-  "." => Op2d.new(sym:"dup",narg:1,nret:2),
-  "#" => Op2d.new(sym:"cross",narg:2,nret:2),
-}
 
 def create_int(str)
   Op.new(

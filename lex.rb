@@ -8,42 +8,21 @@ NumRegex = /0|[0-9]+/m
 CharRegex = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRegex = /"(\\.|[^"])*"?/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}/m
-D2IdRegex = /!*./m
-D1IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|.)/m
-D1CommentRegex = /\#[^\n]*/m
+IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|.)/m
+CommentRegex = /\#[^\n]*/m
 
-def lex2d(code) # returns a grid of pos -> token
-	tokens = [[]]
-	ops = Ops.merge(Ops2d)
-	scan_with_pos(code,/#{AtomRegex}|#{D2IdRegex}/m){|token|
-	  op = get_op(token,ops){
-	    token.char_no += 1; token.line_no += 1
-  	  raise LexError.new "unknown character"
-  	}
-	  # todo this won't handle multiline strings properly (elsewhere too)
-	  token.str.each_char{|c|
-      if c==$/
-        tokens<<[]
-      else
-        tokens[-1]<<op
-      end
-    }
-	}
-	tokens
-end
-
-def lex1d(code) # returns a list of tokens
+def lex(code) # returns a list of tokens
 	tokens = []
 
-	ops1d = Ops.dup
-	Ops.each{|key,op| ops1d[op.name] = op }
+	ops = Ops.dup
+	Ops.each{|key,op| ops[op.name] = op }
 
 	scan_with_pos(code,
-	    /#{AtomRegex}|#{D1CommentRegex}|#{D1IdRegex}/m){|token|
+	    /#{AtomRegex}|#{CommentRegex}|#{IdRegex}/m){|token|
 	  next if token.str =~ /^\#.*|^ +$/
 	  # kinda hacky to do this here, but inc these since 2d pads
 	  token.char_no += 1; token.line_no += 1
-	  op = get_op(token,ops1d) { Op.new(
+	  op = get_op(token,ops) { Op.new(
 	    name: "var",
 	    type: {A => A})
 	  }

@@ -32,7 +32,12 @@ class Promise
       raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
       @calculating=true
       $reductions+=1
-      @impl=@impl[]
+      begin
+        @impl=@impl[]
+      ensure
+        # not really needed since new promises are created rather than reused
+        @calculating=false
+      end
       raise InfiniteLoopError.new "infinite loop detected2",self,nil if expect_non_empty && @impl == []
     end
     @impl

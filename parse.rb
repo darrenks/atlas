@@ -9,7 +9,7 @@ class AST
   attr_accessor :replaced_memo
 end
 
-def parse1d(tokens)
+def parse(tokens)
   context={}
   prog=parse_top_level(tokens,context)
   op=Ops["O"].dup

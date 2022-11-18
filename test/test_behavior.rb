@@ -1,6 +1,6 @@
 require "./ops.rb"
 require "./lex.rb"
-require "./parse1d.rb"
+require "./parse.rb"
 require "./type.rb"
 require "./infer.rb"
 require "./lazylib.rb"
@@ -8,8 +8,8 @@ require "./lazylib.rb"
 require 'stringio'
 
 def doit(source,limit)
-  tokens = lex1d(source)
-  root = parse1d(tokens)
+  tokens = lex(source)
+  root = parse(tokens)
   infer(root)
 
   type = root.args[0].args[0].type

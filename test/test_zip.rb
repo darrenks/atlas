@@ -196,15 +196,15 @@ Ops["T"]=Ops[":"]
 Ops["T"].name = Ops["T"].sym = "T"
 
 require "./lex.rb"
-require "./parse1d.rb"
+require "./parse.rb"
 require "./type.rb"
 require "./infer.rb"
 require "./lazylib.rb"
 require "./to1d.rb"
 
 def doit(source)
-  tokens = lex1d(source)
-  root = parse1d(tokens)
+  tokens = lex(source)
+  root = parse(tokens)
   infer(root)
   to1d(root)[0]*" "
 end

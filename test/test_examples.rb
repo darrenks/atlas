@@ -1,3 +1,5 @@
+# This was written to test 2d examples, TODO conver them to 1d
+
 runs = 0
 fail = false
 dirs = Dir["./test/examples/*"]
