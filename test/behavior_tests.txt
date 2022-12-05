@@ -44,12 +44,13 @@ $ -> [] : Nil
 
 
 [ :5 :6 $ -> 5
-[ $ -> AtlasTypeError
+[ $ -> DynamicError
 ] :5 :6 $ -> 6
-] $ -> AtlasTypeError
+] $ -> DynamicError
 ) :5 :6 $ -> [6]
 ) :5 $ -> []
-) $ -> AtlasTypeError
+# todo may want to reconsider and make empty
+) $ -> DynamicError
 
 ######### test vars
 + a=5 a -> 10
@@ -63,7 +64,6 @@ a=: '- a -> "-------------...
 + : :3 :4 $ : :5 :7 $ $ 1 -> [[4,5],[6,8]]
 +1 "asdf" -> "bteg"
 +"asdf" 1 -> "bteg"
-+1 $ -> AtlasTypeError
 +:1 :2 $ :4 :6 :8 $ -> [5,8]
 +:4 :6 :8 $ :1 :2 $ -> [5,8]
 
@@ -92,7 +92,7 @@ a=: '- a -> "-------------...
 % ~10 5 -> 0
 % ~10 ~5 -> 0
 % ~9 ~5 -> -4
-% "abcd" 2 -> [1,0,1,0]
+#% "abcd" 2 -> [1,0,1,0]
 % 5 0 -> DynamicError
 
 ~:4 : 5 $ -> [-4,-5]
@@ -219,7 +219,7 @@ a = (:0 a -> InfiniteLoopError
 # !~ :"1 2" :"3 4" $ -> [[1,2],[3,4]]
 
 # complicated test (primes)
-_ !? % + 1 v1=: 1 * v2=: 2 + 1 v2 v1 v2 $ !; v2 -> [2,3,5,7,11...
+_ !? % + 1 v1=: 1 * v2=: 2 + 1 v2 v1 v2 ,$ !; v2 -> [2,3,5,7,11...
 
 # aliases of special zip
 #!read "4 5 6" -> [4,5,6]
