@@ -49,7 +49,7 @@ class Op < Struct.new(
       raise if raw.size != 1
       Op.parse_raw_arg_spec(raw[0],list_nest_depth+1)
     when Type
-      ExactTypeSpec.new(raw.dim+list_nest_depth, [->t{t==raw}])
+      ExactTypeSpec.new(raw.dim+list_nest_depth, raw)
     when TypeSpec
       raw
     else
@@ -90,14 +90,13 @@ OpsList = [
     # todo
     ## Test: :$ $ -> [1]
     type: { [A,[A]] => [A] },
-      # Change cons special case to check if non auto vecable, and ret can be determined already.
     impl: -> a,b { [a,b] },
   ),
   Op.new(
     name: "head",
     sym: "[",
     # Example: [ "abc" -> 'a
-    type: { ([A]) => A },
+    type: { [A] => A },
     impl: -> a {
       raise DynamicError.new "head on empty list",nil if a.value==[]
       a.value[0].value
@@ -115,7 +114,7 @@ OpsList = [
     name: "tail",
     # Example: ) "abc" -> "bc"
     sym: ")",
-    type: { no_nil([A]) => [A] },
+    type: { [A] => [A] },
     impl: -> a {
       raise DynamicError.new "tail on empty list",nil if a.value==[]
       a.value[1].value}
@@ -123,7 +122,7 @@ OpsList = [
     name: "init",
     # Example: ( "abc" -> "ab"
     sym: "(",
-    type: { no_nil([A]) => [A] },
+    type: { [A] => [A] },
     impl: -> a {
       raise DynamicError.new "init on empty list",nil if a.value==[]
       init(a.value,nil)
@@ -166,7 +165,7 @@ OpsList = [
     name: "mod",
     # Example: %7 3 -> 1
     sym: "%",
-    type: { [Scalar,Int] => Int },
+    type: { [Int,Int] => Int },
     impl: -> a,b {
       if b.value==0
         raise DynamicError.new("mod 0",nil)
@@ -301,7 +300,7 @@ OpsList = [
     # Example: _:"abc";"123" -> "abc123"
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a.value,[]){|i,r,first|append(i,r)} },
-  ), Op.new( # todo make circular compatible
+  ), Op.new(
     name: "append",
     sym: "@",
     # Example: @"abc" "123" -> "abc123"

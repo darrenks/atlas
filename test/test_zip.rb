@@ -1,6 +1,6 @@
 # todo some ops may only error because return type if using head, but no other ops like it
 
-tests = <<EOF
+tests = <<'EOF'
 ## 1 arg #######
 
 # A (inspect)
@@ -24,8 +24,8 @@ tests = <<EOF
 [ ; ; 1 -> [ ; ; 1
 
 # [[A]] (transpose)
-# \ 1 -> AtlasTypeError
-# \ ; 1 -> AtlasTypeError
+\\ 1 -> AtlasTypeError
+\ ; 1 -> AtlasTypeError
 \ ; ; 1 -> \ ; ; 1
 
 ## 2 arg #########
@@ -41,12 +41,12 @@ eq ;;1 ;1 -> != ; ; 1 , ; 1
 eq ;;1 ;;1 -> = ; ; 1 ; ; 1
 
 # A,[A] (cons)
-T 1 1 -> AtlasTypeError
-T 1 ;1 -> T 1 ; 1
-T 1 ;;1 -> !T , 1 ; ; 1
-T ;1 1 -> AtlasTypeError
-T ;1 ;1 -> !T ; 1 , ; 1
-T ;1 ;;1 -> T ; 1 ; ; 1
+: 1 1 -> AtlasTypeError
+: 1 ;1 -> : 1 ; 1
+: 1 ;;1 -> !: , 1 ; ; 1
+: ;1 1 -> AtlasTypeError
+: ;1 ;1 -> !: ; 1 , ; 1
+: ;1 ;;1 -> : ; 1 ; ; 1
 
 # [A],[A] (append todo)
 
@@ -108,23 +108,23 @@ T ;1 ;;1 -> T ; 1 ; ; 1
 # [scalar] none
 
 # [A] (head)
-[$ -> AtlasTypeError
+[$ -> [ $
 [;$ -> [ ; $
 
 # [[A]] (concat)
-_$ -> AtlasTypeError
+# _$ -> AtlasTypeError todo
 _;$ -> _ ; $
 _;;$ -> _ ; ; $
 
 ## 2 arg #########
 # A,A (eq)
-eq $ 1 -> AtlasTypeError
+eq $ 1 -> != $ , 1
 eq $ ;1 -> = $ ; 1
 eq $ ;;1 -> = $ ; ; 1
-eq ;$ 1 -> AtlasTypeError
+eq ;$ 1 -> !!= ; $ , , 1
 eq ;$ ;1 -> != ; $ , ; 1
 eq ;$ ;;1 -> = ; $ ; ; 1
-eq ;;$ 1 -> AtlasTypeError
+eq ;;$ 1 -> !!!= ; ; $ , , , 1
 eq ;;$ ;1 -> !!= ; ; $ , , ; 1
 eq ;;$ ;;1 -> != ; ; $ , ; ; 1
 
@@ -143,7 +143,7 @@ eq ;;$ ;;1 -> != ; ; $ , ; ; 1
 {1 $ -> { 1 $
 {1 ;$ -> { 1 ; $
 {1 ;;$ -> { 1 ; ; $
-{;1 $ -> !{ ; 1 , $
+{;1 $ -> !{ ; 1 $
 {;1 ;$ -> !{ ; 1 ; $
 {;1 ;;$ -> !{ ; 1 ; ; $
 
@@ -154,15 +154,15 @@ eq ;;$ ;;1 -> != ; ; $ , ; ; 1
 ## 3 arg ###########
 # A,B,B
 ? $ 2 3 -> ? $ 2 3
-? $ 2 ;3 -> AtlasTypeError
+? $ 2 ;3 -> !? $ , 2 ; 3
 ? ;$ 2 3 -> ? ; $ 2 3
 ? $ ;2 ;3 -> ? $ ; 2 ; 3
-? 1 $ 3 -> AtlasTypeError
+? 1 $ 3 -> !? , 1 $ , 3
 ? 1 $ ;3 -> ? 1 $ ; 3
-? 1 ;$ 3 -> AtlasTypeError
+? 1 ;$ 3 -> !!? , , 1 ; $ , , 3
 ? 1 ;$ ;3 -> !? , 1 ; $ , ; 3
 ? 1 $ $ -> ? 1 $ $
-? 1 $ ;$ -> !? , 1 , $ ; $
+? 1 $ ;$ -> ? 1 $ ; $
 ? 1 !$ ;$ -> ? 1 !$ ; $
 
 ### Excessive zip tests
@@ -191,10 +191,6 @@ eq ;;$ ;;1 -> != ; ; $ , ; ; 1
 EOF
 
 require "./ops.rb"
-# Test how cons operator would auto vec (it can't now though)
-Ops["T"]=Ops[":"]
-Ops["T"].name = Ops["T"].sym = "T"
-
 require "./lex.rb"
 require "./parse.rb"
 require "./type.rb"

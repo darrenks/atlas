@@ -1,10 +1,14 @@
-Type = Struct.new(:dim,:base_elem) # base_elem is :int, :char, or :nil
+Inf = 2**61 # for max_pos_dim
+Type = Struct.new(:dim,:base_elem) # base is :int, :char, or :unknown
+# unknown can be any type including higher dim
+
 class Type
   def inspect
-    d = is_nil ? dim - 1 : dim
-    return "nerg" if d < 0
-    "["*d+ base_elem.to_s.capitalize + "]"*d
+    d = is_nil ? dim-1 : dim
+    return "(%d %s)"%[dim,base_elem] if d < 0
+    "["*d + base_elem.to_s.capitalize + "]"*d
   end
+
   def -(rhs)
     # negative is ok during math of type solving
 #     raise AtlasTypeError.new "internal type error, can't take elem", nil if dim - rhs < 0
@@ -13,8 +17,8 @@ class Type
   def +(zip_level)
     Type.new(dim+zip_level, base_elem)
   end
-  def to_i
-    dim
+  def max_pos_dim
+    is_nil ? Inf : dim
   end
   def elem
     self-1
@@ -28,11 +32,16 @@ class Type
   def is_nil
     base_elem == :nil
   end
-  def can_be(rhs)
-    return true if base_elem == :nil && rhs.base_elem == :nil
-    return true if base_elem == :nil && rhs.dim >= 0
-    return true if rhs.base_elem == :nil && dim >= 0
-    return base_elem == rhs.base_elem && dim == rhs.dim
+  def can_be(rhs) # return true if self can be rhs (without zipping)
+    return true if is_nil && dim <= rhs.dim
+    return self == rhs
+#     return true if base_elem == :nil && rhs.base_elem == :nil
+#     return true if base_elem == :nil && rhs.dim >= 0
+#     return true if rhs.base_elem == :nil && dim >= 0
+#     return base_elem == rhs.base_elem && dim == rhs.dim
+  end
+  def |(rhs)
+    Type.new([dim, rhs.dim].min, base_elem == rhs.base_elem ? base_elem : :nil)
   end
 end
 
@@ -41,39 +50,32 @@ Char = Type.new(0,:char)
 Str = Type.new(1,:char)
 Nil = Type.new(1,:nil)
 
-class TypeSpec
-  attr_reader :constraints
-  def initialize(constraints = [])
-    @constraints = constraints
-  end
-end
-
-class ExactTypeSpec < TypeSpec
+class ExactTypeSpec
   attr_reader :req_dim
-  def initialize(req_dim, constraints = [])
+  attr_reader :type
+  def initialize(req_dim, type)
     @req_dim = req_dim
-    super(constraints)
+    @type = type
+  end
+  def check(type)
+    type.can_be(@type)
   end
 end
 
-class VarTypeSpec < TypeSpec
+class VarTypeSpec
   attr_reader :var_name
   attr_reader :extra_dims
-  def initialize(var_name, extra_dims, constraints = []) # e.g. [[a]] is .new(:a, 2)
+  def initialize(var_name, extra_dims) # e.g. [[a]] is .new(:a, 2)
     @var_name = var_name
     @extra_dims = extra_dims
-    super(constraints)
+  end
+  def check(type)
+    return true
   end
 end
 
-Scalar = ExactTypeSpec.new(0)
 A = :a
 B = :b
-def no_nil(a)
-  ret=Op.parse_raw_arg_spec(a)
-  ret.constraints << lambda{|t| t != Nil }
-  ret
-end
 
 # type spec ================================
 # { from => to } or just "to" if no args
@@ -89,7 +91,7 @@ FnType = Struct.new(:specs,:ret)
 # constraints:
 #   0 <= rep levels <= z
 #   type vars satisfiable
-def min_zip_level(arg_types, specs)
+def implicit_zip_level(arg_types, specs)
   vars = {}
   min_z = 0
   arg_types.zip(specs) { |arg,spec|
@@ -106,8 +108,7 @@ def min_zip_level(arg_types, specs)
     end
   }
   vars.each{|_,uses|
-    nil_bases,non_nil_bases = uses.partition(&:is_nil)
-    min_use = non_nil_bases.map{|t| t.dim }.min || nil_bases.map{|t| t.dim }.min
+    min_use = uses.map{|t| t.max_pos_dim }.min
     max_use = [uses.map{|t| t.dim }.max, 0].max
     min_z = [min_z, max_use-min_use].max
   }
@@ -134,7 +135,7 @@ def solve_type_vars(arg_types, specs)
       :nil
     else
       base_elems -= [:nil]
-      raise AtlasTypeError.new("inconsistant base elem", nil) if base_elems.size > 1
+      raise AtlasTypeError.new("inconsistant base elem %p" % uses, nil) if base_elems.size != 1
       base_elems[0]
     end
 
@@ -145,7 +146,7 @@ end
 
 def rank_deficits(arg_types, specs, vars, zip_level)
   arg_types.zip(specs).map{|arg,spec|
-    if arg.is_nil && arg.dim > zip_level
+    if arg.is_nil #&& arg.dim > zip_level
       0
     else
       spec_dim = case spec
@@ -168,8 +169,6 @@ def spec_to_type(spec, vars)
   when Array
     raise "cannot return multiple values for now" if spec.size != 1
     spec_to_type(spec[0], vars) + 1
-#   when Constraint
-#     spec_to_type(t.spec, vars)
   when Symbol
     vars[spec]
   else
@@ -178,10 +177,9 @@ def spec_to_type(spec, vars)
   end
 end
 
-def check_constraints(specs, arg_types)
+def check_constraints(node, specs, arg_types)
   specs.zip(arg_types){|spec,type|
-    spec.constraints.each{|constraint|
-      raise AtlasTypeError.new("constraint failed",nil) if !constraint[type]
-    }
+    raise AtlasTypeError.new("constraint failed, expecting %p found %p" % [spec.type,type],nil) if !spec.check(type)
+    node.last_error ||= AtlasTypeError.new "cannot use nil type as a concrete type", nil if ExactTypeSpec === spec && type.is_nil
   }
 end
