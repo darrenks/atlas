@@ -44,8 +44,7 @@ def possible_types(node)
    begin
     arg_types = node.args.map(&:type)
 #STDERR.puts arg_types.inspect
-                           # todo not used yet  #
-    min_implicit_zip_level,max_implicit_zip_level = implicit_zip_level(arg_types, fn_type.specs)
+    min_implicit_zip_level = implicit_zip_level(arg_types, fn_type.specs)
     zip_level = node.op.explicit_zip_level + min_implicit_zip_level
 #STDERR.puts "zip_level = %d" % zip_level
 
