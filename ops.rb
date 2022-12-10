@@ -85,8 +85,8 @@ OpsList = [
   Op.new(
     name: "cons",
     sym: ":",
-    # Example: : 'a "bc" -> "abc"
-    # Test: :1 $ -> [1]
+    # Example: 'a:"bc" -> "abc"
+    # Test: 1:$ -> [1]
     # todo
     ## Test: :$ $ -> [1]
     type: { [A,[A]] => [A] },
@@ -95,7 +95,7 @@ OpsList = [
   Op.new(
     name: "head",
     sym: "[",
-    # Example: [ "abc" -> 'a
+    # Example: ["abc" -> 'a
     type: { [A] => A },
     impl: -> a {
       raise DynamicError.new "head on empty list",nil if a.value==[]
@@ -104,7 +104,7 @@ OpsList = [
   ), Op.new(
     name: "last",
     sym: "]",
-    # Example: ] "abc" -> 'c
+    # Example: ]"abc" -> 'c
     type: { [A] => A },
     impl: -> a {
       raise DynamicError.new "last on empty list",nil if a.value==[]
@@ -112,7 +112,7 @@ OpsList = [
     }
   ), Op.new(
     name: "tail",
-    # Example: ) "abc" -> "bc"
+    # Example: tail "abc" -> "bc"
     sym: ")",
     type: { [A] => [A] },
     impl: -> a {
@@ -120,7 +120,7 @@ OpsList = [
       a.value[1].value}
   ), Op.new(
     name: "init",
-    # Example: ( "abc" -> "ab"
+    # Example: init "abc" -> "ab"
     sym: "(",
     type: { [A] => [A] },
     impl: -> a {
@@ -130,7 +130,7 @@ OpsList = [
   ), Op.new(
     name: "add",
     sym: "+",
-    # Example: +1 2 -> 3
+    # Example: 1+2 -> 3
     type: { [Int,Int] => Int,
             [Int,Char] => Char,
             [Char,Int] => Char },
@@ -138,20 +138,20 @@ OpsList = [
   ), Op.new(
     name: "sub",
     sym: "-",
-    # Example: -5 3 -> 2
+    # Example: 5-3 -> 2
     type: { [Int,Int] => Int,
             [Char,Int] => Char,
             [Char,Char] => Int },
     impl: -> a,b { a.value - b.value }
   ), Op.new(
     name: "mult",
-    # Example: *2 3 -> 6
+    # Example: 2*3 -> 6
     sym: "*",
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value * b.value }
   ), Op.new(
     name: "div",
-    # Example: /7 3 -> 2
+    # Example: 7/3 -> 2
     sym: "/",
     type: { [Int,Int] => Int },
     impl: -> a,b {
@@ -163,7 +163,7 @@ OpsList = [
     }
   ), Op.new(
     name: "mod",
-    # Example: %7 3 -> 1
+    # Example: 7%3 -> 1
     sym: "%",
     type: { [Int,Int] => Int },
     impl: -> a,b {
@@ -202,8 +202,8 @@ OpsList = [
     impl: -> a { repeat(a) }
   ), Op.new(
     name: "eq",
-    # Example: eq 3 3 -> 1
-    # Test: eq 3 2 -> 0
+    # Example: 3eq 3 -> 1
+    # Test: 3eq 2 -> 0
     sym: "=",
     type: { [A,A] => Int },
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1 : 0 } }
@@ -215,14 +215,14 @@ OpsList = [
     impl: -> { [] }
   ), Op.new(
     name: "pad",
-    # Example: |"abc" '_ -> "abc_____...
+    # Example: "abc"|'_ -> "abc_____...
     sym: "|",
     type: { [[A],A] => [A] },
     impl: -> a,b { pad(a,b) }
   ), Op.new(
     name: "const",
     sym: "&",
-    # Example: & "abcd" "123" -> "abc"
+    # Example: "abcd"&"123" -> "abc"
     type: { [[A],[B]] => [A],
             [A,B] => [A] },
     poly_impl: ->ta,tb { raise AtlasTypeError.new("asdf",nil) if tb.dim == 0
@@ -231,26 +231,20 @@ OpsList = [
   ), Op.new(
     name: "if",
     sym: "?",
-    # Example: ? 1 "yes" "no" -> "yes"
+    # Example: 1?"yes")"no" -> "yes"
     type: { [A,B,B] => B },
     poly_impl: -> ta,tb,tc {
       if ta == Int
-        # Test: !? :~1;2 1 0 -> [0,1]
+        # Test: ((~1):;2)!?1)0 -> [0,1]
         lambda{|a,b,c| a.value > 0 ? b.value : c.value }
       elsif ta == Char
-        # Test: !? " d" 1 0 -> [0,1]
+        # Test: " d"!?1)0 -> [0,1]
         lambda{|a,b,c| a.value.chr[/\S/] ? b.value : c.value }
       else # List
-        # Test: !? :"" ;"a" 1 0 -> [0,1]
+        # Test: ("":;"a")!?1)0 -> [0,1]
         lambda{|a,b,c| a.value != [] ? b.value : c.value }
       end
     }
-  ), Op.new(
-    # Hidden
-    name: "output",
-    sym: "O",
-    type: { A => Int }, # lies for single output
-    poly_impl: -> t { -> a { print_value(t,a.value,t) }}
   ), Op.new(
     # Hidden
     name: "input",
@@ -275,42 +269,42 @@ OpsList = [
   ), Op.new(
     name: "single",
     sym: ";",
-    # Example: ; 2 -> [2]
+    # Example: ;2 -> [2]
     type: { A => [A] },
     impl: -> a { [a,Null] }
   ), Op.new(
     name: "take",
     sym: "{",
-    # Example: { 3 "abcd" -> "abc"
-    # Test: { ~2 "abc" -> ""
-    # Test: { 2 "" -> ""
+    # Example: 3{"abcd" -> "abc"
+    # Test: (~2){"abc" -> ""
+    # Test: 2{"" -> ""
     type: { [Int,[A]] => [A] },
     impl: -> a,b { take(a.value, b) }
   ), Op.new(
     name: "drop",
     sym: "}",
-    # Example: } 3 "abcd" -> "d"
-    # Test: } ~2 "abc" -> "abc"
-    # Test: } 2 "" -> ""
+    # Example: 3}"abcd" -> "d"
+    # Test: (~2)}"abc" -> "abc"
+    # Test: 2}"" -> ""
     type: { [Int,[A]] => [A] },
     impl: -> a,b { drop(a.value, b) }
   ), Op.new(
     name: "concat",
     sym: "_",
-    # Example: _:"abc";"123" -> "abc123"
+    # Example: _"abc":;"123" -> "abc123"
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a.value,[]){|i,r,first|append(i,r)} },
   ), Op.new(
     name: "append",
     sym: "@",
-    # Example: @"abc" "123" -> "abc123"
+    # Example: "abc"@"123" -> "abc123"
     type: { [[A],[A]] => [A] },
     impl: -> a,b { append(a.value,b) },
   ), Op.new(
     name: "transpose",
     sym: "\\",
-    # Example: \:"abc";"123" -> ["a1","b2","c3"]
-    # Test: \:"abc";"1234" -> ["a1","b2","c3","4"]
+    # Example: \"abc":;"123" -> ["a1","b2","c3"]
+    # Test: \"abc":;"1234" -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a.value) },
   )

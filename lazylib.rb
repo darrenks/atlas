@@ -6,9 +6,7 @@ $reductions = 0
 def run(root,output_limit=10000,out=STDOUT)
   $out = out
   $limit = output_limit
-  make_promises(root)
-  root.promise.value
-  #trace(root).value
+  print_value(root.type,make_promises(root).value,root.type)
 end
 
 def make_promises(node)

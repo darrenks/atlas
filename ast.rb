@@ -2,7 +2,7 @@ AST=Struct.new(:op,:args,:type,:zip_level,:promise,:expected_type,:id,:used_by,:
 
 def all_nodes(root)
   all = []
-  dfs(root,cycle_fn:->_{}, post_fn:->node{all << node})
+  dfs(root){|node| all << node}
   all
 end
 
@@ -12,7 +12,7 @@ module Status
   SEEN = 3
 end
 
-def dfs(root,cycle_fn:,post_fn:)
+def dfs(root,cycle_fn:->_{},&post_fn)
   enumerate_nodes(root,0) if !root.id
   dfs_helper(root,[],cycle_fn,post_fn)
 end

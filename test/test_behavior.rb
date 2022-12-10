@@ -9,10 +9,10 @@ require 'stringio'
 
 def doit(source,limit)
   tokens = lex(source)
-  root = parse(tokens)
+  root = parse_infix(tokens)
   infer(root)
 
-  type = root.args[0].args[0].type
+  type = root.args[0].type # remove the "show" command
   output = StringIO.new
   run(root, limit, output)
   [output.string,type.inspect]

@@ -22,10 +22,7 @@ def lex(code) # returns a list of tokens
 	  next if token.str =~ /^\#.*|^ +$/
 	  # kinda hacky to do this here, but inc these since 2d pads
 	  token.char_no += 1; token.line_no += 1
-	  op = get_op(token,ops) { Op.new(
-	    name: "var",
-	    type: {A => A})
-	  }
+	  op = get_op(token,ops) { Op.new(name: "var") }
 	  tokens << op
 	}
 	tokens
