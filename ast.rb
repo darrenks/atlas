@@ -1,4 +1,4 @@
-AST=Struct.new(:op,:args,:type,:zip_level,:promise,:expected_type,:id,:used_by,:replicated_args,:last_error)
+AST=Struct.new(:op,:args,:type,:zip_level,:promise,:expected_type,:id,:used_by,:replicated_args,:last_error,:replaced)
 
 def all_nodes(root)
   all = []

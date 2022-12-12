@@ -1,23 +1,49 @@
-# This was written to test 2d examples, TODO conver them to 1d
-
+require 'open3'
 runs = 0
-fail = false
-dirs = Dir["./test/examples/*"]
-dirs.each{|dir|
-  ins = Dir["#{dir}/in*.txt"]
-  if ins.empty?
-    ins = ["/dev/null"]
-    outs = ["#{dir}/out.txt"]
-  else
-    outs = ins.map{|i|i.sub(/in(\d+).txt/,'out\1.txt')}
-  end
-  ins.zip(outs) {|i,o|
-    out = `ruby atlas.rb #{dir}/prog.a2d < #{i} 2> /dev/null | diff #{o} -`
-    unless out.strip.empty?
-      fail = true
-      puts "FAIL example: %s < %s" % [dir, i]
+$fail = false
+def failit(test, reason)
+  puts "FAIL example: "
+  puts test
+  puts reason
+  $fail = true
+end
+
+tests = Dir["test/examples/*.test"]
+section_regex = /^\[.*?\]\n/i
+tests.each{|test_file|
+  test = File.read(test_file)
+  sections = test.scan(section_regex)
+  datum = test.split(section_regex)[1..-1]
+  prog = nil
+  expected_stderr = input = expected_stdout = ""
+  sections.zip(datum){|section,data|
+    case section.chomp[1...-1].downcase
+    when "input"
+      input = data.strip
+    when "stdout"
+      expected_stdout = data.strip
+    when "stderr"
+      expected_stderr = (data||"").strip
+    when "prog"
+      prog = data
+    else
+      raise "unknown section %p" % section
     end
-    runs += 1
   }
+
+  File.write("test/input", input)
+  File.write("test/prog.atl", prog)
+  stdout, stderr, status = Open3.capture3("ruby atlas.rb test/prog.atl < test/input")
+
+  stdout.strip!
+  stderr.strip!
+
+  if stdout != expected_stdout
+    failit(test,"stdout was\n"+stdout)
+  elsif !expected_stderr.empty? && !stderr[expected_stderr] || expected_stderr.empty? && !stderr.empty?
+    failit(test,"stderr was\n"+stderr)
+  else
+    runs += 1
+  end
 }
-puts "PASS %d example runs" % runs if !fail
+puts "PASS %d example runs" % runs if !$fail

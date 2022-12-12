@@ -1,0 +1,6 @@
+[prog]
+asdf
+
+[stderr]
+(ParseError)
+1:1 (asdf) unset identifier

@@ -38,7 +38,7 @@ class Op < Struct.new(
   end
 
   def explicit_zip_level
-    str[/^!*/].size
+    token ? str[/^!*/].size : 0
   end
 
   def self.parse_raw_arg_spec(raw,list_nest_depth=0)
@@ -206,6 +206,7 @@ OpsList = [
     # Test: 3eq 2 -> 0
     sym: "=",
     type: { [A,A] => Int },
+    # todo return list of element if true (maintains lattice property of returns
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1 : 0 } }
   ), Op.new(
     name: "nil",
@@ -257,6 +258,16 @@ OpsList = [
     sym: "zI",
     type: [Str],
     impl: -> { lines(ReadStdin.value) }
+  ), Op.new(
+    # Hidden
+    name: "tostring",
+    # Example: tostring 12 -> "12"
+    type: { A => Str },
+    # Test: tostring "a" -> "a"
+    # Test: tostring 'a -> "a"
+    # Test: tostring 2:;1 -> "2\n1"
+    # Test: tostring (2:;1):;(3:;4) -> "2 1\n3 4"
+    poly_impl: -> t { -> a { to_string(t,a.value) } }
   ), Op.new(
     name: "show",
     sym: "`",

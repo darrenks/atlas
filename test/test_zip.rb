@@ -200,7 +200,9 @@ require "./to_infix.rb"
 
 def doit(source)
   tokens = lex(source)
-  root = parse_infix(tokens)
+  roots = parse_infix(tokens)
+  raise "must be 1 expr but found %d in %s" % [roots.size,source] if roots.size != 1
+  root = roots[0]
   infer(root)
   to_infix(root)
 end

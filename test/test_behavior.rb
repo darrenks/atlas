@@ -9,13 +9,15 @@ require 'stringio'
 
 def doit(source,limit)
   tokens = lex(source)
-  root = parse_infix(tokens)
-  infer(root)
+  roots = parse_infix(tokens)
+  raise "must be 1 expr but found %d in %s" % [roots.size,source] if roots.size != 1
+  root = roots[0]
+  inspect_root = AST.new(Ops['`'],roots)
+  infer(inspect_root)
 
-  type = root.args[0].type # remove the "show" command
   output = StringIO.new
-  run(root, limit, output)
-  [output.string,type.inspect]
+  run(inspect_root, limit, output)
+  [output.string,root.type.inspect]
 end
 
 line = 1
@@ -40,7 +42,7 @@ example_tests = File.read("ops.rb").lines.grep(example_regex).map{|line|line.gsu
   end
 
   begin
-    found,found_type = doit("`" + i, limit)
+    found,found_type = doit(i, limit)
   rescue Exception
     found = $!
   end

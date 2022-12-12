@@ -1,0 +1,6 @@
+[prog]
+1/0
+
+[stderr]
+(DynamicError)
+?:? div 0

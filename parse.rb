@@ -7,40 +7,40 @@ require_relative "./ast.rb"
 
 def parse_infix(tokens)
   context={}
-  prog=parse_top_level(tokens,context)
-  replace_vars(prog,context)
+  roots = parse_top_level(tokens,context)
+  replace_vars(roots, context)
 end
-
 
 Var=Struct.new(:token)
 
-def replace_vars(node,context)
-  if Var === node
-    context[node.token.str] || raise(ParseError.new("unset identifier %p" % node.token.str, node.token))
-  else
-    node.args.map!{|arg|replace_vars(arg,context)}
-    node
-  end
+def replace_vars(nodes,context)
+  nodes.size.times{|i|
+    while Var === nodes[i]
+      nodes[i] = context[nodes[i].token.str] || raise(ParseError.new("unset identifier %p" % nodes[i].token.str, nodes[i].token))
+    end
+    next if nodes[i].replaced
+    nodes[i].replaced = true
+    replace_vars(nodes[i].args,context)
+  }
+  nodes
 end
 
+# return a list of ASTs to print (only the exprs or last statement if none)
 def parse_top_level(tokens,context)
-  #tokens.filter{|t|t.op.str != " "}
-  ans=nil
-  last=nil
-  while true
-    while tokens[0].str == "\n"
-      tokens.shift
-      return ans||last if tokens.empty?
-    end
-    if tokens.size < 2 || tokens[1].str != "="
-      raise ParseError.new "there can only be 1 non assignment line", tokens[0].token if ans!=nil
-      ans = get_expr(tokens,context,0)
+  last_stmt = []
+  lines = tokens.chunk_while{|token|token.str != "\n" }
+  exprs = []
+  lines.each{|line_tokens|
+    next if line_tokens.empty? || line_tokens[0].str == "\n"
+    is_stmt = line_tokens.size > 1 && line_tokens[1].str == "="
+    expr = get_expr(line_tokens,context,0)
+    if is_stmt
+      last_stmt = [expr]
     else
-      last = get_expr(tokens,context,0)
+      exprs << expr
     end
-    return ans||last if tokens.empty?
-    raise ParseError.new "expecting newline or eof",tokens[0].token if tokens[0].str != "\n"
-  end
+  }
+  exprs.empty? ? last_stmt : exprs
 end
 
 def get_expr(tokens,context,depth)

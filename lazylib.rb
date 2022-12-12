@@ -4,9 +4,7 @@ require_relative "./error.rb"
 $reductions = 0
 
 def run(root,output_limit=10000,out=STDOUT)
-  $out = out
-  $limit = output_limit
-  print_value(root.type,make_promises(root).value,root.type)
+  print_string(make_promises(root).value, out, output_limit)
 end
 
 def make_promises(node)
@@ -43,14 +41,6 @@ class Promise
   def inspect
     "promise"
   end
-end
-
-def limprint(s)
-  s = s.to_s
-  char_count = [$limit,s.size].min
-  $out.print s[0,char_count]
-  $limit -= char_count
-  $limit <= 0
 end
 
 def take(n, a)
@@ -186,7 +176,7 @@ def inspect_value_h(t,value,rhs)
     str_to_lazy_list(value.to_s,rhs)
   elsif t==Char
     str_to_lazy_list(inspect_char(value),rhs)
-  else #Array
+  else #List
     [Promise.new{"[".ord}, Promise.new{
       concat_map(value,str_to_lazy_list("]",rhs)){|v,r,first|
         first ?
@@ -197,24 +187,31 @@ def inspect_value_h(t,value,rhs)
   end
 end
 
-def print_value(t,value,orig_t)
-  if t==Int
-    limprint value
-  elsif t==Char
-    limprint "%c" % value
-  else #Array
-    first = true
-    orig_dim = orig_t.string_dim
+def to_string(t, value)
+  to_string_h(t,value,t.string_dim,Null)
+end
+
+def to_string_h(t, value, orig_dim, rhs)
+  if t == Int
+    inspect_value_h(t, value, rhs)
+  elsif t == Char
+    [Promise.new{value}, rhs]
+  else # List
     dim = t.string_dim
     separator = [""," ","\n"][dim] || "\n\n"
     separator = "\n" if orig_dim == 1 && dim == 1
-    while value != []
-      return if limprint separator unless first
-      first = false
-      print_value(t.elem,value[0].value,orig_t)
-      return if $limit <= 0
-      value = value[1].value
-    end
+    concat_map(value,rhs.value){|v,r,first|
+      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, r) }
+      first ? svalue.value : str_to_lazy_list(separator, svalue)
+    }
+  end
+end
+
+def print_string(value, out, limit)
+  while value != [] && limit > 0
+    out.print "%c" % value[0].value
+    value = value[1].value
+    limit -= 1
   end
 end
 
