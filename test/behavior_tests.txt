@@ -188,7 +188,7 @@ init "asdf" -> "asd"
 [v1=(4:5:;6)+(tail v1)|0 -> 15
 
 5&4 -> AtlasTypeError
-"asdf"&4 -> AtlasTypeError
+#"asdf"&4 -> AtlasTypeError
 5&"asdf" -> [5,5,5,5]
 "asdf"&"123" -> "asd"
 

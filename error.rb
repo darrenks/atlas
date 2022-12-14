@@ -1,25 +1,35 @@
 #AtlasError = Struct.new(:char_no,:line_no,:message)
 
-class AtlasError < StandardError
-  def initialize(message,token)
-    @message = message
-    @token = case token
-      when Token
-        token
-      when AST
-        token.op.token
-      when NilClass
+def warn(msg, from=nil)
+  STDERR.puts to_location(from) + " " + msg
+end
 
-      else
-        raise "unknown token type %p " % token
-    end
+def to_location(from)
+  token = case from
+  when Token
+    from
+  when AST
+    from.token
+  when NilClass
+    nil
+  else
+    raise "unknown location type %p " % from
+  end
+
+  if token
+    "%d:%d (%s)" % [token.line_no, token.char_no, token.str]
+  else
+    "?:?"
+  end
+end
+
+class AtlasError < StandardError
+  def initialize(message,from)
+    @message = message
+    @from = from
   end
   def message
-    if Token===@token
-      "\n%d:%d (%s) %s" % [@token.line_no, @token.char_no, @token.str,@message]
-    else
-      "\n?:? %s" % @message
-    end
+    to_location(@from) + " " + @message
   end
 end
 

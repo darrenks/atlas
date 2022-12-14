@@ -1,17 +1,18 @@
 require 'open3'
 runs = 0
 $fail = false
-def failit(test, reason)
+def failit(filename,test, reason)
   puts "FAIL example: "
   puts test
   puts reason
+  puts "from: "+filename
   $fail = true
 end
 
 tests = Dir["test/examples/*.test"]
 section_regex = /^\[.*?\]\n/i
-tests.each{|test_file|
-  test = File.read(test_file)
+tests.each{|test_filename|
+  test = File.read(test_filename)
   sections = test.scan(section_regex)
   datum = test.split(section_regex)[1..-1]
   prog = nil
@@ -25,23 +26,23 @@ tests.each{|test_file|
     when "stderr"
       expected_stderr = (data||"").strip
     when "prog"
-      prog = data
+      prog = data.strip
     else
       raise "unknown section %p" % section
     end
   }
 
   File.write("test/input", input)
-  File.write("test/prog.atl", prog)
+  File.write("test/prog.atl",prog)
   stdout, stderr, status = Open3.capture3("ruby atlas.rb test/prog.atl < test/input")
 
   stdout.strip!
   stderr.strip!
 
   if stdout != expected_stdout
-    failit(test,"stdout was\n"+stdout)
+    failit(test_filename,test,"stdout was\n"+stdout)
   elsif !expected_stderr.empty? && !stderr[expected_stderr] || expected_stderr.empty? && !stderr.empty?
-    failit(test,"stderr was\n"+stderr)
+    failit(test_filename,test,"stderr was\n"+stderr)
   else
     runs += 1
   end

@@ -2,5 +2,5 @@
 1/0
 
 [stderr]
-(DynamicError)
-?:? div 0
+DynamicError
+1:2 (/) div 0

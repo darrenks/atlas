@@ -12,7 +12,7 @@ def make_promises(node)
   arg_types = node.args.map{|arg|arg.type-node.zip_level}
   args = nil
   node.promise = Promise.new {
-    zipn(node.zip_level, args, node.op.get_impl(arg_types))
+    zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
   args = node.args.map{|arg| make_promises(arg) }
   node.promise
@@ -56,10 +56,10 @@ def drop(n, a)
   a.value
 end
 
-def init(a,from)
-  raise DynamicError.new "init on empty list",from if a==[]
+def init(a)
+  raise DynamicError.new "init on empty list",nil if a==[]
   return [] if a[1].value == []
-  [a[0], Promise.new{ init(a[1].value,from) }]
+  [a[0], Promise.new{ init(a[1].value) }]
 end
 
 # value -> (value -> Promise) -> value
@@ -83,13 +83,13 @@ def transpose(a)
    Promise.new{transpose [a[0].value[1],tls]}]
 end
 
-def last(a,from)
+def last(a)
   prev=nil
   until a.empty?
     prev = a
     a = a[1].value
   end
-  raise DynamicError.new("empty last", from) if prev == nil
+  raise DynamicError.new("empty last", nil) if prev == nil
   prev[0].value
 end
 
@@ -138,7 +138,7 @@ def equal(a,b,t)
   if t.dim>0
     return true if a==[] && b==[]
     return false if a==[] || b==[]
-    return equal(a[0].value,b[0].value,t.elem) && equal(a[1].value,b[1].value,t)
+    return equal(a[0].value,b[0].value,t-1) && equal(a[1].value,b[1].value,t)
   else
     a==b
   end
@@ -180,8 +180,8 @@ def inspect_value_h(t,value,rhs)
     [Promise.new{"[".ord}, Promise.new{
       concat_map(value,str_to_lazy_list("]",rhs)){|v,r,first|
         first ?
-          inspect_value_h(t.elem,v,r) :
-          [Promise.new{','.ord},Promise.new{inspect_value_h(t.elem,v,r)}]
+          inspect_value_h(t-1,v,r) :
+          [Promise.new{','.ord},Promise.new{inspect_value_h(t-1,v,r)}]
       }
     }]
   end
@@ -279,14 +279,4 @@ end
 
 def to_lazy_list(l, rhs=Null, ind=0)
   ind >= l.size ? rhs.value : [Promise.new{l[ind]}, Promise.new{to_lazy_list(l, rhs, ind+1)}]
-end
-
-def atlas_catch(a)
-  begin
-    return [] if a.value == []
-    a.value[0].value
-    [a.value[0], Promise.new{ atlas_catch(a.value[1]) }]
-  rescue DynamicError
-    []
-  end
 end

@@ -2,87 +2,45 @@ require_relative "./type.rb"
 require_relative "./escape.rb"
 require_relative "./error.rb"
 require_relative "./lazylib.rb"
+require_relative "./spec.rb"
 
 class Op < Struct.new(
     :name,
     :sym, # optional
     :type,
-    :poly_impl,
-    :impl,
-    :token,
-    keyword_init: true)
-  def initialize(args)
-    if args[:type]
-      args[:type] = case raw_spec = args[:type]
-      when Hash
-        raw_spec.map{|raw_arg,ret|
-          specs = (x=case raw_arg
-            when Array
-              if raw_arg.size == 1
-                [raw_arg]
-              else
-                raw_arg
-              end
-            else
-              [raw_arg]
-            end).map{|a_raw_arg| Op.parse_raw_arg_spec(a_raw_arg) }
-          FnType.new(specs,ret)
-        }
-      when Type, Array
-        [FnType.new([],raw_spec)]
-      else
-        raise "unknown fn type format"
-      end
-    end
-    super(args)
-  end
-
-  def explicit_zip_level
-    token ? str[/^!*/].size : 0
-  end
-
-  def self.parse_raw_arg_spec(raw,list_nest_depth=0)
-    case raw
-    when Symbol
-      VarTypeSpec.new(raw,list_nest_depth)
-    when Array
-      raise if raw.size != 1
-      Op.parse_raw_arg_spec(raw[0],list_nest_depth+1)
-    when Type
-      ExactTypeSpec.new(raw.dim+list_nest_depth, raw)
-    when TypeSpec
-      raw
-    else
-      p raw
-      error
-    end
-  end
-
+    :min_zip_level,
+    :impl)
   def narg
     type[0].specs.size
   end
-  def nret
-    sym=="O" ? 0 : 1 # todo...
-  end
-
   def str
     token.str
   end
-  def get_impl(arg_types)
-    ans = if impl != nil
-      impl
-    elsif poly_impl != nil
-      poly_impl[*arg_types]
-    else
-      raise "ops must specify impl or poly_impl"
-    end
-    return ans if Proc === ans
-    return lambda{ ans }
+end
+
+def create_op(
+  name: ,
+  sym: nil,
+  type: ,
+  min_zip_level: 0,
+  poly_impl: nil, # impl that needs type info
+  impl: nil,
+  impl_with_loc: nil # impl that could throw, needs token location for err msgs
+)
+  type = create_specs(type)
+  raise "exactly on of [poly_impl,impl,impl_with_loc] must be set" if [poly_impl,impl,impl_with_loc].compact.size != 1
+  if poly_impl
+    built_impl = -> arg_types,from { poly_impl[*arg_types] }
+  elsif impl_with_loc
+    built_impl = -> arg_types,from { impl_with_loc[from] }
+  else
+    built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
+  Op.new(name,sym,type,min_zip_level,built_impl)
 end
 
 OpsList = [
-  Op.new(
+  create_op(
     name: "cons",
     sym: ":",
     # Example: 'a:"bc" -> "abc"
@@ -92,42 +50,42 @@ OpsList = [
     type: { [A,[A]] => [A] },
     impl: -> a,b { [a,b] },
   ),
-  Op.new(
+  create_op(
     name: "head",
     sym: "[",
     # Example: ["abc" -> 'a
     type: { [A] => A },
-    impl: -> a {
-      raise DynamicError.new "head on empty list",nil if a.value==[]
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "head on empty list",from if a.value==[]
       a.value[0].value
-    }
-  ), Op.new(
+    }}
+  ), create_op(
     name: "last",
     sym: "]",
     # Example: ]"abc" -> 'c
     type: { [A] => A },
-    impl: -> a {
-      raise DynamicError.new "last on empty list",nil if a.value==[]
-      last(a.value, nil ) # todo for errors
-    }
-  ), Op.new(
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "last on empty list",from if a.value==[]
+      last(a.value)
+    }}
+  ), create_op(
     name: "tail",
     # Example: tail "abc" -> "bc"
     sym: ")",
     type: { [A] => [A] },
-    impl: -> a {
-      raise DynamicError.new "tail on empty list",nil if a.value==[]
-      a.value[1].value}
-  ), Op.new(
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "tail on empty list",from if a.value==[]
+      a.value[1].value}}
+  ), create_op(
     name: "init",
     # Example: init "abc" -> "ab"
     sym: "(",
     type: { [A] => [A] },
-    impl: -> a {
-      raise DynamicError.new "init on empty list",nil if a.value==[]
-      init(a.value,nil)
-    } #todo from
-  ), Op.new(
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "init on empty list",from if a.value==[]
+      init(a.value)
+    }}
+  ), create_op(
     name: "add",
     sym: "+",
     # Example: 1+2 -> 3
@@ -135,7 +93,7 @@ OpsList = [
             [Int,Char] => Char,
             [Char,Int] => Char },
     impl: -> a,b { a.value + b.value }
-  ), Op.new(
+  ), create_op(
     name: "sub",
     sym: "-",
     # Example: 5-3 -> 2
@@ -143,37 +101,37 @@ OpsList = [
             [Char,Int] => Char,
             [Char,Char] => Int },
     impl: -> a,b { a.value - b.value }
-  ), Op.new(
+  ), create_op(
     name: "mult",
     # Example: 2*3 -> 6
     sym: "*",
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value * b.value }
-  ), Op.new(
+  ), create_op(
     name: "div",
     # Example: 7/3 -> 2
     sym: "/",
     type: { [Int,Int] => Int },
-    impl: -> a,b {
+    impl_with_loc: -> from { -> a,b {
       if b.value==0
-        raise DynamicError.new("div 0",nil) # todo maybe too complicated to be worth it same for mod
+        raise DynamicError.new("div 0", from) # todo maybe too complicated to be worth it same for mod
       else
         a.value/b.value
       end
-    }
-  ), Op.new(
+    }}
+  ), create_op(
     name: "mod",
     # Example: 7%3 -> 1
     sym: "%",
     type: { [Int,Int] => Int },
-    impl: -> a,b {
+    impl_with_loc: -> from { -> a,b {
       if b.value==0
-        raise DynamicError.new("mod 0",nil)
+        raise DynamicError.new("mod 0",from)
       else
         a.value % b.value
       end
-    }
-  ), Op.new(
+    }}
+  ), create_op(
     name: "neg",
     sym: "~",
     type: { Int => Int,
@@ -194,13 +152,13 @@ OpsList = [
         raise
       end
     }
-  ), Op.new(
+  ), create_op(
     name: "rep",
     sym: ",",
     # Example: ,2 -> [2,2,2,2,2...
     type: { A => [A] },
     impl: -> a { repeat(a) }
-  ), Op.new(
+  ), create_op(
     name: "eq",
     # Example: 3eq 3 -> 1
     # Test: 3eq 2 -> 0
@@ -208,28 +166,26 @@ OpsList = [
     type: { [A,A] => Int },
     # todo return list of element if true (maintains lattice property of returns
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1 : 0 } }
-  ), Op.new(
+  ), create_op(
     name: "nil",
     # Example: $ -> []
     sym: "$",
     type: Nil,
     impl: -> { [] }
-  ), Op.new(
+  ), create_op(
     name: "pad",
     # Example: "abc"|'_ -> "abc_____...
     sym: "|",
     type: { [[A],A] => [A] },
     impl: -> a,b { pad(a,b) }
-  ), Op.new(
+  ), create_op(
     name: "const",
     sym: "&",
     # Example: "abcd"&"123" -> "abc"
-    type: { [[A],[B]] => [A],
-            [A,B] => [A] },
-    poly_impl: ->ta,tb { raise AtlasTypeError.new("asdf",nil) if tb.dim == 0
-        -> a,b { zipn(1,[ta.dim==0 ? Promise.new{repeat(a)} : a,b],->aa,bb{aa.value}) }
-      }
-  ), Op.new(
+    type: { [A,B] => A },
+    min_zip_level: 1,
+    impl: -> a,b { a.value }
+  ), create_op(
     name: "if",
     sym: "?",
     # Example: 1?"yes")"no" -> "yes"
@@ -246,19 +202,19 @@ OpsList = [
         lambda{|a,b,c| a.value != [] ? b.value : c.value }
       end
     }
-  ), Op.new(
+  ), create_op(
     # Hidden
     name: "input",
     sym: "I",
     type: Str,
     impl: -> { ReadStdin.value }
-  ), Op.new(
+  ), create_op(
     # Hidden
     name: "input2",
     sym: "zI",
     type: [Str],
     impl: -> { lines(ReadStdin.value) }
-  ), Op.new(
+  ), create_op(
     # Hidden
     name: "tostring",
     # Example: tostring 12 -> "12"
@@ -268,7 +224,7 @@ OpsList = [
     # Test: tostring 2:;1 -> "2\n1"
     # Test: tostring (2:;1):;(3:;4) -> "2 1\n3 4"
     poly_impl: -> t { -> a { to_string(t,a.value) } }
-  ), Op.new(
+  ), create_op(
     name: "show",
     sym: "`",
     # Example: `12 -> "12"
@@ -277,13 +233,13 @@ OpsList = [
     # Test: `'a -> "'a"
     # Test: `;1 -> "[1]"
     poly_impl: -> t { -> a { inspect_value(t,a.value) } }
-  ), Op.new(
+  ), create_op(
     name: "single",
     sym: ";",
     # Example: ;2 -> [2]
     type: { A => [A] },
     impl: -> a { [a,Null] }
-  ), Op.new(
+  ), create_op(
     name: "take",
     sym: "{",
     # Example: 3{"abcd" -> "abc"
@@ -291,7 +247,7 @@ OpsList = [
     # Test: 2{"" -> ""
     type: { [Int,[A]] => [A] },
     impl: -> a,b { take(a.value, b) }
-  ), Op.new(
+  ), create_op(
     name: "drop",
     sym: "}",
     # Example: 3}"abcd" -> "d"
@@ -299,19 +255,19 @@ OpsList = [
     # Test: 2}"" -> ""
     type: { [Int,[A]] => [A] },
     impl: -> a,b { drop(a.value, b) }
-  ), Op.new(
+  ), create_op(
     name: "concat",
     sym: "_",
     # Example: _"abc":;"123" -> "abc123"
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a.value,[]){|i,r,first|append(i,r)} },
-  ), Op.new(
+  ), create_op(
     name: "append",
     sym: "@",
     # Example: "abc"@"123" -> "abc123"
     type: { [[A],[A]] => [A] },
     impl: -> a,b { append(a.value,b) },
-  ), Op.new(
+  ), create_op(
     name: "transpose",
     sym: "\\",
     # Example: \"abc":;"123" -> ["a1","b2","c3"]
@@ -327,7 +283,7 @@ Ops = {}; OpsList.each{|op|
 RepOp = Ops["rep"]
 
 def create_int(str)
-  Op.new(
+  create_op(
     sym: str,
     name: str,
     type: Int,
@@ -336,7 +292,8 @@ def create_int(str)
 end
 
 def create_str(str)
-  Op.new(
+  raise LexError.new("unterminated string") if str[-1] != '"'
+  create_op(
     sym: str,
     name: str,
     type: Str,
@@ -345,7 +302,8 @@ def create_str(str)
 end
 
 def create_char(str)
-  Op.new(
+  raise LexError.new("empty char") if str.size < 2
+  create_op(
     sym: str,
     name: str,
     type: Char,

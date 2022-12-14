@@ -2,5 +2,5 @@
 asdf
 
 [stderr]
-(ParseError)
+ParseError
 1:1 (asdf) unset identifier

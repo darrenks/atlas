@@ -1,0 +1,6 @@
+[prog]
+'a + 'b
+
+[stderr]
+AtlasTypeError
+1:4 (+) op is not definied for arg types: Char,Char

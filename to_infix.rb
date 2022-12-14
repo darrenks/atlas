@@ -35,7 +35,7 @@ def r(node, is_lhs)
   op_name = node.op.sym.to_s
   op_name = Convert.include?(op_name) ? ""+node.op.name+" " : op_name
 
-  op = "!" * (node.zip_level || node.op.explicit_zip_level) + op_name
+  op = "!" * (node.zip_level || node.explicit_zip_level) + op_name
 
   name_it = node.var_name ? node.var_name + "=" : ""
   expr = case node.args.size
@@ -54,3 +54,5 @@ def r(node, is_lhs)
     "(" + statement + ")" :
     statement
 end
+
+# todo look at ~5  it becomes _((~5)):"\n":$ which has extra parens

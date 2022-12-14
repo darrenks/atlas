@@ -16,7 +16,8 @@ Var=Struct.new(:token)
 def replace_vars(nodes,context)
   nodes.size.times{|i|
     while Var === nodes[i]
-      nodes[i] = context[nodes[i].token.str] || raise(ParseError.new("unset identifier %p" % nodes[i].token.str, nodes[i].token))
+      var_name = nodes[i].token.str
+      nodes[i] = context[var_name] || raise(ParseError.new("unset identifier %p" % var_name, nodes[i].token))
     end
     next if nodes[i].replaced
     nodes[i].replaced = true
@@ -46,41 +47,62 @@ end
 def get_expr(tokens,context,depth)
   raise ParseError.new "unexpected EOF",nil if tokens.empty?
   t = tokens.shift
-  raise ParseError.new "unexpected )",nil if t.str == ")" # later will be empty parens which means empty list
-#   raise ParseError.new "unexpected newline",nil if t.str =="\n"
+  raise ParseError.new "unexpected end of line",t if t.str == "\n"
+  raise ParseError.new "unexpected )",t if t.str == ")" # later will be empty parens which means empty list
+  op = get_op(t)
   lhs = if t.str == "("
     get_expr(tokens,context,depth+1)
-  elsif t.name == "var"
-    Var.new(t.token)
-  elsif t.narg == 0
-    AST.new(t, [])
+  elsif op.name == "var"
+    Var.new(t)
+  elsif op.narg == 0
+    AST.new(op, [], t)
   elsif true # uop
-    return AST.new(t, [get_expr(tokens,context,depth)])
+    return AST.new(op, [get_expr(tokens,context,depth)], t)
   else
     impossible
   end
 
   lhs_t = t
   if tokens.empty? || tokens[0].str =="\n"
-    raise "unexpected eof" if depth > 0
+    raise ParseError.new "unexpected end of expression, expecting ')'",t if depth > 0
     return lhs
   end
   t = tokens.shift
   if t.str == ")"
-    raise "unexpected ) or eof" if depth <= 0
+    raise ParseError.new "unmatched )", t if depth <= 0
     return lhs
   end
 
+  op = get_op(t)
   if t.str == "="
-    # todo error if duplicate assign or op assign
+    warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
     context[lhs_t.str] = get_expr(tokens,context,depth)
-  elsif t.narg == 0
-    errorz # for now cons
-  elsif t.narg == 1 || t.narg == 2 # binop
-    AST.new(t, [lhs, get_expr(tokens,context,depth)])
-  elsif t.narg == 3
-    AST.new(t, [lhs, get_expr(tokens,context,depth+1), get_expr(tokens,context,depth)])
+  elsif op.narg == 0
+    raise ParseError.new("2 adjacent atoms is illegal for now (will mean cons later)", t)
+  elsif op.narg == 1 || op.narg == 2 # binop
+    AST.new(op, [lhs, get_expr(tokens,context,depth)], t)
+  elsif op.narg == 3
+    AST.new(op, [lhs, get_expr(tokens,context,depth+1), get_expr(tokens,context,depth)], t)
   else
     impossible2
+  end
+end
+
+def get_op(token)
+  str = token.str
+  if str[0] =~ /[0-9]/
+    create_int(str)
+  elsif str[0] == '"'
+    create_str(str)
+  elsif str[0] == "'"
+    create_char(str)
+#   elsif is_special_zip(str)
+#     Ops[str].dup
+  elsif Ops.include? str[/!*(.*)/m,1]
+    Ops[str[/!*(.*)/m,1]]
+  elsif str != $/
+    Op.new("var")
+  else
+    raise
   end
 end

@@ -1,12 +1,12 @@
 require_relative "./error.rb"
 
 def inspect_char(char)
-  return "'\"" if char=='"'.ord
+  return "'\"" if char=='"'.ord # Don't escape this char (we would in a string)
   "'" + escape_str_char(char)
 end
 
 def escape_str_char(char)
-  raise "invalid char (negative) %d" % char if char < 0
+  raise DynamicError.new "invalid char (negative) %d" % char, nil if char < 0
   return "\\0" if char == "\0".ord
   return "\\n" if char == "\n".ord
   return "\\\\" if char == "\\".ord
