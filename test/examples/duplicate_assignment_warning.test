@@ -7,4 +7,4 @@ a
 3
 
 [stderr]
-2:2 (=) duplicate assignment to var: a
+2:2 (=) duplicate assignment to var: a (Warning)

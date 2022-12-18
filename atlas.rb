@@ -28,10 +28,9 @@ begin
 
   #STDERR.puts "dynamic reductions: %d" % $reductions
 rescue AtlasError => e
-  STDERR.puts e.class
   STDERR.puts e.message
   exit(1)
 rescue => e
-  STDERR.puts "!!!This is an internal Atlas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!"
+  STDERR.puts "!!!This is an internal Atlas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!\n\n"
   raise e
 end

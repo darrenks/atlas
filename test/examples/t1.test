@@ -12,4 +12,4 @@ ij
 line2
 
 [stderr]
-div 0
+3:2 (/) div 0 (DynamicError)

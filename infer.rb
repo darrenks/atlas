@@ -7,13 +7,17 @@ def infer(root)
 
   dfs_infer(root)
 
-  all.each{|node|
-    node.args = node.replicated_args
-    if node.last_error != nil
-      # todo, print all errors not just first
-      raise node.last_error
+  errors = []
+  dfs(root) { |node|
+    if node.last_error
+      errors << node.last_error if node.args.all?{|arg| arg.type != nil }
+      node.type = nil
     end
   }
+  errors[0...-1].each{|error| STDERR.puts error.message }
+  raise errors[-1] if !errors.empty?
+
+  all.each{|node| node.args = node.replicated_args }
 end
 
 def dfs_infer(node)

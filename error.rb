@@ -1,7 +1,7 @@
 #AtlasError = Struct.new(:char_no,:line_no,:message)
 
 def warn(msg, from=nil)
-  STDERR.puts to_location(from) + " " + msg
+  STDERR.puts to_location(from) + " " + msg + " (Warning)"
 end
 
 def to_location(from)
@@ -29,7 +29,10 @@ class AtlasError < StandardError
     @from = from
   end
   def message
-    to_location(@from) + " " + @message
+    to_location(@from) + " " + @message + " (" + class_name + ")"
+  end
+  def class_name
+    self.class.to_s
   end
 end
 
@@ -47,7 +50,11 @@ end
 class StaticError < AtlasError
 end
 
+# Named this way to avoid conflicting with Ruby's TypeError
 class AtlasTypeError < StaticError
+  def class_name
+    "TypeError"
+  end
 end
 
 class ParseError < StaticError

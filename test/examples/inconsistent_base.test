@@ -1,5 +1,4 @@
 [prog]
 1:"a"
 [stderr]
-AtlasTypeError
-1:2 (:) op is not definied for arg types: Int,[Char]
+1:2 (:) op is not definied for arg types: Int,[Char] (TypeError)

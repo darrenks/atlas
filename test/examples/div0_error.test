@@ -2,5 +2,4 @@
 1/0
 
 [stderr]
-DynamicError
-1:2 (/) div 0
+1:2 (/) div 0 (DynamicError)

@@ -1,4 +1,4 @@
 [prog]
 "hi
 [stderr]
-unterminated string
+unterminated string (LexError)
