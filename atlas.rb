@@ -28,6 +28,7 @@ begin
 
   #STDERR.puts "dynamic reductions: %d" % $reductions
 rescue AtlasError => e
+  STDERR.puts if DynamicError === e
   STDERR.puts e.message
   exit(1)
 rescue => e

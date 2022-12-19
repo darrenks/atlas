@@ -11,7 +11,7 @@ class Op < Struct.new(
     :min_zip_level,
     :impl)
   def narg
-    type[0].specs.size
+    type ? type[0].specs.size : 0
   end
   def str
     token.str
@@ -221,7 +221,7 @@ OpsList = [
     type: { A => Str },
     # Test: tostring "a" -> "a"
     # Test: tostring 'a -> "a"
-    # Test: tostring 2:;1 -> "2\n1"
+    # Test: tostring 2:;1 -> "2 1"
     # Test: tostring (2:;1):;(3:;4) -> "2 1\n3 4"
     poly_impl: -> t { -> a { to_string(t,a.value) } }
   ), create_op(

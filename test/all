@@ -2,3 +2,4 @@
 ruby test/test_behavior.rb
 ruby test/test_zip.rb
 ruby test/test_examples.rb
+ruby test/test_docs.rb

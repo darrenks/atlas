@@ -199,7 +199,8 @@ def to_string_h(t, value, orig_dim, rhs)
   else # List
     dim = t.string_dim
     separator = [""," ","\n"][dim] || "\n\n"
-    separator = "\n" if orig_dim == 1 && dim == 1
+    # this would make the lang a bit better on golf.shinh.org but not intuitive
+    #separator = "\n" if orig_dim == 1 && dim == 1
     concat_map(value,rhs.value){|v,r,first|
       svalue = Promise.new{ to_string_h(t-1, v, orig_dim, r) }
       first ? svalue.value : str_to_lazy_list(separator, svalue)
