@@ -27,7 +27,7 @@ TODO automatically generate this as it is likely to become out of date.
 |`%` | mod| `Num Num -> Num`|
 |`~` | neg| `Num -> Num`|
 |`&` | const| `a b -> a`|
-|`|` | pad| `[a] a -> [a]`|
+|`\|` | pad| `[a] a -> [a]`|
 **Op modifier**
 |`!` | vectorize |
 **Atoms**

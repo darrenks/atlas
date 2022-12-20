@@ -32,7 +32,7 @@ def r(node, is_lhs)
   return node.var_name if node.var_name
   node.var_name = "v#{$vars+=1}" if node.references > 1 && !node.var_name
 
-  op_name = node.op.sym.to_s
+  op_name = (node.op.sym||node.op.name).to_s
   op_name = Convert.include?(op_name) ? ""+node.op.name+" " : op_name
 
   op = "!" * (node.zip_level || node.explicit_zip_level) + op_name
@@ -45,8 +45,8 @@ def r(node, is_lhs)
     op + r(node.args[0], is_lhs)
   when 2
     r(node.args[0], true) + op + r(node.args[1], false)
-  when 3
-    r(node.args[0], true) + op + r(node.args[1], false) + ")" + r(node.args[2], false)
+  when 3 # only if statement is 3
+    op + " " + r(node.args[0], false) + " then " + r(node.args[1], false) + " else " + r(node.args[2], false)
   else error
   end
   statement = name_it + expr

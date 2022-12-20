@@ -1,3 +1,4 @@
-Input is a regular string value, but thanks to laziness, interactive programs can still be written.
+Input is a regular string value accessible using the variable `I`, but thanks to laziness, interactive programs can still be written.
 
-Output automatically converts any type to a string by joining with spaces and newlines if rank >= 2 otherwise. It is similar to [Nibbles](http://golfscript.com/nibbles).
+Each line that doesn't begin with an assignment is output followed by a newline (and if there are none then the last assigment is printed).
+Output automatically converts any type to a string by joining with spaces then newlines then double newlines.

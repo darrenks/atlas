@@ -405,7 +405,7 @@ This would give a Turing Complete basis that is only 2 ops, plus assignment and 
 
 ## Complex State
 
-I've mentioned how you can think of any computation as a sequence of states and therefore accomplish it with circular programming. But said states are surely complicated right? And here we have only been using lists of scalars, there aren't even tuples or ways of constructing new types in Atlas. We don't need them though. If you want a list of tuples, just use two lists. Anytime you need to do an operation involving both values of the tuple, just use your operation on the two lists and they will zipWith. If you have a tuple of size 3 and want to do an operation that needs all 3, it would actually be two operations (assuming it is a binary op), and so you would just be doing two zipped with operations on 3 lists. Technically Atlas does have a ternary operator and it would just be doing a zipWith3 if you happened to combine them all in a single operation.
+I've mentioned how you can think of any computation as a sequence of states and therefore accomplish it with circular programming. But said states are surely complicated right? And here we have only been using lists of scalars, there aren't even tuples or ways of constructing new types in Atlas. We don't need them though. If you want a list of tuples, just use two lists. Anytime you need to do an operation involving both values of the tuple, just use your operation on the two lists and they will zipWith. If you have a tuple of size 3 and want to do an operation that needs all 3, it would actually be two operations (assuming it is a binary op), and so you would just be doing two zipped with operations on 3 lists. Technically Atlas does have a ternary operator (the if/else statement) and it would just be doing a zipWith3 if you happened to combine them all in a single operation.
 
 This way of handling complex state isn't as contrived as it sounds. For example Haskell has functions like mapAccumL, unfoldr, iterate, and scanl which can get tedious to use if you need to use tuples in your state - typically people switch to using monads in these cases. But these functions are really a single concept that is more elegantly expressed with a circular program.
 
@@ -426,27 +426,27 @@ TODO more complex example but more readable than my bf interpreter
 Just in case there was any doubt that the language is Turing Complete, I'll use these principles to implement a brianfuck interpreter:
 
     source="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
-    bracket_depth = 0 : (source eq '[) !? bracket_depth+1 ) (source eq ']) !? bracket_depth-1 ) bracket_depth
-    truthy = value !? 1 ) 0
-    not_truthy = value !? 0 ) 1
+    bracket_depth = 0 : !if source eq '[ then bracket_depth+1 else !if source eq '] then bracket_depth-1 else bracket_depth
+    truthy = !if value then 1 else 0
+    not_truthy = !if value then 0 else 1
     wholes=0:wholes+,1
-    code_pointer = 0 : (not_truthy * instruction eq '[) !? find_rbracket ) (truthy * instruction eq ']) !? find_lbracket ) code_pointer+1
+    code_pointer = 0 : !if not_truthy * instruction eq '[ then find_rbracket else !if truthy * instruction eq '] then find_lbracket else code_pointer+1
     instruction = !head code_pointer drop source
-    pointer = 0 : (instruction eq '>) !? pointer+1 ) (instruction eq '<) !? pointer-1 ) pointer
+    pointer = 0 : !if instruction eq '> then pointer+1 else !if instruction eq '< then pointer-1 else pointer
     state = (,0) : (pointer take state) !@ (!;new_value) !@ (pointer+1) drop state
 
     value = !head pointer drop state
-    new_value = (instruction eq '+) !? value+1 ) (instruction eq '-) !? value-1 ) value
+    new_value = !if instruction eq '+ then value+1 else !if instruction eq '- then value-1 else value
 
     current_bracket_depth = !head code_pointer drop bracket_depth
 
     # first point where bracket_depth = bracket_depth again
-    find_rbracket = code_pointer + 1 + !head !concat ((!,current_bracket_depth) !!eq (code_pointer+1) drop bracket_depth) !!? ,!;wholes ) ,,$
+    find_rbracket = code_pointer + 1 + !head !concat !!if (!,current_bracket_depth) !!eq (code_pointer+1) drop bracket_depth then ,!;wholes else ,,$
 
     # last point where bracket_depth = bracket_depth again
-    find_lbracket = !last !concat ((!,current_bracket_depth-1) !!eq code_pointer take bracket_depth) !!? ,!;wholes ) ,,$
+    find_lbracket = !last !concat !!if (!,current_bracket_depth-1) !!eq code_pointer take bracket_depth then ,!;wholes else ,,$
 
-    output = (instruction eq '.) !? (!;value) ) ,$
+    output = !if instruction eq '. then !;value else ,$
 
     # todo terminate when code_pointer > source size
     '\0+concat output
@@ -461,6 +461,8 @@ It can automatically be minified to:
     s="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
     '\0+_((a=![((b=0:(((c=![((d=0:(a='>)!?d+1)(a='<)!?d-1)d)}e=(,0):(d{e)!@(!;((a='+)!?c+1)(a='-)!?c-1)c))!@(d+1)}e))!?0)1)*a='[)!?b+1+![!_((!,(f=![(b}g=0:((s)='[)!?g+1)(s='])!?g-1)g)))!!=(b+1)}g)!!?,!;h=0:h+,1),,$)((c!?1)0)*a='])!?!]!_((!,(f-1))!!=b{g)!!?,!;h),,$)b+1)}s))='.)!?!;c),$
 
+TODO regen minified given some new syntax changes.
+
 That's a brainfuck interpreter (without input, but it could be supported similarly) in about 281 characters using only a handful of built in operations in a purely functional language. The brainfuck code might be more readable though... This could be done better, it is only my first attempt, and I'm new to writing complex problems in Atlas too! Some downsides to my method are that I treat lists like arrays and do random access using head of a drop, this is slow and verbose. Concepts like zippered lists could greatly improve it.
 
 
@@ -468,24 +470,24 @@ That's a brainfuck interpreter (without input, but it could be supported similar
 
 Circular programming is a powerful technique, especially when your language has a nice syntax for vectorization. These techniques are often the simplest and best way to describe a sequence, but as I've shown you can take it too far. Moderation is key for real code. Still, going too far in play is enlightening, and hopefully you can have some fun playing with Atlas.
 
-Let's end with two examples where circular programming is an elegant solution. The first "real world" problem is the Josephus Problem. Where 40 prisoners decided to go around in a circle, every third prisoner shooting themselves, until only 1 is left. The [haskell solution](https://rosettacode.org/wiki/Josephus_problem#Haskell) is 39 lines long without circular programming and [16 with](https://debasishg.blogspot.com/2009/02/learning-haskell-solving-josephus.html).
+Let's end with two examples where circular programming is an elegant solution. The first "real world" problem is the Josephus Problem. Where 40 prisoners decide to go around in a circle, every third prisoner shooting themselves, until only 1 is left, which spot should line up at to survive? The [haskell solution](https://rosettacode.org/wiki/Josephus_problem#Haskell) is 39 lines long without circular programming and [16 with](https://debasishg.blogspot.com/2009/02/learning-haskell-solving-josephus.html).
 
 In Atlas the solution is simple:
 
     nats=1:nats+1
     prisoners=40 take nats
-    gun_holders = prisoners @ _ (nats % 3) !? !;gun_holders ) ,$
-    head concat (gun_holders !eq tail gun_holders) !? !; gun_holders ) ,$
+    gun_holders = prisoners @ _ !if nats % 3 then !;gun_holders else ,$
+    head concat !if gun_holders !eq tail gun_holders then !; gun_holders else ,$
     ──────────────────────────────────
     28
 
-The `concat ... !? !;gun_holders ) ,$` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line just selecting the first case it is the same person in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
+The `concat ... !? !;gun_holders ) ,$` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
 
 I guess it is no surprise that a problem involving a circle has a nice circular programming solution. But calculating primes using the Sieve of Eratosthenesis is our next example. Typically the sieve is done on a fixed size, but if you use circular programming you can stream it.
 
 TODO clean this up
 
-    _((1+v1=1:(v2=2:1+v2)*v1)%v2)!?,$)!;v2
+    _!if (1+v1=1:(v2=2:1+v2)*v1)%v2 then ,$ else !;v2
     ──────────────────────────────────
     2 3 5 7 11 13 17 19 23 29 31 ...
 
@@ -505,4 +507,4 @@ I'd like to do add some more advanced features / ops to give it lasting appeal, 
 
 BTW there was a 2d mode which I think was very interesting, but I removed it for now (check out the first commit if you are curious).
 
-Please raise an issue or email me with your thoughts. <name of this lang> at golfscript.com.
+Please raise an issue or email me with your thoughts. `<name of this lang> at golfscript.com`.

@@ -65,35 +65,35 @@ tests = <<'EOF'
 
 ## 3 arg ###########
 # A,B,B
-1?2)3 -> 1?2)3
-1?2);3 -> (,1)!?,2);3
-1?2);;3 -> (,(,1))!!?,,2);;3
-1?;2)3 -> (,1)!?;2),3
-1?;2);3 -> 1?;2);3
-1?;2);;3 -> (,1)!?,;2);;3
-1?;;2)3 -> (,(,1))!!?;;2),,3
-1?;;2);3 -> (,1)!?;;2),;3
-1?;;2);;3 -> 1?;;2);;3
+if 1 then 2 else 3 -> if 1 then 2 else 3
+if 1 then 2 else ;3 -> !if ,1 then ,2 else ;3
+if 1 then 2 else ;;3 -> !!if ,,1 then ,,2 else ;;3
+if 1 then ;2 else 3 -> !if ,1 then ;2 else ,3
+if 1 then ;2 else ;3 -> if 1 then ;2 else ;3
+if 1 then ;2 else ;;3 -> !if ,1 then ,;2 else ;;3
+if 1 then ;;2 else 3 -> !!if ,,1 then ;;2 else ,,3
+if 1 then ;;2 else ;3 -> !if ,1 then ;;2 else ,;3
+if 1 then ;;2 else ;;3 -> if 1 then ;;2 else ;;3
 
-(;1)?2)3 -> (;1)?2)3
-(;1)?2);3 -> (;1)!?,2);3
-(;1)?2);;3 -> (,(;1))!!?,,2);;3
-(;1)?;2)3 -> (;1)!?;2),3
-(;1)?;2);3 -> (;1)?;2);3
-(;1)?;2);;3 -> (;1)!?,;2);;3
-(;1)?;;2)3 -> (,(;1))!!?;;2),,3
-(;1)?;;2);3 -> (;1)!?;;2),;3
-(;1)?;;2);;3 -> (;1)?;;2);;3
+if ;1 then 2 else 3 -> if ;1 then 2 else 3
+if ;1 then 2 else ;3 -> !if ;1 then ,2 else ;3
+if ;1 then 2 else ;;3 -> !!if ,;1 then ,,2 else ;;3
+if ;1 then ;2 else 3 -> !if ;1 then ;2 else ,3
+if ;1 then ;2 else ;3 -> if ;1 then ;2 else ;3
+if ;1 then ;2 else ;;3 -> !if ;1 then ,;2 else ;;3
+if ;1 then ;;2 else 3 -> !!if ,;1 then ;;2 else ,,3
+if ;1 then ;;2 else ;3 -> !if ;1 then ;;2 else ,;3
+if ;1 then ;;2 else ;;3 -> if ;1 then ;;2 else ;;3
 
-(;(;1))?2)3 -> (;(;1))?2)3
-(;(;1))?2);3 -> (;(;1))!?,2);3
-(;(;1))?2);;3 -> (;(;1))!!?,,2);;3
-(;(;1))?;2)3 -> (;(;1))!?;2),3
-(;(;1))?;2);3 -> (;(;1))?;2);3
-(;(;1))?;2);;3 -> (;(;1))!?,;2);;3
-(;(;1))?;;2)3 -> (;(;1))!!?;;2),,3
-(;(;1))?;;2);3 -> (;(;1))!?;;2),;3
-(;(;1))?;;2);;3 -> (;(;1))?;;2);;3
+if ;;1 then 2 else 3 -> if ;;1 then 2 else 3
+if ;;1 then 2 else ;3 -> !if ;;1 then ,2 else ;3
+if ;;1 then 2 else ;;3 -> !!if ;;1 then ,,2 else ;;3
+if ;;1 then ;2 else 3 -> !if ;;1 then ;2 else ,3
+if ;;1 then ;2 else ;3 -> if ;;1 then ;2 else ;3
+if ;;1 then ;2 else ;;3 -> !if ;;1 then ,;2 else ;;3
+if ;;1 then ;;2 else 3 -> !!if ;;1 then ;;2 else ,,3
+if ;;1 then ;;2 else ;3 -> !if ;;1 then ;;2 else ,;3
+if ;;1 then ;;2 else ;;3 -> if ;;1 then ;;2 else ;;3
 
 ### Nil tests #####
 
@@ -153,17 +153,17 @@ ${$ -> AtlasTypeError
 
 ## 3 arg ###########
 # A,B,B
-$?2)3 -> $?2)3
-$?2);3 -> $!?,2);3
-(;$)?2)3 -> (;$)?2)3
-$?;2);3 -> $?;2);3
-1?$)3 -> (,1)!?$),3
-1?$);3 -> 1?$);3
-1?;$)3 -> (,(,1))!!?;$),,3
-1?;$);3 -> (,1)!?;$),;3
-1?$)$ -> 1?$)$
-1?$);$ -> 1?$);$
-1?!$);$ -> 1?!$);$
+if $ then 2 else 3 -> if $ then 2 else 3
+if $ then 2 else ;3 -> !if $ then ,2 else ;3
+if ;$ then 2 else 3 -> if ;$ then 2 else 3
+if $ then ;2 else ;3 -> if $ then ;2 else ;3
+if 1 then $ else 3 -> !if ,1 then $ else ,3
+if 1 then $ else ;3 -> if 1 then $ else ;3
+if 1 then ;$ else 3 -> !!if ,,1 then ;$ else ,,3
+if 1 then ;$ else ;3 -> !if ,1 then ;$ else ,;3
+if 1 then $ else $ -> if 1 then $ else $
+if 1 then $ else ;$ -> if 1 then $ else ;$
+if 1 then !$ else ;$ -> if 1 then !$ else ;$
 
 ### Excessive zip tests
 ## not excessive
@@ -171,7 +171,7 @@ $?;2);3 -> $?;2);3
 !$ -> !$
 !`"1" -> !`"1"
 (;1)!eq ;1 -> (;1)!eq ;1
-(;1)!?;2);3 -> (;1)!?;2);3
+!if ;1 then ;2 else ;3 -> !if ;1 then ;2 else ;3
 
 ## excessive
 !3 -> ParseError
@@ -185,8 +185,8 @@ $?;2);3 -> $?;2);3
 1!eq ;1 -> AtlasTypeError
 1!eq ;1 -> AtlasTypeError
 ;1 !!eq ;1 -> AtlasTypeError
-1 !? 2 ) 3 -> AtlasTypeError
-(;1) !? 2 ) ;3 -> AtlasTypeError
+!if 1 then 2 else 3 -> AtlasTypeError
+!if ;1 then 2 else ;3 -> AtlasTypeError
 
 EOF
 

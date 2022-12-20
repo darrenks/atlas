@@ -187,18 +187,17 @@ OpsList = [
     impl: -> a,b { a.value }
   ), create_op(
     name: "if",
-    sym: "?",
-    # Example: 1?"yes")"no" -> "yes"
+    # Example: if 1 then "yes" else "no" -> "yes"
     type: { [A,B,B] => B },
     poly_impl: -> ta,tb,tc {
       if ta == Int
-        # Test: ((~1):;2)!?1)0 -> [0,1]
+        # Test: !if (~1):;2 then 1 else 0 -> [0,1]
         lambda{|a,b,c| a.value > 0 ? b.value : c.value }
       elsif ta == Char
-        # Test: " d"!?1)0 -> [0,1]
+        # Test: !if " d" then 1 else 0 -> [0,1]
         lambda{|a,b,c| a.value.chr[/\S/] ? b.value : c.value }
       else # List
-        # Test: ("":;"a")!?1)0 -> [0,1]
+        # Test: !if "":;"a" then 1 else 0 -> [0,1]
         lambda{|a,b,c| a.value != [] ? b.value : c.value }
       end
     }

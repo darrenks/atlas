@@ -2,12 +2,13 @@
 allow cons to be specified by 2 atoms in a row
    note that it should be able to handle stuff "asd" 'a because really it promotes as needed and appends
    !atom should do a zipped cons since atoms cannot zip (!space should always zip cons)
-more intuitive ternary operator
-   second separator of ) is bad
-   also needing parens in condition is bad
 the code "had 1" (misspelling of head, gives an error unintuitive message)
-   need sym version of eq
+   this will not be a problem once two atoms = cons
+need sym version of eq
 allow indented multiline strings with no delimiters
+allow newlines followed by indentation in complicated expressions
+   this is even lower precedence than a space
+   make sure else/then don't need to be indented
 
 ==== runtime improvements ====
 remove need for pad, better greatest fixed point calculation
@@ -19,11 +20,15 @@ port to nim
    compile to js too
       have mouse over show type or even values
 
-
 ==== add many ops ====
 overload char/int
 overload bin/unary op
 need ops like take_while
+filter would be handy
+logical and/or not
+comparisons?
+negation
+min/max
 add !+ /etc to fold or scan on + and other scalar ops (maybe !!+ for scanl)
 more read/parsing options on strings
 
@@ -36,10 +41,9 @@ add ops for looking forward and back, a=a+1 -> [+], (a=1+2)+a -> {+}1+2
 
 ==== paren reduction ====
 using white space presense to lower precedence
-allow newlines followed by indentation in complicated expressions
-   this is even lower precedence than a space
+flip, an op modifier
 
 ==== type improvements ====
 allow swapping and promoting if arg types don't match
-if new what the return type needed to be could do thinks like make max lazy (like logical or) if number used as bool (also fyi, should truthy be >0 or non zero?)
+if knew what the return type needed to be could do thinks like make max lazy (like logical or) if number used as bool (also fyi, should truthy be >0 or non zero?)
 should zipping default to least axis instead of greatest? see what is used more - are there implications for inference or other things that would be bad though?

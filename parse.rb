@@ -34,7 +34,7 @@ def parse_top_level(tokens,context)
   lines.each{|line_tokens|
     next if line_tokens.empty? || line_tokens[0].str == "\n"
     is_stmt = line_tokens.size > 1 && line_tokens[1].str == "="
-    expr = get_expr(line_tokens,context,0)
+    expr = get_expr(line_tokens,context,:EOF)
     if is_stmt
       last_stmt = [expr]
     else
@@ -44,47 +44,53 @@ def parse_top_level(tokens,context)
   exprs.empty? ? last_stmt : exprs
 end
 
-def get_expr(tokens,context,depth)
+def get_expr(tokens,context,delimiter)
   raise ParseError.new "unexpected EOF",nil if tokens.empty?
   t = tokens.shift
   raise ParseError.new "unexpected end of line",t if t.str == "\n"
   raise ParseError.new "unexpected )",t if t.str == ")" # later will be empty parens which means empty list
+  raise ParseError.new "unexpected then",t if t.str == "then"
+  raise ParseError.new "unexpected else",t if t.str == "else"
   op = get_op(t)
   lhs = if t.str == "("
-    get_expr(tokens,context,depth+1)
+    get_expr(tokens,context,')')
   elsif op.name == "var"
     Var.new(t)
   elsif op.narg == 0
     AST.new(op, [], t)
   elsif op.narg == 1
-    return AST.new(op, [get_expr(tokens,context,depth)], t)
-  elsif op.narg > 1
+    return AST.new(op, [get_expr(tokens,context,delimiter)], t)
+  elsif op.name == "if"
+    c=get_expr(tokens,context,"then")
+    a=get_expr(tokens,context,"else")
+    b=get_expr(tokens,context,delimiter)
+    return AST.new(op, [c,a,b], t)
+  else # op.narg > 1
     raise ParseError.new "found non unary op with no left hand side", t
   end
 
   lhs_t = t
   if tokens.empty? || tokens[0].str =="\n"
-    raise ParseError.new "unexpected end of expression, expecting ')'",t if depth > 0
+    raise ParseError.new "unexpected end of expression, expecting '#{delimiter}'",t if delimiter != :EOF
     return lhs
   end
   t = tokens.shift
-  if t.str == ")"
-    raise ParseError.new "unmatched )", t if depth <= 0
+  if [')','then','else'].include? t.str
+    raise ParseError.new "unmatched #{t.str}", t if delimiter == :EOF
+    raise ParseError.new "expecting #{delimiter}" if t.str != delimiter
     return lhs
   end
 
   op = get_op(t)
   if t.str == "="
     warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
-    context[lhs_t.str] = get_expr(tokens,context,depth)
+    context[lhs_t.str] = get_expr(tokens,context,delimiter)
   elsif op.narg == 0
     raise ParseError.new("2 adjacent atoms is illegal for now (will mean cons later)", t)
   elsif op.narg == 1
     raise ParseError.new "found unary op used as a binary op", t
   elsif op.narg == 2 # binop
-    AST.new(op, [lhs, get_expr(tokens,context,depth)], t)
-  elsif op.narg == 3
-    AST.new(op, [lhs, get_expr(tokens,context,depth+1), get_expr(tokens,context,depth)], t)
+    AST.new(op, [lhs, get_expr(tokens,context,delimiter)], t)
   else
     impossible2
   end
