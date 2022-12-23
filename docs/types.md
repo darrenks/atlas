@@ -21,6 +21,6 @@ You may also use any unicode character the Atlas files are assumed to be UTF-8 e
 
 Integers are truthy if >0, chars if non whitespace, lists if non empty. This is only used by the if/else operator.
 
-Atlas is statically typed. Inference works in a top down fashion. You shouldn't have to think about it or even notice it since you never need to specify type. The only thing it prevents is heterogeneous lists, but there are major advantages to static type checking and homogeneous lists when it comes to implicit vectorization.
+Atlas is statically typed. Inference works in a top down fashion. You shouldn't have to think about it or even notice it since you never need to specify type. The only thing it prevents is heterogeneous lists, but there are major advantages to homogeneous lists when it comes to implicit vectorization. Homogeneous lists could be done dynamically, but static typing is useful for circular programs it allows for selecting of op behavior and vectorization before evaluating the args.
 
 Doing type inference on circular programs that can have implicit vectorization was a very tricky problem to solve, it works by treating the types as a lattice. An implication of this is that ops shouldn't be able to have a smaller rank if their arguments ranks increase. An equality op that returns 1 or 0 instead of the arg or empty violates this, hence one reason it was removed, but the current way would probably be more useful anyway.

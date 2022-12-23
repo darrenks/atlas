@@ -57,7 +57,7 @@ But what is the point of making `a` a function, it doesn't use its argument? Fun
 
 Laziness will not save the day from all circular programs, only so long as we do not ask for a value in a circle before it has been computed. If we had said `a = a+1` we would hit an infinite loop in Haskell when we ask for the value of `a`. What is `a`? It is `a+1`, and what is `a`? It is `a+1`, etc. Note that this would actually give a type error in Atlas but if you got around that it would raise an infinite loop error since it would also detect the circular dependency at runtime. Circular dependencies of values can always be detected at runtime but not all infinite loops can be since there are other ways to create them (that would break the halting problem).
 
-Before we go deeper, I'd like to mentioned that circular programming seems to refer to two different types of things that are related. We will be exclusively talking about the kind you can do by zipping, but there is another type that involves using tuple return values seemingly before they are computed. It is worth knowing about, but not applicable in Atlas.
+Before we go deeper, I'd like to mention that circular programming seems to refer to two different types of things that are related. We will be exclusively talking about the kind you can do by zipping, but there is another type that involves using tuple return values seemingly before they are computed. It is worth knowing about, but not applicable in Atlas.
 [Here is a tutorial](http://www.cs.umd.edu/class/spring2019/cmsc388F/assignments/circular-programming.html) on that.
 
 ### Scanl
@@ -102,7 +102,7 @@ There's also an op to make this more concise:
     ──────────────────────────────────
     1 1 1 1 ...
 
-So we could definite the natural numbers as:
+So we could define the natural numbers as:
 
     ones=1:ones
     nats=ones+0:nats
@@ -461,6 +461,8 @@ It can automatically be minified to:
     s="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
     '\0+_((a=![((b=0:(((c=![((d=0:(a='>)!?d+1)(a='<)!?d-1)d)}e=(,0):(d{e)!@(!;((a='+)!?c+1)(a='-)!?c-1)c))!@(d+1)}e))!?0)1)*a='[)!?b+1+![!_((!,(f=![(b}g=0:((s)='[)!?g+1)(s='])!?g-1)g)))!!=(b+1)}g)!!?,!;h=0:h+,1),,$)((c!?1)0)*a='])!?!]!_((!,(f-1))!!=b{g)!!?,!;h),,$)b+1)}s))='.)!?!;c),$
 
+Note that you could use `I` for input rather than hard coding the input as `s=...`.
+
 TODO regen minified given some new syntax changes.
 
 That's a brainfuck interpreter (without input, but it could be supported similarly) in about 281 characters using only a handful of built in operations in a purely functional language. The brainfuck code might be more readable though... This could be done better, it is only my first attempt, and I'm new to writing complex problems in Atlas too! Some downsides to my method are that I treat lists like arrays and do random access using head of a drop, this is slow and verbose. Concepts like zippered lists could greatly improve it.
@@ -470,18 +472,18 @@ That's a brainfuck interpreter (without input, but it could be supported similar
 
 Circular programming is a powerful technique, especially when your language has a nice syntax for vectorization. These techniques are often the simplest and best way to describe a sequence, but as I've shown you can take it too far. Moderation is key for real code. Still, going too far in play is enlightening, and hopefully you can have some fun playing with Atlas.
 
-Let's end with two examples where circular programming is an elegant solution. The first "real world" problem is the Josephus Problem. Where 40 prisoners decide to go around in a circle, every third prisoner shooting themselves, until only 1 is left, which spot should line up at to survive? The [haskell solution](https://rosettacode.org/wiki/Josephus_problem#Haskell) is 39 lines long without circular programming and [16 with](https://debasishg.blogspot.com/2009/02/learning-haskell-solving-josephus.html).
+Let's end with two examples where circular programming is an elegant solution. The first "real world" problem is the Josephus Problem. Where 40 prisoners decide to go around in a circle, every third prisoner shooting themselves, until only 1 is left, which spot should line up at to survive? The [haskell solution](https://rosettacode.org/wiki/Josephus_problem#Haskell) is 39 lines long without circular programming and [16 with](https://debasishg.blogspot.com/2009/02/learning-haskell-solving-josephus.html). There is a 1-line without circular programming but it is non obvious. Implementing it intuitively is simpler with circular programming.
 
 In Atlas the solution is simple:
 
     nats=1:nats+1
     prisoners=40 take nats
-    gun_holders = prisoners @ _ !if nats % 3 then !;gun_holders else ,$
+    gun_holders = prisoners @ concat !if nats % 3 then !;gun_holders else ,$
     head concat !if gun_holders !eq tail gun_holders then !; gun_holders else ,$
     ──────────────────────────────────
     28
 
-The `concat ... !? !;gun_holders ) ,$` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
+The `concat !if ... !;gun_holders else ,$` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
 
 I guess it is no surprise that a problem involving a circle has a nice circular programming solution. But calculating primes using the Sieve of Eratosthenesis is our next example. Typically the sieve is done on a fixed size, but if you use circular programming you can stream it.
 

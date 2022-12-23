@@ -1,3 +1,8 @@
+===
+programs that infinite loop statically
+a=a - should be nil
+infinite type - would be nice to give proper error
+
 ==== syntax ====
 allow cons to be specified by 2 atoms in a row
    note that it should be able to handle stuff "asd" 'a because really it promotes as needed and appends

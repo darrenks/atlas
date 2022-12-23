@@ -12,7 +12,7 @@ TODO automatically generate this as it is likely to become out of date.
 |`(` | init| `[a] -> [a]`|
 |`{` | take| `Int [a] -> [a]`|
 |`}` | drop| `Int [a] -> [a]`|
-|`?` | if| `a b b -> b`|
+|    | if| `a b b -> b`|
 |`,` | rep| `a -> [a]`|
 |`;` | single| `a -> [a]`|
 |`_` | concat| `[[a]] -> [a]`|
