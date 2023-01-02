@@ -173,7 +173,7 @@ end
 
 def rank_deficits(arg_types, specs, vars, zip_level)
   arg_types.zip(specs).map{|arg,spec|
-    if arg.is_nil #&& arg.dim > zip_level
+    if arg.is_nil && arg.dim > zip_level
       0
     else
       spec_dim = case spec

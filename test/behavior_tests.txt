@@ -233,3 +233,5 @@ _!if (1+v1=1:(v2=2:1+v2)*v1)%v2 then ,$ else !;v2 -> [2,3,5,7,11...
 # this would attempt to access invalid elements if said check was not in place
 (`(v1=if (;0)!:v2=v1+;;3 then 0{;;4 else 0{;;5))@`v2 -> InfiniteLoopError
 
+# Test auto replicating of nil
+_!if "______MA_" eq '_ then !;"CHISTMAS" else $ -> "CHISTM"
