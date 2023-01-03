@@ -16,6 +16,9 @@ class Type
   def max_pos_dim
     is_nil ? Inf : dim
   end
+  def min_concrete_dim
+    is_nil ? dim-1 : dim
+  end
   def string_dim # dim but string = 0
     dim + (is_char ? -1 : 0)
   end

@@ -61,8 +61,9 @@ def possible_types(node)
 
   arg_types = node.args.map(&:type)
 #STDERR.puts arg_types.inspect
-  min_implicit_zip_level = implicit_zip_level(arg_types, fn_type.specs)
-  zip_level = node.explicit_zip_level + min_implicit_zip_level + node.op.min_zip_level
+  #p node.token.str if node.token
+  max_implicit_zip_level = node.op.min_zip ? 0 : implicit_zip_level(arg_types, fn_type.specs)
+  zip_level = max_implicit_zip_level - node.explicit_zip_level
 #STDERR.puts "zip_level = %d" % zip_level
 
   arg_types.map!{|t| t-zip_level }
@@ -118,7 +119,8 @@ end
 # constraints:
 #   0 <= rep levels <= z
 #   type vars satisfiable
-def implicit_zip_level(arg_types, specs)
+def implicit_zip_level_old(arg_types, specs, min_zip)
+  return 0 if min_zip
   vars = {}
   min_z = 0
   arg_types.zip(specs) { |arg,spec|
@@ -137,9 +139,75 @@ def implicit_zip_level(arg_types, specs)
   vars.each{|_,uses|
     min_use = uses.map{|t| t.max_pos_dim }.min
     max_use = [uses.map{|t| t.dim }.max, 0].max
-    min_z = [min_z, max_use-min_use].max
+    min_z = [min_z, max_use-(min_zip ? min_use : 0)].max
   }
   return min_z
+end
+
+#################
+# Solve for the maximum possible zip level that satisfies all
+# type constraints and minimizes rep levels
+def implicit_zip_level_2(arg_types, specs)
+  vars = {}
+  max_z = 0
+  limit = Inf
+  arg_types.zip(specs) { |arg,spec|
+    case spec
+    when VarTypeSpec
+      if arg.is_nil
+        limit = [arg.dim - spec.extra_dims - 1, limit].min
+      end
+      (vars[spec.var_name]||=[]) << (arg - spec.extra_dims)
+      #max_z = [arg.dim - spec.extra_dims, max_z].max
+    when ExactTypeSpec
+      if arg.is_nil
+        error # ?
+        limit = [arg.dim - spec.req_dim, limit].min
+      end
+      max_z = [arg.dim - spec.req_dim, max_z].max
+    else
+      error
+    end
+  }
+
+  x=vars.map{|_,uses|
+    min_use = uses.map{|t| t.max_pos_dim }.min
+    max_use = [uses.map{|t| t.dim }.max, 0].max
+    max_z = [max_z, max_use-min_use ].max
+    uses.min || Inf
+  }.min || 0
+  p [max_z,x,limit]
+  return [[max_z,x].max,[0,limit].max].min
+end
+
+def implicit_zip_level(arg_types, specs)
+  z = 0
+  vars = {}
+  limit = Inf
+  bonus = []
+  arg_types.zip(specs) { |arg,spec|
+    case spec
+    when VarTypeSpec
+      if arg.is_nil
+        limit = [arg.dim - spec.extra_dims - 1, limit].min
+      end
+      (vars[spec.var_name]||=[]) << (arg - spec.extra_dims)
+    when ExactTypeSpec
+      z = [arg.dim - spec.req_dim, z].max
+      bonus << arg.dim - spec.req_dim
+    end
+  }
+  vars.each{|_,uses|
+    min_use = uses.map{|t| t.max_pos_dim }.min
+    max_use = [uses.map{|t| t.dim }.max, 0].max
+    max_use2 = [uses.map{|t| t.min_concrete_dim }.max, 0].max
+
+    # not really needed, but might be with limited
+    z = [z, max_use-min_use].max
+
+    bonus << max_use2
+  }
+  return [z, [bonus.min || 0, limit].min].max
 end
 
 def solve_type_vars(arg_types, specs)

@@ -13,16 +13,21 @@ begin
 
   newline = AST.new(create_str('"\n"'),[])
 
-  root = AST.new(Ops['_'],[roots.reverse.inject(AST.new(Ops['$'],[])){|after,line|
-    line = AST.new(Ops['tostring'],[line])
-    AST.new(Ops[':'],[line,AST.new(Ops[':'],[newline,after])])
-  }])
+#   root = AST.new(Ops['_'],[roots.reverse.inject(AST.new(Ops['$'],[])){|after,line|
+#     line = AST.new(Ops['tostring'],[line])
+#     AST.new(Ops[':'],[line,AST.new(Ops[':'],[newline,after])])
+#   }])
+
+  root = AST.new(Ops['tostring'],roots)
+
 #
 #   puts to_infix(root)
 
   infer(root)
-  #STDERR.puts to_infix(root)
-  #STDERR.puts root.type.inspect
+
+#   STDERR.puts to_infix(root)
+#   STDERR.puts roots[0].type.inspect
+
   make_promises(root)
   run(root)
 

@@ -114,7 +114,7 @@ So we could define the natural numbers as:
 
 How can we transpose a list defined as so?
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
+    a=(1:2:3:4:$)!:(5:6:7:8:$):$
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8

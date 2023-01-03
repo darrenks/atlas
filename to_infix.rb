@@ -42,7 +42,7 @@ def r(node, is_lhs)
   when 0
     op
   when 1
-    op + r(node.args[0], is_lhs)
+    op + r(node.args[0], false)
   when 2
     r(node.args[0], true) + op + r(node.args[1], false)
   when 3 # only if statement is 3
