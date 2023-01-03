@@ -12,13 +12,15 @@ begin
   roots = parse_infix(tokens)
 
   newline = AST.new(create_str('"\n"'),[])
+  no_vec_cons = Ops[':'].dup
+  no_vec_cons.min_zip = true
 
-#   root = AST.new(Ops['_'],[roots.reverse.inject(AST.new(Ops['$'],[])){|after,line|
-#     line = AST.new(Ops['tostring'],[line])
-#     AST.new(Ops[':'],[line,AST.new(Ops[':'],[newline,after])])
-#   }])
+  root = AST.new(Ops['_'],[roots.reverse.inject(AST.new(Ops['$'],[])){|after,line|
+    line = AST.new(Ops['tostring'],[line])
+    AST.new(no_vec_cons,[line,AST.new(no_vec_cons,[newline,after])])
+  }])
 
-  root = AST.new(Ops['tostring'],roots)
+#  root = AST.new(Ops['tostring'],roots)
 
 #
 #   puts to_infix(root)

@@ -58,15 +58,15 @@ tests = <<'EOF'
 # Int,[A] (take)
 1{1 -> AtlasTypeError
 1{;1 -> 1{;1
-1{!;;1 -> 1{;;1
+1{!;;1 -> (,1)!{;;1
 (;1){1 -> AtlasTypeError
 (;1){;1 -> (;1)!{,;1
 (;1){!;;1 -> (;1)!{;;1
 
 # A B (const)
 1&2 -> 1&2
-(;1)&2 -> (;1)&2
-1&;2 -> 1&;2
+(;1)&2 -> (;1)!&,2
+1&;2 -> (,1)!&;2
 
 # ## 3 arg ###########
 # # A,B,B
@@ -147,7 +147,7 @@ $+;1 -> AtlasTypeError
 # todo, some should probably be no nil error
 #1{$ -> AtlasTypeError
 1{;$ -> 1{;$
-1{!;;$ -> 1{;;$
+1{!;;$ -> (,1)!{;;$
 #(;1){$ -> AtlasTypeError
 ## should be error
 #(;1){;$ -> (;1)!{;$

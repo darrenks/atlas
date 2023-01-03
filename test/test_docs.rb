@@ -1,13 +1,12 @@
 require 'open3'
 runs = 0
-$fail = false
 def failit(filename,line,prog,expected,output)
   puts "FAIL example: "
   puts prog
   puts "Expecting:", expected
   puts "Found:", output
   puts "from: "+filename+" line: "+line.to_s
-  $fail = true
+  exit(1)
 end
 
 (Dir['docs/*.md']<<"README.md").each{|doc|
@@ -45,4 +44,4 @@ end
   raise "probably have misformatted example" if tests != file.split(/───+/).size-1
 }
 
-puts "PASS %d doc tests" % runs if !$fail
+puts "PASS %d doc tests" % runs

@@ -1,12 +1,11 @@
 require 'open3'
 runs = 0
-$fail = false
 def failit(filename,test, reason)
   puts "FAIL example: "
   puts test
   puts reason
   puts "from: "+filename
-  $fail = true
+  exit(1)
 end
 
 tests = Dir["test/examples/*.test"]
@@ -47,4 +46,4 @@ tests.each{|test_filename|
     runs += 1
   end
 }
-puts "PASS %d example runs" % runs if !$fail
+puts "PASS %d example runs" % runs
