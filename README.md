@@ -16,6 +16,9 @@ You can run code by downloading the Atlas source and saving your Atlas code to a
 
 I have tested with ruby 2.7 and 3.1.
 
+
+FYI current doc is out of date.
+
 ## Circular Programming Intro
 
 Let's look at the first example I ever saw of circular programming. It was the Haskell program:
@@ -509,4 +512,4 @@ I'd like to do add some more advanced features / ops to give it lasting appeal, 
 
 BTW there was a 2d mode which I think was very interesting, but I removed it for now (check out the first commit if you are curious).
 
-Please raise an issue or email me with your thoughts. `<name of this lang> at golfscript.com`.
+Please raise an issue or email me with your thoughts. `<name of this lang> at golfscript.com`. There is also a google group for issues relating to the design of the language: [atlas-lang](https://groups.google.com/g/atlas-lang).

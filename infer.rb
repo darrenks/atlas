@@ -173,7 +173,7 @@ end
 #################
 # Solve for the maximum possible zip level that satisfies all
 # type constraints and minimizes rep levels
-def implicit_zip_level_max(arg_types, specs)
+def implicit_zip_level_middleground(arg_types, specs)
   z = 0
   vars = {}
   limit = Inf
