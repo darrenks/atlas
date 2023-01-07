@@ -164,15 +164,15 @@ _"hi":"there":$ -> "hithere"
 ("a":;"b")!@"1":;"2" -> ["a1","b2"]
 'a@"b" -> AtlasTypeError
 
-1eq 2 -> 0
-1eq 1 -> 1
-'aeq 'a -> 1
+1eq 2 -> []
+1eq 1 -> [1]
+'aeq 'a -> "a"
 'deq 100 -> AtlasTypeError
-"abc"eq "abc" -> 1
-"abc"eq "abd" -> 0
-"abc"eq 'a -> [1,0,0]
+"abc"=="abc" -> ["abc"]
+"abc"eq "abd" -> []
+"abc"eq 'a -> ["a","",""]
 "abc"!eq 'a -> AtlasTypeError
-"abc"!eq "abd" -> [1,1,0]
+"abc"!eq "abd" -> ["a","b",""]
 
 init "asdf" -> "asd"
 !init "abc":"123":$ -> ["ab","12"]

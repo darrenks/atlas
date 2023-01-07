@@ -426,27 +426,26 @@ TODO more complex example but more readable than my bf interpreter
 Just in case there was any doubt that the language is Turing Complete, I'll use these principles to implement a brianfuck interpreter:
 
     source="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
-    bracket_depth = 0 : !if source eq '[ then bracket_depth+1 else !if source eq '] then bracket_depth-1 else bracket_depth
-    truthy = !if value then 1 else 0
+    bracket_depth = 0 : !if source == '[ then bracket_depth+1 else !if source == '] then bracket_depth-1 else bracket_depth
     not_truthy = !if value then 0 else 1
     wholes=0:wholes+,1
-    code_pointer = 0 : !if not_truthy * instruction eq '[ then find_rbracket else !if truthy * instruction eq '] then find_lbracket else code_pointer+1
+    code_pointer = 0 : !if not_truthy * !len instruction == '[ then find_rbracket else !if value !& instruction == '] then find_lbracket else code_pointer+1
     instruction = !head code_pointer drop source
-    pointer = 0 : !if instruction eq '> then pointer+1 else !if instruction eq '< then pointer-1 else pointer
+    pointer = 0 : !if instruction == '> then pointer+1 else !if instruction == '< then pointer-1 else pointer
     state = (,0) : (pointer take state) !@ (!;new_value) !@ (pointer+1) drop state
 
     value = !head pointer drop state
-    new_value = !if instruction eq '+ then value+1 else !if instruction eq '- then value-1 else value
+    new_value = !if instruction == '+ then value+1 else !if instruction == '- then value-1 else value
 
     current_bracket_depth = !head code_pointer drop bracket_depth
 
     # first point where bracket_depth = bracket_depth again
-    find_rbracket = code_pointer + 1 + !head !concat !!if (!,current_bracket_depth) !!eq (code_pointer+1) drop bracket_depth then ,!;wholes else ,,$
+    find_rbracket = code_pointer + 1 + !head !concat !!if (!,current_bracket_depth) !!== (code_pointer+1) drop bracket_depth then ,!;wholes else ,,$
 
     # last point where bracket_depth = bracket_depth again
-    find_lbracket = !last !concat !!if (!,current_bracket_depth-1) !!eq code_pointer take bracket_depth then ,!;wholes else ,,$
+    find_lbracket = !last !concat !!if (!,current_bracket_depth-1) !!== code_pointer take bracket_depth then ,!;wholes else ,,$
 
-    output = !if instruction eq '. then !;value else ,$
+    output = !if instruction == '. then !;value else ,$
 
     # todo terminate when code_pointer > source size
     '\0+concat output
@@ -454,7 +453,7 @@ Just in case there was any doubt that the language is Turing Complete, I'll use 
     ──────────────────────────────────
     Hello World!
 
-    7:15 (!head) head on empty list (DynamicError)
+    6:15 (!head) head on empty list (DynamicError)
 
 It can automatically be minified to:
 

@@ -6,7 +6,7 @@ NumRegex = /0|[0-9]+/m
 CharRegex = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRegex = /"(\\.|[^"])*"?/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}/m
-IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|.)/m
+IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|==|.)/m
 CommentRegex = /\#[^\n]*/m
 
 def lex(code) # returns a list of tokens

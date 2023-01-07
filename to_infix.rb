@@ -26,13 +26,14 @@ def to_infix(root)
   ret
 end
 
-Convert = '( ) ='.split
+Convert = '( )'.split
 
 def r(node, is_lhs)
   return node.var_name if node.var_name
   node.var_name = "v#{$vars+=1}" if node.references > 1 && !node.var_name
 
   op_name = (node.op.sym||node.op.name).to_s
+  op_name = "if" if node.op.name == "if"
   op_name = Convert.include?(op_name) ? ""+node.op.name+" " : op_name
 
   op = "!" * (node.zip_level || node.explicit_zip_level) + op_name

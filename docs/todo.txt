@@ -15,6 +15,9 @@ allow newlines followed by indentation in complicated expressions
    this is even lower precedence than a space
    make sure else/then don't need to be indented
 
+brackets to increase zip level, op to not be replicated inside, optimization to not replicate constants
+   every brackets must then have a use of that special op so make it implicit to last list atom if missing, similarly if no brackets are present but that special op is, the whole program should be bracketed
+
 ==== runtime improvements ====
 remove need for pad, better greatest fixed point calculation
 

@@ -144,6 +144,11 @@ def equal(a,b,t)
   end
 end
 
+def len(a)
+  return 0 if a==[]
+  return 1+len(a[1].value)
+end
+
 # value -> Promise -> value
 def append(v,r)
   v==[] ? r.value : [v[0],Promise.new{append(v[1].value, r)}]

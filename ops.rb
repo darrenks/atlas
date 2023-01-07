@@ -160,12 +160,22 @@ OpsList = [
     impl: -> a { repeat(a) }
   ), create_op(
     name: "eq",
-    # Example: 3eq 3 -> 1
-    # Test: 3eq 2 -> 0
-    sym: "=",
+    # Example: 3==3 -> [3]
+    # Test: 3==2 -> []
+    sym: "==",
+    type: { [A,A] => [A] },
+    poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? [a,Null] : [] } }
+  ), create_op(
+    name: "old",
+    # Example: 3==3 -> [3]
+    # Test: 3==2 -> []
     type: { [A,A] => Int },
-    # todo return list of element if true (maintains lattice property of returns
-    poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1 : 0 } }
+    poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1:0 } }
+  ), create_op(
+    name: "len", #symbol tbd
+    # Example: len "asdf" -> 4
+    type: { [A] => Int },
+    impl: -> a { len(a.value) }
   ), create_op(
     name: "nil",
     # Example: $ -> []

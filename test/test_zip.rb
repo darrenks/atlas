@@ -30,15 +30,15 @@ tests = <<'EOF'
 
 ## 2 arg #########
 # A,A (eq)
-1eq 1 -> 1eq 1
-1eq ;1 -> (,1)!eq ;1
-1eq ;;1 -> (,,1)!!eq ;;1
-(;1)eq 1 -> (;1)!eq ,1
-(;1)eq ;1 -> (;1)eq ;1
-(;1)eq ;;1 -> (,;1)!eq ;;1
-(;;1)eq 1 -> (;;1)!!eq ,,1
-(;;1)eq ;1 -> (;;1)!eq ,;1
-(;;1)eq ;;1 -> (;;1)eq ;;1
+1==1 -> 1==1
+1==;1 -> (,1)!==;1
+1==;;1 -> (,,1)!!==;;1
+(;1)==1 -> (;1)!==,1
+(;1)==;1 -> (;1)==;1
+(;1)==;;1 -> (,;1)!==;;1
+(;;1)==1 -> (;;1)!!==,,1
+(;;1)==;1 -> (;;1)!==,;1
+(;;1)==;;1 -> (;;1)==;;1
 
 # A,[A] (cons)
 1:1 -> AtlasTypeError
@@ -118,15 +118,15 @@ _;;$ -> _;;$
 
 ## 2 arg #########
 # A,A (eq)
-$eq 1 -> $!eq ,1
-$eq ;1 -> $eq ;1
-$eq ;;1 -> $eq ;;1
-(;$)eq 1 -> (;$)!!eq ,,1
-(;$)eq ;1 -> (;$)!eq ,;1
-(;$)eq ;;1 -> (;$)eq ;;1
-(;;$)eq 1 -> (;;$)!!!eq ,,,1
-(;;$)eq ;1 -> (;;$)!!eq ,,;1
-(;;$)eq ;;1 -> (;;$)!eq ,;;1
+$==1 -> $!==,1
+$==;1 -> $==;1
+$==;;1 -> $==;;1
+(;$)==1 -> (;$)!!==,,1
+(;$)==;1 -> (;$)!==,;1
+(;$)==;;1 -> (;$)==;;1
+(;;$)==1 -> (;;$)!!!==,,,1
+(;;$)==;1 -> (;;$)!!==,,;1
+(;;$)==;;1 -> (;;$)!==,;;1
 
 
 # A,[A] (cons)
@@ -170,7 +170,7 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 # this actually could be useful
 !$ -> !$
 !`"1" -> !`"1"
-(;1)!eq ;1 -> (;1)!eq ;1
+(;1)!==;1 -> (;1)!==;1
 !if ;1 then ;2 else ;3 -> !if ;1 then ;2 else ;3
 
 ## excessive
@@ -181,10 +181,10 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 !["a" -> AtlasTypeError
 1!+2 -> AtlasTypeError
 1!{;1 -> AtlasTypeError
-1!eq 1 -> AtlasTypeError
-1!eq ;1 -> AtlasTypeError
-1!eq ;1 -> AtlasTypeError
-;1 !!eq ;1 -> AtlasTypeError
+1!==1 -> AtlasTypeError
+1!==;1 -> AtlasTypeError
+1!==;1 -> AtlasTypeError
+;1 !!==;1 -> AtlasTypeError
 !if 1 then 2 else 3 -> AtlasTypeError
 !if ;1 then 2 else ;3 -> AtlasTypeError
 
