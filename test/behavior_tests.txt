@@ -5,11 +5,11 @@
 "" -> "" : [Char]
 "hi" -> "hi"
 "#" -> "#"
-;"\n\\" -> ["\n","\\"]
-;"\x02\x20\xaa" -> ["\x02"," ","\xaa"]
+!;"\n\\" -> ["\n","\\"]
+!;"\x02\x20\xaa" -> ["\x02"," ","\xaa"]
 
 # test utf8 encoding chars
-;"├───╯" -> ["├","─","─","─","╯"]
+!;"├───╯" -> ["├","─","─","─","╯"]
 
 'a -> 'a
 '\n -> '\n
@@ -61,7 +61,7 @@ v1='-:v1 -> "-------------...
 
 ############## test zips
 1+3:4:$ -> [4,5]
-((3:4:$)!:(5:7:$):$)+1 -> [[4,5],[6,8]]
+((3:4:$):(5:7:$):$)+1 -> [[4,5],[6,8]]
 1+"asdf" -> "bteg"
 "asdf"+1 -> "bteg"
 (1:2:$)+4:6:8:$ -> [5,8]
@@ -97,42 +97,41 @@ v1='-:v1 -> "-------------...
 
 ~4:5:$ -> [-4,-5]
 
-!["abcd"!:"xzy":$ -> "abcd"
-["abcd"!:"xzy":$ -> "ax"
-]"abcd"!:"xzy":$ -> "dy"
+["abcd":"xzy":$ -> "abcd"
+!["abcd":"xzy":$ -> "ax"
+!]"abcd":"xzy":$ -> "dy"
 !!["abcd":"xzy":$ -> AtlasTypeError
 
-!tail "abcd"!:"xzy":$ -> ["xzy"]
-tail "abcd"!:"xzy":$ -> ["bcd","zy"]
+tail "abcd":"xzy":$ -> ["xzy"]
+!tail "abcd":"xzy":$ -> ["bcd","zy"]
 tail 'c -> AtlasTypeError
 
-"abc"!:"def"!:"xzy":$ -> ["abc","def","xzy"]
-"abc":"def"!:"xzy":$ -> ["adef","bxzy"]
-"abc"!!:"def"!:"xzy":$ -> AtlasTypeError
+"abc":"def":"xzy":$ -> ["abc","def","xzy"]
+"abc"!:"def":"xzy":$ -> ["adef","bxzy"]
+"abc"!!:"def":"xzy":$ -> AtlasTypeError
 
 if 0 then 2 else 3 -> 3
 if 1 then 2 else 3 -> 2
 if $ then 2 else 3 -> 3
-!if 0:$ then 2 else 3 -> 2
-if 0:$ then 2 else 3 -> [3]
+if 0:$ then 2 else 3 -> 2
 if [" " then 2 else 3 -> 3
 if ["a" then 2 else 3 -> 2
 
 if 1 then 'a else "b" -> "a"
 if 1 then 'a else "bcd" -> "aaa"
 if "a " then '1 else "23" -> "13"
-!if "a " then "1" else "2"!:"3":$ -> ["1","3"]
+if "a " then "1" else "2":"3":$ -> ["1","3"]
 
-if "a b " then "fghi" else "jklm" -> "fkhm"
-if "a b " then ,1 else 0 -> [1,0,1,0]
+!if "a b " then "fghi" else "jklm" -> "fkhm"
+!if "a b " then 1 else 0 -> [1,0,1,0]
 
-#!`1:2:$ -> ["1","2"]
+!`1:2:$ -> ["1","2"]
 
 4{"asdfg" -> "asdf"
 0{"" -> ""
 1{"" -> ""
 (1:2:$){"asdf" -> ["a","as"]
-(,2){"abc"!:"123":$ -> ["ab","12"]
+2!{"abc":"123":$ -> ["ab","12"]
 
 ######### more advanced circular programming
 v1=1:1+v1 -> [1,2,3,4,5...
@@ -142,56 +141,55 @@ v1=1+v1 -> AtlasTypeError
 
 ### test more ops and zips
 ,1 -> [1,1,1,1...
-(,5){,"hi" -> ["hhhhh","iiiii"]
+5!{!,"hi" -> ["hhhhh","iiiii"]
 
 ;1 -> [1]
-;"hi" ->["h","i"]
+!;"hi" ->["h","i"]
 2}"asdfg" -> "dfg"
-(,2)}"abc"!:"123":$ -> ["c","3"]
+2!}"abc":"123":$ -> ["c","3"]
 
-_"hi"!:"there":$ -> "hithere"
-_("hi"!:"there":$)!!:("asdf"!:"123":$):$ -> ["hithere","asdf123"]
-5{_!,;1 -> [1,1,1,1,1]
+_"hi":"there":$ -> "hithere"
+!_("hi":"there":$):("asdf":"123":$):$ -> ["hithere","asdf123"]
+5{_,;1 -> [1,1,1,1,1]
 
 "abc"@"123" -> "abc123"
-"abc"@_!,"123" -> "abc123123...
-(_!,"abc")@"123" -> "abcabcabc...
+"abc"@_,"123" -> "abc123123...
+(_(,"abc"))@"123" -> "abcabcabc...
 "abc"!@"123" -> AtlasTypeError
-("a"!:!;"b")@"1"!:!;"2" -> ["a1","b2"]
+("a":;"b")!@"1":;"2" -> ["a1","b2"]
 'a@"b" -> AtlasTypeError
 
 1eq 2 -> 0
 1eq 1 -> 1
 'aeq 'a -> 1
 'deq 100 -> AtlasTypeError
-"abc"!eq "abc" -> 1
-"abc"!eq "abd" -> 0
+"abc"eq "abc" -> 1
+"abc"eq "abd" -> 0
 "abc"eq 'a -> [1,0,0]
 "abc"!eq 'a -> AtlasTypeError
-"abc"eq "abd" -> [1,1,0]
+"abc"!eq "abd" -> [1,1,0]
 
 init "asdf" -> "asd"
-init "abc"!:"123":$ -> ["ab","12"]
+!init "abc":"123":$ -> ["ab","12"]
 
-\"abc"!:"123":$ -> ["a1","b2","c3"]
-\"abc"!:"12"!:"xyz":$ -> ["a1x","b2y","c"]
-\("abc"!:"123":$)!!:("xyz"!:"789":$):$ -> [["a1","b2","c3"],["x7","y8","z9"]]
+\"abc":"123":$ -> ["a1","b2","c3"]
+\"abc":"12":"xyz":$ -> ["a1x","b2y","c"]
+!\("abc":"123":$):("xyz":"789":$):$ -> [["a1","b2","c3"],["x7","y8","z9"]]
 
 \"abcd" -> AtlasTypeError
 \4 -> AtlasTypeError
-!\"abc"!:"123":$ -> AtlasTypeError
+!\"abc":"123":$ -> AtlasTypeError
 
 (;5)|6 -> [5,6,6,6,6...
-# should not evaluate / 1 0 because outer if should be known to be true
-!if (if 1/0 then $ else $)|5 then 'T else 'F -> 'T
+# should not evaluate / 1 0 because outer ? should be known to be true
+if (if 1/0 then $ else $)|5 then "T" else "F" -> "T"
 
 # circular programming foldr
 [v1=(4:5:;6)+(tail v1)|0 -> 15
 
-5&4 -> 5
-"asdf"&4 -> "asdf"
-# todo not good
-(,5)&"asdf" -> [5,5,5,5]
+5&4 -> AtlasTypeError
+#"asdf"&4 -> AtlasTypeError
+5&"asdf" -> [5,5,5,5]
 "asdf"&"123" -> "asd"
 
 # error and catching
@@ -213,7 +211,7 @@ v1=init 0:v1 -> InfiniteLoopError
 ~'5 -> AtlasTypeError
 !~'5 -> AtlasTypeError
 
-~"1 2"!:"3 4":$ -> [1,3]
+~"1 2":"3 4":$ -> [1,3]
 
 # !~ "" -> []
 # !~ "45 50" -> [45,50]
@@ -221,22 +219,19 @@ v1=init 0:v1 -> InfiniteLoopError
 # !~ :"1 2" :"3 4" $ -> [[1,2],[3,4]]
 
 # complicated test (primes)
-# todo nice to get rid of , in ,$
-_if (1+v1=1:(v2=2:1+v2)*v1)%v2 then ,$ else ;v2 -> [2,3,5,7,11...
+_!if (1+v1=1:(v2=2:1+v2)*v1)%v2 then ,$ else !;v2 -> [2,3,5,7,11...
 
 # aliases of special zip
 #!read "4 5 6" -> [4,5,6]
 
-]v1=(,0):v1+(1:2:;3)!:!;4:5:;6 -> [6,15]
+!]v1=(,0)!:v1+(1:2:;3):;4:5:;6 -> [6,15]
 
 ;$ -> [[]]
 [;$ -> []
 
 # check incorrect faith attempt
 # this would attempt to access invalid elements if said check was not in place
-#(`(v1=if (;0)!:v2=v1+;;3 then 0{;;4 else 0{;;5))@`v2 -> InfiniteLoopError
-(`(v1=!if (;0):v2=v1+!;;3 then 0!{!;;4 else 0!{!;;5))@`v2 -> InfiniteLoopError
+(`(v1=if (;0)!:v2=v1+;;3 then 0{;;4 else 0{;;5))@`v2 -> InfiniteLoopError
 
 # Test auto replicating of nil
-# todo it isn't auto replicate
-_if "______MA_" eq '_ then ;"CHISTMAS" else ,$ -> "CHISTM"
+_!if "______MA_" eq '_ then !;"CHISTMAS" else $ -> "CHISTM"

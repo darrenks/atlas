@@ -16,9 +16,6 @@ You can run code by downloading the Atlas source and saving your Atlas code to a
 
 I have tested with ruby 2.7 and 3.1.
 
-
-FYI current doc is out of date.
-
 ## Circular Programming Intro
 
 Let's look at the first example I ever saw of circular programming. It was the Haskell program:
@@ -117,7 +114,7 @@ So we could define the natural numbers as:
 
 How can we transpose a list defined as so?
 
-    a=(1:2:3:4:$)!:(5:6:7:8:$):$
+    a=(1:2:3:4:$):(5:6:7:8:$):$
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8

@@ -8,8 +8,7 @@ class Op < Struct.new(
     :name,
     :sym, # optional
     :type,
-    :min_zip, # no zip is better name
-    :min_zip_level,  # rm
+    :min_zip_level,
     :impl)
   def narg
     type ? type[0].specs.size : 0
@@ -23,7 +22,6 @@ def create_op(
   name: ,
   sym: nil,
   type: ,
-  min_zip: false,
   min_zip_level: 0,
   poly_impl: nil, # impl that needs type info
   impl: nil,
@@ -38,7 +36,7 @@ def create_op(
   else
     built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
-  Op.new(name,sym,type,min_zip,min_zip_level,built_impl)
+  Op.new(name,sym,type,min_zip_level,built_impl)
 end
 
 OpsList = [
@@ -220,7 +218,6 @@ OpsList = [
     name: "tostring",
     # Example: tostring 12 -> "12"
     type: { A => Str },
-    min_zip: true,
     # Test: tostring "a" -> "a"
     # Test: tostring 'a -> "a"
     # Test: tostring 2:;1 -> "2 1"
@@ -231,7 +228,6 @@ OpsList = [
     sym: "`",
     # Example: `12 -> "12"
     type: { A => Str },
-    min_zip: true,
     # Test: `"a" -> "\"a\""
     # Test: `'a -> "'a"
     # Test: `;1 -> "[1]"

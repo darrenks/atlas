@@ -3,50 +3,50 @@
 tests = <<'EOF'
 ## 1 arg #######
 
-# A (repeat)
-,1 -> ,1
-,;1 -> !,;1
-,!;;1 -> !!,;;1
+# A (inspect)
+`1 -> `1
+`;1 -> `;1
+`;;1 -> `;;1
 
 # scalar (negate)
 ~1 -> ~1
 ~;1 -> !~;1
-~!;;1 -> !!~;;1
+~;;1 -> !!~;;1
 
 # [scalar] (read)
 ~'c -> AtlasTypeError
 ~"c" -> ~"c"
-~!;"c" -> !~;"c"
+~;"c" -> !~;"c"
 
 # [A] (head)
 [1 -> AtlasTypeError
 [;1 -> [;1
-[!;;1 -> ![;;1
+[;;1 -> [;;1
 
 # [[A]] (transpose)
 \\1 -> AtlasTypeError
 \;1 -> AtlasTypeError
-\!;;1 -> \;;1
+\;;1 -> \;;1
 
 ## 2 arg #########
 # A,A (eq)
 1eq 1 -> 1eq 1
 1eq ;1 -> (,1)!eq ;1
-1eq !;;1 -> (,,1)!!eq ;;1
+1eq ;;1 -> (,,1)!!eq ;;1
 (;1)eq 1 -> (;1)!eq ,1
-(;1)eq ;1 -> (;1)!eq ;1
-(;1)eq !;;1 -> (,;1)!!eq ;;1
-(!;;1)eq 1 -> (;;1)!!eq ,,1
-(!;;1)eq ;1 -> (;;1)!!eq ,;1
-(!;;1)eq !;;1 -> (;;1)!!eq ;;1
+(;1)eq ;1 -> (;1)eq ;1
+(;1)eq ;;1 -> (,;1)!eq ;;1
+(;;1)eq 1 -> (;;1)!!eq ,,1
+(;;1)eq ;1 -> (;;1)!eq ,;1
+(;;1)eq ;;1 -> (;;1)eq ;;1
 
 # A,[A] (cons)
 1:1 -> AtlasTypeError
 1:;1 -> 1:;1
-1:!;;1 -> (,1)!:;;1
+1:;;1 -> (,1)!:;;1
 (;1):1 -> AtlasTypeError
 (;1):;1 -> (;1)!:,;1
-(;1):!;;1 -> (;1)!:;;1
+(;1):;;1 -> (;1):;;1
 
 # [A],[A] (append todo)
 
@@ -58,53 +58,48 @@ tests = <<'EOF'
 # Int,[A] (take)
 1{1 -> AtlasTypeError
 1{;1 -> 1{;1
-1{!;;1 -> (,1)!{;;1
+1{;;1 -> 1{;;1
 (;1){1 -> AtlasTypeError
 (;1){;1 -> (;1)!{,;1
-(;1){!;;1 -> (;1)!{;;1
+(;1){;;1 -> (;1)!{;;1
 
-# A B (const)
-1&2 -> 1&2
-(;1)&2 -> (;1)!&,2
-1&;2 -> (,1)!&;2
+## 3 arg ###########
+# A,B,B
+if 1 then 2 else 3 -> if 1 then 2 else 3
+if 1 then 2 else ;3 -> !if ,1 then ,2 else ;3
+if 1 then 2 else ;;3 -> !!if ,,1 then ,,2 else ;;3
+if 1 then ;2 else 3 -> !if ,1 then ;2 else ,3
+if 1 then ;2 else ;3 -> if 1 then ;2 else ;3
+if 1 then ;2 else ;;3 -> !if ,1 then ,;2 else ;;3
+if 1 then ;;2 else 3 -> !!if ,,1 then ;;2 else ,,3
+if 1 then ;;2 else ;3 -> !if ,1 then ;;2 else ,;3
+if 1 then ;;2 else ;;3 -> if 1 then ;;2 else ;;3
 
-# ## 3 arg ###########
-# # A,B,B
-# if 1 then 2 else 3 -> if 1 then 2 else 3
-# if 1 then 2 else ;3 -> !if ,1 then ,2 else ;3
-# if 1 then 2 else !;;3 -> !!if ,,1 then ,,2 else ;;3
-# if 1 then ;2 else 3 -> !if ,1 then ;2 else ,3
-# if 1 then ;2 else ;3 -> if 1 then ;2 else ;3
-# if 1 then ;2 else !;;3 -> !if ,1 then ,;2 else ;;3
-# if 1 then ;;2 else 3 -> !!if ,,1 then ;;2 else ,,3
-# if 1 then ;;2 else ;3 -> !if ,1 then ;;2 else ,;3
-# if 1 then ;;2 else !;;3 -> if 1 then ;;2 else ;;3
-#
-# if ;1 then 2 else 3 -> if ;1 then 2 else 3
-# if ;1 then 2 else ;3 -> !if ;1 then ,2 else ;3
-# if ;1 then 2 else ;;3 -> !!if ,;1 then ,,2 else ;;3
-# if ;1 then ;2 else 3 -> !if ;1 then ;2 else ,3
-# if ;1 then ;2 else ;3 -> if ;1 then ;2 else ;3
-# if ;1 then ;2 else ;;3 -> !if ;1 then ,;2 else ;;3
-# if ;1 then ;;2 else 3 -> !!if ,;1 then ;;2 else ,,3
-# if ;1 then ;;2 else ;3 -> !if ;1 then ;;2 else ,;3
-# if ;1 then ;;2 else ;;3 -> if ;1 then ;;2 else ;;3
-#
-# if ;;1 then 2 else 3 -> if ;;1 then 2 else 3
-# if ;;1 then 2 else ;3 -> !if ;;1 then ,2 else ;3
-# if ;;1 then 2 else ;;3 -> !!if ;;1 then ,,2 else ;;3
-# if ;;1 then ;2 else 3 -> !if ;;1 then ;2 else ,3
-# if ;;1 then ;2 else ;3 -> if ;;1 then ;2 else ;3
-# if ;;1 then ;2 else ;;3 -> !if ;;1 then ,;2 else ;;3
-# if ;;1 then ;;2 else 3 -> !!if ;;1 then ;;2 else ,,3
-# if ;;1 then ;;2 else ;3 -> !if ;;1 then ;;2 else ,;3
-# if ;;1 then ;;2 else ;;3 -> if ;;1 then ;;2 else ;;3
+if ;1 then 2 else 3 -> if ;1 then 2 else 3
+if ;1 then 2 else ;3 -> !if ;1 then ,2 else ;3
+if ;1 then 2 else ;;3 -> !!if ,;1 then ,,2 else ;;3
+if ;1 then ;2 else 3 -> !if ;1 then ;2 else ,3
+if ;1 then ;2 else ;3 -> if ;1 then ;2 else ;3
+if ;1 then ;2 else ;;3 -> !if ;1 then ,;2 else ;;3
+if ;1 then ;;2 else 3 -> !!if ,;1 then ;;2 else ,,3
+if ;1 then ;;2 else ;3 -> !if ;1 then ;;2 else ,;3
+if ;1 then ;;2 else ;;3 -> if ;1 then ;;2 else ;;3
+
+if ;;1 then 2 else 3 -> if ;;1 then 2 else 3
+if ;;1 then 2 else ;3 -> !if ;;1 then ,2 else ;3
+if ;;1 then 2 else ;;3 -> !!if ;;1 then ,,2 else ;;3
+if ;;1 then ;2 else 3 -> !if ;;1 then ;2 else ,3
+if ;;1 then ;2 else ;3 -> if ;;1 then ;2 else ;3
+if ;;1 then ;2 else ;;3 -> !if ;;1 then ,;2 else ;;3
+if ;;1 then ;;2 else 3 -> !!if ;;1 then ;;2 else ,,3
+if ;;1 then ;;2 else ;3 -> !if ;;1 then ;;2 else ,;3
+if ;;1 then ;;2 else ;;3 -> if ;;1 then ;;2 else ;;3
 
 ### Nil tests #####
 
-# A (replicate)
-,$ -> ,$
-,;$ -> !,;$
+# A (inspect)
+`$ -> `$
+`;$ -> `;$
 
 # scalar (negate)
 ~$ -> AtlasTypeError
@@ -113,26 +108,26 @@ tests = <<'EOF'
 # [scalar] none
 
 # [A] (head)
-# [$ -> AtlasTypeError
+[$ -> [$
 [;$ -> [;$
-[!;;$ -> ![;;$
 
 # [[A]] (concat)
-# _$ -> AtlasTypeError
-# _;$ -> AtlasTypeError
-_!;;$ -> _;;$
+# _$ -> AtlasTypeError todo
+_;$ -> _;$
+_;;$ -> _;;$
 
 ## 2 arg #########
 # A,A (eq)
-#$eq 1 -> AtlasTypeError
+$eq 1 -> $!eq ,1
 $eq ;1 -> $eq ;1
-$eq !;;1 -> $eq ;;1
-#(;$)eq 1 -> AtlasTypeError
+$eq ;;1 -> $eq ;;1
+(;$)eq 1 -> (;$)!!eq ,,1
 (;$)eq ;1 -> (;$)!eq ,;1
-(;$)eq !;;1 -> (;$)!eq ;;1
-#(!;;$)eq 1 -> AtlasTypeError
-(!;;$)eq ;1 -> (;;$)!!eq ,,;1
-(!;;$)eq !;;1 -> (;;$)!!eq ,;;1
+(;$)eq ;;1 -> (;$)eq ;;1
+(;;$)eq 1 -> (;;$)!!!eq ,,,1
+(;;$)eq ;1 -> (;;$)!!eq ,,;1
+(;;$)eq ;;1 -> (;;$)!eq ,;;1
+
 
 # A,[A] (cons)
 
@@ -145,13 +140,12 @@ $+;1 -> AtlasTypeError
 
 # Int,[A] (take)
 # todo, some should probably be no nil error
-#1{$ -> AtlasTypeError
+1{$ -> 1{$
 1{;$ -> 1{;$
-1{!;;$ -> (,1)!{;;$
-#(;1){$ -> AtlasTypeError
-## should be error
-#(;1){;$ -> (;1)!{;$
-(;1){!;;$ -> (;1)!{;;$
+1{;;$ -> 1{;;$
+(;1){$ -> (;1)!{,$
+(;1){;$ -> (;1)!{;$
+(;1){;;$ -> (;1)!{;;$
 
 ${;1 -> AtlasTypeError
 ${;;1 -> AtlasTypeError
@@ -159,25 +153,25 @@ ${$ -> AtlasTypeError
 
 ## 3 arg ###########
 # A,B,B
-# if $ then 2 else 3 -> if $ then 2 else 3
-# if $ then 2 else ;3 -> !if $ then ,2 else ;3
-# if ;$ then 2 else 3 -> if ;$ then 2 else 3
-# if $ then ;2 else ;3 -> if $ then ;2 else ;3
-# if 1 then $ else 3 -> !if ,1 then $ else ,3
-# if 1 then $ else ;3 -> if 1 then $ else ;3
-# if 1 then ;$ else 3 -> !!if ,,1 then ;$ else ,,3
-# if 1 then ;$ else ;3 -> !if ,1 then ;$ else ,;3
-# if 1 then $ else $ -> if 1 then $ else $
-# if 1 then $ else ;$ -> if 1 then $ else ;$
-# if 1 then !$ else ;$ -> if 1 then !$ else ;$
+if $ then 2 else 3 -> if $ then 2 else 3
+if $ then 2 else ;3 -> !if $ then ,2 else ;3
+if ;$ then 2 else 3 -> if ;$ then 2 else 3
+if $ then ;2 else ;3 -> if $ then ;2 else ;3
+if 1 then $ else 3 -> !if ,1 then $ else ,3
+if 1 then $ else ;3 -> if 1 then $ else ;3
+if 1 then ;$ else 3 -> !!if ,,1 then ;$ else ,,3
+if 1 then ;$ else ;3 -> !if ,1 then ;$ else ,;3
+if 1 then $ else $ -> if 1 then $ else $
+if 1 then $ else ;$ -> if 1 then $ else ;$
+if 1 then !$ else ;$ -> if 1 then !$ else ;$
 
 ### Excessive zip tests
 ## not excessive
 # this actually could be useful
-#!$ -> !$
-#!`"1" -> !`"1"
-(;1)!eq ;1 -> (;1)eq ;1
-!if ;1 then ;2 else ;3 -> if ;1 then ;2 else ;3
+!$ -> !$
+!`"1" -> !`"1"
+(;1)!eq ;1 -> (;1)!eq ;1
+!if ;1 then ;2 else ;3 -> !if ;1 then ;2 else ;3
 
 ## excessive
 !3 -> ParseError
@@ -185,7 +179,7 @@ ${$ -> AtlasTypeError
 ! -> ParseError
 !`1 -> AtlasTypeError
 !["a" -> AtlasTypeError
-#1!+2 -> AtlasTypeError
+1!+2 -> AtlasTypeError
 1!{;1 -> AtlasTypeError
 1!eq 1 -> AtlasTypeError
 1!eq ;1 -> AtlasTypeError
