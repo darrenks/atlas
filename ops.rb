@@ -71,7 +71,7 @@ OpsList = [
   ), create_op(
     name: "tail",
     # Example: tail "abc" -> "bc"
-    sym: ")",
+    sym: ">",
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "tail on empty list",from if a.value==[]
@@ -79,7 +79,7 @@ OpsList = [
   ), create_op(
     name: "init",
     # Example: init "abc" -> "ab"
-    sym: "(",
+    sym: "<",
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "init on empty list",from if a.value==[]
@@ -166,12 +166,6 @@ OpsList = [
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? [a,Null] : [] } }
   ), create_op(
-    name: "old",
-    # Example: 3==3 -> [3]
-    # Test: 3==2 -> []
-    type: { [A,A] => Int },
-    poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? 1:0 } }
-  ), create_op(
     name: "len", #symbol tbd
     # Example: len "asdf" -> 4
     type: { [A] => Int },
@@ -251,18 +245,18 @@ OpsList = [
     impl: -> a { [a,Null] }
   ), create_op(
     name: "take",
-    sym: "{",
-    # Example: 3{"abcd" -> "abc"
-    # Test: (~2){"abc" -> ""
-    # Test: 2{"" -> ""
+    sym: "[",
+    # Example: 3["abcd" -> "abc"
+    # Test: (~2)["abc" -> ""
+    # Test: 2["" -> ""
     type: { [Int,[A]] => [A] },
     impl: -> a,b { take(a.value, b) }
   ), create_op(
     name: "drop",
-    sym: "}",
-    # Example: 3}"abcd" -> "d"
-    # Test: (~2)}"abc" -> "abc"
-    # Test: 2}"" -> ""
+    sym: "]",
+    # Example: 3]"abcd" -> "d"
+    # Test: (~2)]"abc" -> "abc"
+    # Test: 2]"" -> ""
     type: { [Int,[A]] => [A] },
     impl: -> a,b { drop(a.value, b) }
   ), create_op(
@@ -299,10 +293,25 @@ OpsList = [
   )
 ]
 
-Ops = {}; OpsList.each{|op|
-  Ops[op.name] = Ops[op.sym] = op
+Ops1 = {}
+Ops2 = {}
+AllOps = {}
+OpsList.each{|op|
+  ops = case op.type[0].specs.size
+  when 0
+    Ops1[op.name] = Ops1[op.sym] = op
+    Ops2[op.name] = Ops2[op.sym] = op
+  when 1
+    Ops1[op.name] = Ops1[op.sym] = op
+  when 2
+    Ops2[op.name] = Ops2[op.sym] = op
+  when 3 # if
+    Ops1[op.name] = op
+    Ops2[op.sym] = op
+  else; error; end
+  AllOps[op.name] = AllOps[op.sym] = op
 }
-RepOp = Ops["rep"]
+RepOp = Ops1["rep"]
 
 def create_int(str)
   create_op(

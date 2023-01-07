@@ -12,7 +12,7 @@ def doit(source,limit)
   roots = parse_infix(tokens)
   raise "must be 1 expr but found %d in %s" % [roots.size,source] if roots.size != 1
   root = roots[0]
-  inspect_root = AST.new(Ops['`'],roots)
+  inspect_root = AST.new(Ops1['show'],roots)
   infer(inspect_root)
 
   output = StringIO.new

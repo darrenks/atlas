@@ -51,7 +51,7 @@ def get_expr(tokens,context,delimiter)
   raise ParseError.new "unexpected )",t if t.str == ")" # later will be empty parens which means empty list
   raise ParseError.new "unexpected then",t if t.str == "then"
   raise ParseError.new "unexpected else",t if t.str == "else"
-  op = get_op(t)
+  op = get_op(t,Ops1,"unary")
   lhs = if t.str == "("
     get_expr(tokens,context,')')
   elsif op.name == "var"
@@ -81,7 +81,7 @@ def get_expr(tokens,context,delimiter)
     return lhs
   end
 
-  op = get_op(t)
+  op = get_op(t,Ops2,"non-unary")
   if t.str == "="
     warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
     context[lhs_t.str] = get_expr(tokens,context,delimiter)
@@ -100,7 +100,7 @@ def get_expr(tokens,context,delimiter)
   end
 end
 
-def get_op(token)
+def get_op(token,ops,ops_name)
   str = token.str
   if str[0] =~ /[0-9]/
     create_int(str)
@@ -110,8 +110,10 @@ def get_op(token)
     create_char(str)
 #   elsif is_special_zip(str)
 #     Ops[str].dup
-  elsif Ops.include? str[/!*(.*)/m,1]
-    Ops[str[/!*(.*)/m,1]]
+  elsif ops.include? str[/!*(.*)/m,1]
+    ops[str[/!*(.*)/m,1]]
+  elsif AllOps.include? str[/!*(.*)/m,1]
+    raise ParseError.new("op not defined for %s operations" % ops_name,token)
   elsif str != $/
     Op.new("var")
   else

@@ -56,12 +56,12 @@ tests = <<'EOF'
 1+;2 -> (,1)!+;2
 
 # Int,[A] (take)
-1{1 -> AtlasTypeError
-1{;1 -> 1{;1
-1{;;1 -> 1{;;1
-(;1){1 -> AtlasTypeError
-(;1){;1 -> (;1)!{,;1
-(;1){;;1 -> (;1)!{;;1
+1[1 -> AtlasTypeError
+1[;1 -> 1[;1
+1[;;1 -> 1[;;1
+(;1)[1 -> AtlasTypeError
+(;1)[;1 -> (;1)![,;1
+(;1)[;;1 -> (;1)![;;1
 
 ## 3 arg ###########
 # A,B,B
@@ -140,16 +140,16 @@ $+;1 -> AtlasTypeError
 
 # Int,[A] (take)
 # todo, some should probably be no nil error
-1{$ -> 1{$
-1{;$ -> 1{;$
-1{;;$ -> 1{;;$
-(;1){$ -> (;1)!{,$
-(;1){;$ -> (;1)!{;$
-(;1){;;$ -> (;1)!{;;$
+1[$ -> 1[$
+1[;$ -> 1[;$
+1[;;$ -> 1[;;$
+(;1)[$ -> (;1)![,$
+(;1)[;$ -> (;1)![;$
+(;1)[;;$ -> (;1)![;;$
 
-${;1 -> AtlasTypeError
-${;;1 -> AtlasTypeError
-${$ -> AtlasTypeError
+$[;1 -> AtlasTypeError
+$[;;1 -> AtlasTypeError
+$[$ -> AtlasTypeError
 
 ## 3 arg ###########
 # A,B,B
@@ -180,7 +180,7 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 !`1 -> AtlasTypeError
 !["a" -> AtlasTypeError
 1!+2 -> AtlasTypeError
-1!{;1 -> AtlasTypeError
+1![;1 -> AtlasTypeError
 1!==1 -> AtlasTypeError
 1!==;1 -> AtlasTypeError
 1!==;1 -> AtlasTypeError

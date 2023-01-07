@@ -13,9 +13,9 @@ begin
 
   newline = AST.new(create_str('"\n"'),[])
 
-  root = AST.new(Ops['_'],[roots.reverse.inject(AST.new(Ops['$'],[])){|after,line|
-    line = AST.new(Ops['tostring'],[line])
-    AST.new(Ops[':'],[line,AST.new(Ops[':'],[newline,after])])
+  root = AST.new(Ops1['_'],[roots.reverse.inject(AST.new(Ops1['$'],[])){|after,line|
+    line = AST.new(Ops1['tostring'],[line])
+    AST.new(Ops2[':'],[line,AST.new(Ops2[':'],[newline,after])])
   }])
 
 #  root = AST.new(Ops['tostring'],roots)
