@@ -91,6 +91,10 @@ def get_expr(tokens,context,delimiter)
     raise ParseError.new "found unary op used as a binary op", t
   elsif op.narg == 2 # binop
     AST.new(op, [lhs, get_expr(tokens,context,delimiter)], t)
+  elsif op.sym == "?"
+    c=get_expr(tokens,context,")")
+    a=get_expr(tokens,context,delimiter)
+    AST.new(op, [c,a,lhs], t)
   else
     impossible2
   end

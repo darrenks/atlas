@@ -187,6 +187,7 @@ OpsList = [
     impl: -> a,b { a.value }
   ), create_op(
     name: "if",
+    sym: "?",
     # Example: if 1 then "yes" else "no" -> "yes"
     type: { [A,B,B] => B },
     poly_impl: -> ta,tb,tc {

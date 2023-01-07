@@ -28,6 +28,7 @@ TODO automatically generate this as it is likely to become out of date.
 |`~` | neg| `Num -> Num`|
 |`&` | const| `a b -> a`|
 |`\|` | pad| `[a] a -> [a]`|
+|`?` | if| `a b b -> b` |
 **Op modifier**
 |`!` | vectorize |
 **Atoms**
@@ -40,3 +41,13 @@ TODO automatically generate this as it is likely to become out of date.
 
 
 In the op chart there is `Num`. All numeric operations can operate on `Int` or `Char` if it "makes sense". BQN does a good job describing this see [note on affine characters](https://mlochbaum.github.io/BQN/doc/types.html#characters).
+
+Note structure for using `?` / `if` is:
+
+    if cond then true_clause else false_clause
+
+Which is the same as:
+
+    false_clause ? cond ) true_clause
+
+The symbol version is highly unusual compared normal languages, this order is least likely to require parenthesis. I expect it to only be used when code golfing, and that the more intuitive if/then/else style to be much easier to use. Despite the seemingly complicated structure this op is a normal function, what is unusual about it is that it is the only op that takes more than 2 args, and thus it does require some special syntax.
