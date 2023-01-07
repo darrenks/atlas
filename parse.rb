@@ -85,8 +85,10 @@ def get_expr(tokens,context,delimiter)
   if t.str == "="
     warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
     context[lhs_t.str] = get_expr(tokens,context,delimiter)
-  elsif op.narg == 0
-    raise ParseError.new("2 adjacent atoms is illegal for now (will mean cons later)", t)
+  elsif t.str == "(" || op.narg == 0
+    tokens.unshift(t)
+    rhs = get_expr(tokens,context,delimiter)
+    AST.new(Ops2['cons'], [lhs, rhs], t)
   elsif op.narg == 1
     raise ParseError.new "found unary op used as a binary op", t
   elsif op.narg == 2 # binop

@@ -297,7 +297,7 @@ Ops1 = {}
 Ops2 = {}
 AllOps = {}
 OpsList.each{|op|
-  ops = case op.type[0].specs.size
+  ops = case op.narg
   when 0
     Ops1[op.name] = Ops1[op.sym] = op
     Ops2[op.name] = Ops2[op.sym] = op

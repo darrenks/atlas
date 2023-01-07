@@ -4,12 +4,10 @@ a=a - should be nil
 infinite type - would be nice to give proper error
 
 ==== syntax ====
-allow cons to be specified by 2 atoms in a row
+implicit cons:
    note that it should be able to handle stuff "asd" 'a because really it promotes as needed and appends
    !atom should do a zipped cons since atoms cannot zip (!space should always zip cons)
-the code "had 1" (misspelling of head, gives an error unintuitive message)
-   this will not be a problem once two atoms = cons
-need sym version of eq
+consider trying to make == a single op and be smart about deciding when it means assignment
 allow indented multiline strings with no delimiters
 allow newlines followed by indentation in complicated expressions
    this is even lower precedence than a space
@@ -30,7 +28,6 @@ port to nim
 
 ==== add many ops ====
 overload char/int
-overload bin/unary op
 need ops like take_while
 filter would be handy
 logical and/or not
@@ -53,5 +50,5 @@ flip, an op modifier
 
 ==== type improvements ====
 allow swapping and promoting if arg types don't match
-if knew what the return type needed to be could do thinks like make max lazy (like logical or) if number used as bool (also fyi, should truthy be >0 or non zero?)
-should zipping default to least axis instead of greatest? see what is used more - are there implications for inference or other things that would be bad though?
+if knew what the return type needed to be could do things like make max lazy (like logical or) if number used as bool (also fyi, should truthy be >0 or non zero?)
+
