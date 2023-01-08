@@ -439,15 +439,15 @@ Just in case there was any doubt that the language is Turing Complete, I'll use 
 
     current_bracket_depth = !head code_pointer drop bracket_depth
 
-    # first point where bracket_depth = bracket_depth again
+    // first point where bracket_depth = bracket_depth again
     find_rbracket = code_pointer + 1 + !head !concat !!if (!,current_bracket_depth) !!== (code_pointer+1) drop bracket_depth then ,!;wholes else ,,$
 
-    # last point where bracket_depth = bracket_depth again
+    // last point where bracket_depth = bracket_depth again
     find_lbracket = !last !concat !!if (!,current_bracket_depth-1) !!== code_pointer take bracket_depth then ,!;wholes else ,,$
 
     output = !if instruction == '. then !;value else ,$
 
-    # todo terminate when code_pointer > source size
+    // todo terminate when code_pointer > source size
     '\0+concat output
 
     ──────────────────────────────────

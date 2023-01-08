@@ -7,27 +7,25 @@ CharRegex = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRegex = /"(\\.|[^"])*"?/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}/m
 IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|==|.)/m
-CommentRegex = /\#[^\n]*/m
+CommentRegex = /\/\/.*/
 
 def lex(code) # returns a list of tokens
 	tokens = []
 
 	scan_with_pos(code,
 	    /#{AtomRegex}|#{CommentRegex}|#{IdRegex}/m){|token|
-	  next if token.str =~ /^\#.*|^ +$/
-	  # kinda hacky to do this here, but inc these since 2d pads
-	  token.char_no += 1; token.line_no += 1
+	  next if token.str =~ /^(#{CommentRegex}| +)$/
 	  tokens << token
 	}
 	tokens
 end
 
 def scan_with_pos(str,regex)
-  char_no = line_no = 0
+  char_no = line_no = 1
   str.scan(regex) {|matches|
     yield($from=Token.new($&,char_no,line_no))
     if $&.include?($/)
-			char_no = $&.size - $&.rindex($/) - 1
+			char_no = $&.size - $&.rindex($/)
 			line_no += $&.count($/)
 		else
 			char_no += $&.size

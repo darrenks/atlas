@@ -81,11 +81,10 @@ def get_expr(tokens,context,delimiter)
     return lhs
   end
 
-  op = get_op(t,Ops2,"non-unary")
   if t.str == "="
     warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
     context[lhs_t.str] = get_expr(tokens,context,delimiter)
-  elsif t.str == "(" || op.narg == 0
+  elsif t.str == "(" || t.str == "if" || (op = get_op(t,Ops2,"non-unary")).narg == 0
     tokens.unshift(t)
     rhs = get_expr(tokens,context,delimiter)
     AST.new(Ops2['cons'], [lhs, rhs], t)

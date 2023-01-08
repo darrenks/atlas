@@ -166,8 +166,9 @@ OpsList = [
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? [a,Null] : [] } }
   ), create_op(
-    name: "len", #symbol tbd
-    # Example: len "asdf" -> 4
+    name: "len",
+    # Example: # "asdf" -> 5
+    sym: "#",
     type: { [A] => Int },
     impl: -> a { len(a.value) }
   ), create_op(

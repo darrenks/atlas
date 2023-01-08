@@ -23,10 +23,10 @@ end
 line = 1
 pass = 0
 behavior_tests = File.read("./test/behavior_tests.txt").lines.to_a
-example_regex = /^ *# ?(Example|Test): */
+example_regex = /^ *\/\/ ?(Example|Test): */
 example_tests = File.read("ops.rb").lines.grep(example_regex).map{|line|line.gsub(example_regex,"")}
 (behavior_tests + example_tests).map{|test|
-  (line+=1; next) if test.strip == "" || test =~ /^\#/
+  (line+=1; next) if test.strip == "" || test =~ /^\/\//
   i,o=test.split("->")
   o.strip!
 

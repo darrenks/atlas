@@ -1,0 +1,10 @@
+[prog]
+// ignored
+1 // ignored
+2//ignored
+3
+  //ignored
+[stdout]
+1
+2
+3
