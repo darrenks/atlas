@@ -6,9 +6,9 @@ Currently Atlas is in Alpha. It has all the essential features and works. But, I
 
 Atlas consists purely of operators applied to values (like a calculator) and assignment. There are no control structures, functions, blocks, lambdas, etc. The purpose of this simplicity is twofold: to force you to really use circular programming, and to make picking it up easy. Despite the simplicity, it is actually very concise because circular programming and vectorization are seriously powerful.
 
-The techniques presented in the tutorial are applicable to other lazy languages like Haskell, they will just be more verbose (because zipWith isn't done implicitly or maybe require a helper function here and there). Even if you are not interested in Atlas or already know about circular programming, I hope this will be an interesting read, it presents how you can implement foldr with circular programming (something I have not seen anywhere else) and therefore create a very simple basis for a programming language. It assumes some familiarity with laziness.
+The techniques presented in the tutorial are applicable to other lazy languages like Haskell, they will just be more verbose (because zipWith isn't done implicitly or maybe require a helper function here and there). Even if you are not interested in Atlas or already know about circular programming, I hope this will be an interesting read, it presents how you can implement foldr with circular programming (something I have not seen anywhere else) and therefore create a very simple basis for a programming language.
 
-The only thing you need to know about the syntax is that there is no precedence, code is evaluated right to left (APL style). If you want to get into the nitty gritty of Atlas specifically, check out the [docs folder](docs/).
+The purpose of this README is to teach you about circular programming without you having to know anything about Atlas already. However it assumes some familiarity with laziness. Just note, there is no precedence in Atlas, code is evaluated right to left. If you want to get into the nitty gritty of Atlas specifically, check out the [docs folder](docs/), it has some cool features that are omitted in this README to keep it simple.
 
 You can run code by downloading the Atlas source and saving your Atlas code to a file then running:
 
@@ -24,17 +24,17 @@ Let's look at the first example I ever saw of circular programming. It was the H
 
 Which generates the infinite list of fibonacci numbers. In Atlas this would be:
 
-    a=1:1:a+tail a
+    a=1 1 a+tail a
     ──────────────────────────────────
     1 1 2 3 5 8 13 ...
 
-The only real difference between Atlas and Haskell here is that the zipWith is implicit because Atlas is vectorized.
+The only real difference between Atlas and Haskell here is that the zipWith is implicit because Atlas is vectorized. The `:` is also implicitly added between multiple expressions.
 
 The first time I saw this, I just dismissed it as some weird special case trick that I didn't understand and assumed it wasn't practical, but actually it isn't a trick and it is useful, it is probably the most efficient way to compute the Fibonacci numbers sequence in Haskell.
 
 If we do not want an infinite list, we could just take the first n elements of the list and we can do so without an infinite loop, since we never ask for an infinite number of elements.
 
-    a=1:1:a+tail a
+    a=1 1 a+tail a
     10 take a
     ──────────────────────────────────
     1 1 2 3 5 8 13 21 34 55
@@ -68,12 +68,10 @@ We can use it to calculate the scanl of a list and any operation! Suppose we had
 
 We can do that like this:
 
-    a=1:2:3:4:$
-    b=a+0:b
+    a=1 2 3 4
+    b=a+0 b
     ──────────────────────────────────
     1 3 6 10
-
-`$` is the empty list, there is no `[]` for creating lists.
 
 And this works in Haskell too:
 
@@ -84,15 +82,15 @@ It works much the same way as the fibonacci sequence. The first element is the f
 
 And we can do a foldl simply be getting the last element of the scanl:
 
-    a=1:2:3:4:$
-    b=a+0:b
+    a=1 2 3 4
+    b=a+0 b
     last b
     ──────────────────────────────────
     10
 
 BTW we can easily generate the list of natural numbers using this technique if we first define an infinite list of 1's and compute the prefix sums on them. The repeating list can be done via:
 
-    ones=1:ones
+    ones=1 ones
     ──────────────────────────────────
     1 1 1 1 ...
 
@@ -104,8 +102,7 @@ There's also an op to make this more concise:
 
 So we could define the natural numbers as:
 
-    ones=1:ones
-    nats=ones+0:nats
+    nats=1 nats + ,1
     ──────────────────────────────────
     1 2 3 4 5 ...
 
@@ -114,31 +111,31 @@ So we could define the natural numbers as:
 
 How can we transpose a list defined as so?
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
+    a=(1 2 3 4) (5 6 7 8)
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
 
 The first row will be the heads of each row of `a`, which can be gotten with `!head`
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
+    a=(1 2 3 4) (5 6 7 8)
     !head a
     ──────────────────────────────────
     1 5
 
-Note the `!` which means apply this function one level down. Just head would have given the first row. You may have been expecting a column of 1 5 instead of a row, but the heads of each element is just a 1D list and so it displays as such.
+Note the `!` which means apply this function one level down. Just `head` would have given the first row. You may have been expecting a column of 1 5 instead of a row, but the heads of each element is just a 1D list and so it displays as such.
 
 The next row should be the heads of the tails:
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
+    a=(1 2 3 4) (5 6 7 8)
     !head !tail a
     ──────────────────────────────────
     2 6
 
-And the next row would be the head of the tail of the tails. So essentially to transpose we want the heads of the repeated tailings of a 2d list, which we can do with circular programming of course.
+And the next row would be the head of the tail of the tails. So essentially to transpose we want the heads of the repeated tailings of a 2D list, which we can do with circular programming of course.
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
-    tails= a : !!tail tails
+    a=(1 2 3 4) (5 6 7 8)
+    tails= a (!!tail tails)
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
@@ -156,7 +153,7 @@ And the next row would be the head of the tail of the tails. So essentially to t
 
 
 
-    2:12 (!!tail) tail on empty list (DynamicError)
+    2:11 (!!tail) tail on empty list (DynamicError)
 
 It is worth mentioning that this output is a 3D list, which is really just a list of list of a list, there is nothing special about nested lists, they are just lists. The separators for output are different however which makes them display nicely. You can also use the `show` op to display things like Haskell's show function.
 
@@ -166,8 +163,8 @@ Also note the error. It would occur for the same program in Haskell too:
 
 Anytime we see something of the form `var = something : var` it is defining an infinite list. This list clearly can't be infinite though, hence the error. It can be avoided by taking elements of length equal to the first row.
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
-    tails= a : !!tail tails
+    a=(1 2 3 4) (5 6 7 8)
+    tails= a (!!tail tails)
     tails const head a
     ──────────────────────────────────
     1 2 3 4
@@ -186,10 +183,10 @@ Anytime we see something of the form `var = something : var` it is defining an i
 
 I have some ideas about creating an op to catch errors and truncate lists, but for now this manual step is required.
 
-To get the transpose now we just nead to take the heads of each list:
+To get the transpose now we just need to take the heads of each list:
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
-    tails= a : !!tail tails
+    a=(1 2 3 4) (5 6 7 8)
+    tails= a (!!tail tails)
     !!head tails const head a
     ──────────────────────────────────
     1 5
@@ -201,8 +198,8 @@ To get the transpose now we just nead to take the heads of each list:
 
 We've seen how to do scanl on a list, but how does it work on 2D lists?
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
-    b=(,0):a+b
+    a=(1 2 3 4) (5 6 7 8)
+    b=(,0) a+b
     10 !take b
     ──────────────────────────────────
     0 0 0 0 0 0 0 0 0 0
@@ -216,21 +213,21 @@ That was easy, but what if we wanted to do it on rows instead of columns without
 We can do a zipped cons:
 
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
-    b=(,0) !: a+b
+    a=(1 2 3 4) (5 6 7 8)
+    b=(,0)! a+b
     ──────────────────────────────────
     0 1 3 6 10
     0 5 11 18 26
 
 Note that we could have written that more succinctly as:
 
-    a=(1:2:3:4:$):(5:6:7:8:$):$
-    b=0 : a+b
+    a=(1 2 3 4) (5 6 7 8)
+    b=0@a+b
     ──────────────────────────────────
     0 1 3 6 10
     0 5 11 18 26
 
-Because it knows that the left arg of `:` needs to be a list given the type of `a+b` and so it automatically replicates it and zips once. This may seem like magic, but it has fairly simple rules that dictate this behavior, see [docs/vectorization.md](Vectorization) if interested. Both of these representations generate the same code.
+Because it knows that the left arg of append needs to be a list given the type of `a+b` and so it automatically replicates it and zips once (`@` is used because implicit cons default to promoting rather than replicating). This may seem like magic, but it has fairly simple rules that dictate this behavior, see [docs/vectorization.md](Vectorization) if interested. Both of these representations generate the same code.
 
 This doesn't work if we port it to Haskell! It infinitely loops:
 
@@ -251,7 +248,7 @@ For example:
 
 In Atlas is:
 
-    a = 1:2:3:$
+    a = 1 2 3
     (a+2)*3
     ──────────────────────────────────
     9 12 15
@@ -263,7 +260,7 @@ If you need to use the map arg multiple times, that is fine.
 
 In Atlas is:
 
-    a = 1:2:3:$
+    a = 1 2 3
     (a*(a-1))/2
     ──────────────────────────────────
     0 1 3
@@ -278,16 +275,16 @@ Ok, so that's great, but this doesn't work if we need to do nested maps, for exa
 
 Won't work directly:
 
-    (1:2:3:$) * (1:2:3:$)
+    (1 2 3) * (1 2 3)
     ──────────────────────────────────
     1 4 9
 The reason is because the `*` zips instead of doing a 'cartesian product'.
 
-To do a cartesian product is easy though. We just replicate each list in a different dimension
+Doing a cartesian product is easy though. We just replicate each list in a different dimension
 
-    3 take ,(1:2:3:$)
+    3 take ,(1 2 3)
     " and "
-    3 !take !,(1:2:3:$)
+    3 !take !,(1 2 3)
     ──────────────────────────────────
     1 2 3
     1 2 3
@@ -299,7 +296,7 @@ To do a cartesian product is easy though. We just replicate each list in a diffe
 
 `,` means repeat, but it could have been done using our circular technique for creating infinite lists. Also the `3 take` is not needed because each list will take the shorter of the two and they are replicated in different directions with the other dimension still being 3. So the final program can be:
 
-    (,(1:2:3:$)) * !,(1:2:3:$)
+    (,(1 2 3)) * !,(1 2 3)
     ──────────────────────────────────
     1 2 3
     2 4 6
@@ -309,7 +306,7 @@ This technique can do any degree of nesting with any dimension lists. Essentiall
 
 Note for code golfers, the left `,` isn't needed since it knows it needs a 2D list. We could have written
 
-    (1:2:3:$)*!,1:2:3:$
+    (1 2 3)*!,1 2 3
     ──────────────────────────────────
     1 2 3
     2 4 6
@@ -317,14 +314,11 @@ Note for code golfers, the left `,` isn't needed since it knows it needs a 2D li
 
 or even
 
-    a*!,a=1:2:;3
+    a*!,a=1 2 3
     ──────────────────────────────────
     1 2 3
     2 4 6
     3 6 9
-
-Future versions will have a smoother syntax for list construction as well.
-
 
 ## Foldr
 
@@ -345,7 +339,7 @@ But this causes an infinite loop. Why?
 
 The reason is because zipWith stops when either list is empty. And to decide if `b` is empty it needs to know if the tail of `b++[0]` is empty. But to find where the `[0]` begins it needs to know if `b` is empty, which is where we started.
 
-One option around this is to define two different zipWiths, one that only checks if left is empty and a different version that only checks if the right is empty. So in this case we would need to use zipWithL which doesn't check if the right arg is empty, only the left. These zipWiths would throw an error if the opposite side was the shorter list (rather than truncate). This isn't ideal because it puts the burden on the user to choose the correct zipWith and it actually still doesn't work because `++` still needs to know when the left operand is empty, but it would work if Haskell constructed lists symmetrically with `++` as the primitive instead of cons.
+One option around this is to define two different zipWiths, one that only checks if left is empty and a different version that only checks if the right is empty. So in this case we would need to use zipWithL which doesn't check if the right arg is empty, only the left. These zipWiths would throw an error if the opposite side was the shorter list (rather than truncate). This isn't ideal because it puts the burden on the user to choose the correct zipWith and it actually still doesn't work because `++` still needs to know when the left operand is empty, but it would work if Haskell constructed lists symmetrically with `++` as a primitive instead of cons.
 
 There is a solution though! We can define a function that adds an infinite list to the end of a list and construct it in such a way that it doesn't need to check anything if asked if empty, since it can never be empty even after tailing it. This allows zip's empty check to immediately succeed. Here is that function in Haskell:
 
@@ -359,7 +353,7 @@ There is a solution though! We can define a function that adds an infinite list 
 
 This function pads a list by adding an infinite list of a repeating element after it (e.g. `pad [1,2,3,4] 0` is `[1,2,3,4,0,0,0,...]`. But critically it starts by returning a list rather than first checking which case to return.
 
-Notice that it returns `h : pad t v`, which is a non empty list, regardless of if `a` was empty or not, thus nothing needs to be computed when asked if the result is empty. It is only the contents of said list that depend on if `a` was empty. This is definitely not the most intuitive way to define this function, but it is the only way that is sufficiently lazy.
+Notice that it always returns `h : pad t v`, which is a non empty list, regardless of if `a` was empty or not, thus nothing needs to be computed when asked if the result is empty. It is only the contents of said list that depend on if `a` was empty. This is definitely not the most intuitive way to define this function, but it is the only way that is sufficiently lazy.
 
 Now we can write:
 
@@ -368,25 +362,25 @@ Now we can write:
 
 And it works! Atlas has a builtin for pad, it is `|` so we could just write:
 
-    a=1:2:3:4:$
-    b=a+tail b|0
+    a = 1 2 3 4
+    b = a + tail b|0
     ──────────────────────────────────
     10 9 7 4
 
 ## Minimal Basis of Turing Complete Ops
 
-Folds are extremely powerful (see [expressiveness of fold](https://www.cs.nott.ac.uk/~pszgmh/fold.pdf)). My take is that we can think of any computation as series of generating a new state based solely on a previous state. I guess this is more of an `iterate` in Haskell terms. But iterate is just a fold on an infinite list where you don't use the arg. The Transpose example above did an iterate with circular programming to repeatedly tail.
+Folds are extremely powerful (see [expressiveness of fold](https://www.cs.nott.ac.uk/~pszgmh/fold.pdf)). My take is that we can think of any computation as repeatedly generating a new state based solely on a previous state. I guess this is more of an `iterate` in Haskell terms. But iterate is just a fold on an infinite list where you don't use the arg. The Transpose example above did an iterate with circular programming to repeatedly tail.
 
-Since we have seen how to foldr, we can use it to get the nth state or last state. Just foldr, taking the first element where index=n for example. We do need an `if` statement to do that, which Atlas has, but it could have been done as follows. Let's call our condition `c` which is a True if non empty and False if empty. And we want `a` if True and `b` if False. We can then write:
+Since we have seen how to foldr, we can use it to get the nth state or last state. Just foldr, taking the first element where index=n. We do need an `if` statement to do that, which Atlas has, but `if` could have been done as follows. Let's call our condition `c` which is a True if non empty and False if empty. And we want `a` if True and `b` if False. We can then write:
 
-    head ((a:$) const c) | b
+    head ((a ()) const c) | b
 
 It works by replacing `c` with `a` if non empty, appending `b` and then taking the first. If `c` was empty then the result is `b` otherwise it is `a`.
 
 Example:
 
-    head (("true":$) const "") | "false"
-    head (("true":$) const "asdf") | "false"
+    head (("true" ()) const "") | "false"
+    head (("true" ()) const "asdf") | "false"
     ──────────────────────────────────
     false
     true
@@ -399,7 +393,7 @@ That's four ops. It is possible to reduce this by combining append and single in
 
 Head/tail could be combined into a single function uncons, but then we need a way to support multiple assignment.
 
-Numbers aren't needed, they could be represented as the length of a list or if you cared about efficiency a list of bits where each bit is an empty list or not. This is similar to strategies that are used for numbers in the lambda calculus.
+Numbers aren't needed, they could be represented as the length of a list or if you cared about efficiency a list of bits where each bit is an empty list or non empty. This is similar to strategies that are used for numbers in the lambda calculus.
 
 This would give a Turing Complete basis that is only 2 ops, plus assignment and `!`. `!` isn't truly needed in that we could define ops that perform at predefined zip levels, I'm not sure how many we would need though (probably only a couple). This is very arguably simpler than the SK calculus because there are no partial applications and the language can be statically typed! I personally find it more intuitive to work with values and first class lists than partial functions.
 
@@ -415,7 +409,7 @@ For example consider our original Fibonacci numbers program, with iterate that w
 
 Compared to Atlas
 
-    a=1:1:a+tail a
+    a=1 1 a+tail a
     ──────────────────────────────────
     1 1 2 3 5 8 13 ...
 
@@ -426,13 +420,13 @@ TODO more complex example but more readable than my bf interpreter
 Just in case there was any doubt that the language is Turing Complete, I'll use these principles to implement a brianfuck interpreter:
 
     source="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
-    bracket_depth = 0 : !if source == '[ then bracket_depth+1 else !if source == '] then bracket_depth-1 else bracket_depth
+    bracket_depth = 0 !if source == '[ then bracket_depth+1 else !if source == '] then bracket_depth-1 else bracket_depth
     not_truthy = !if value then 0 else 1
-    wholes=0:wholes+,1
-    code_pointer = 0 : !if not_truthy * !len instruction == '[ then find_rbracket else !if value !& instruction == '] then find_lbracket else code_pointer+1
+    wholes=0 wholes+,1
+    code_pointer = 0 !if not_truthy * !len instruction == '[ then find_rbracket else !if value !& instruction == '] then find_lbracket else code_pointer+1
     instruction = !head code_pointer drop source
-    pointer = 0 : !if instruction == '> then pointer+1 else !if instruction == '< then pointer-1 else pointer
-    state = (,0) : (pointer take state) !@ (!;new_value) !@ (pointer+1) drop state
+    pointer = 0 !if instruction == '> then pointer+1 else !if instruction == '< then pointer-1 else pointer
+    state = (,0) (pointer take state) !@ (!;new_value) !@ (pointer+1) drop state
 
     value = !head pointer drop state
     new_value = !if instruction == '+ then value+1 else !if instruction == '- then value-1 else value
@@ -471,24 +465,24 @@ That's a brainfuck interpreter (without input, but it could be supported similar
 
 Circular programming is a powerful technique, especially when your language has a nice syntax for vectorization. These techniques are often the simplest and best way to describe a sequence, but as I've shown you can take it too far. Moderation is key for real code. Still, going too far in play is enlightening, and hopefully you can have some fun playing with Atlas.
 
-Let's end with two examples where circular programming is an elegant solution. The first "real world" problem is the Josephus Problem. Where 40 prisoners decide to go around in a circle, every third prisoner shooting themselves, until only 1 is left, which spot should line up at to survive? The [haskell solution](https://rosettacode.org/wiki/Josephus_problem#Haskell) is 39 lines long without circular programming and [16 with](https://debasishg.blogspot.com/2009/02/learning-haskell-solving-josephus.html). There is a 1-line without circular programming but it is non obvious. Implementing it intuitively is simpler with circular programming.
+Let's end with two examples where circular programming is an elegant solution. The first "real world" problem is the Josephus Problem. Where 40 prisoners decide to go around in a circle, every third prisoner shooting themselves, until only 1 is left, which spot should you line up at to survive? The [haskell solution](https://rosettacode.org/wiki/Josephus_problem#Haskell) is 39 lines long without circular programming and [16 with](https://debasishg.blogspot.com/2009/02/learning-haskell-solving-josephus.html). There is a 1-line without circular programming but it is non obvious. Implementing it intuitively is simpler with circular programming.
 
 In Atlas the solution is simple:
 
-    nats=1:nats+1
+    nats=1 nats+1
     prisoners=40 take nats
-    gun_holders = prisoners @ concat !if nats % 3 then !;gun_holders else ,$
-    head concat !if gun_holders !eq tail gun_holders then !; gun_holders else ,$
+    gun_holders = prisoners @ concat !if nats % 3 then !;gun_holders else $
+    head concat !if gun_holders !== tail gun_holders then !;gun_holders else $
     ──────────────────────────────────
     28
 
-The `concat !if ... !;gun_holders else ,$` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
+The `concat !if ... !;gun_holders else $` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
 
 I guess it is no surprise that a problem involving a circle has a nice circular programming solution. But calculating primes using the Sieve of Eratosthenesis is our next example. Typically the sieve is done on a fixed size, but if you use circular programming you can stream it.
 
 TODO clean this up
 
-    _!if (1+v1=1:(v2=2:1+v2)*v1)%v2 then ,$ else !;v2
+    _!if (1+v1=1(v2=2 1+v2)*v1)%v2 then $ else !;v2
     ──────────────────────────────────
     2 3 5 7 11 13 17 19 23 29 31 ...
 
@@ -504,8 +498,10 @@ Recursion is used to implement primitives and so you will hit a stack overflow i
 
 # Future / Contributing
 
-I'd like to do add some more advanced features / ops to give it lasting appeal, see [todo](docs/todo.txt) (or maybe it is best left simple). I'd also like to port it to Nim or another static language that can also compile to javascript so that it can be used online. But first it would be very valuable to get feedback and ideas from **YOU**. I would love to collaborate with anyone who finds this interesting.
+I'd like to do add some more advanced features / ops to give it lasting appeal, see [todo](docs/todo.txt). I'd also like to port it to Nim or another static language that can also compile to javascript so that it can be used online easily. But first it would be very valuable to get feedback and ideas from **YOU**. I would love to collaborate with anyone who finds this interesting.
 
-BTW there was a 2d mode which I think was very interesting, but I removed it for now (check out the first commit if you are curious).
+Please raise an issue or email me with your thoughts. `<name of this lang> at golfscript.com`.
 
-Please raise an issue or email me with your thoughts. `<name of this lang> at golfscript.com`. There is also a google group for issues relating to the design of the language: [atlas-lang](https://groups.google.com/g/atlas-lang).
+There is also a google group for discussing the ongoing design of the language: [atlas-lang](https://groups.google.com/g/atlas-lang). Please ask to join with a message (this is just to prevent spam, all are welcome).
+
+BTW there was a working Befunge-like 2D mode where you draw your program's graph rather than use variable names and parenthesis - it was smart about deducing connections so was probably even more concise. It was very interesting, but I removed it for now to focus on teaching circular programming rather than exploring a wacky idea (check out the first commit of this language for a working prototype if you are curious).

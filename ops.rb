@@ -4,13 +4,17 @@ require_relative "./error.rb"
 require_relative "./lazylib.rb"
 require_relative "./spec.rb"
 
+NO_PROMOTE = :a_no         #
+ALLOW_PROMOTE = :b_allow   # promote if only way to satisfy type spec
+PREFER_PROMOTE = :c_prefer # promote instead of replicate
+MUST_PROMOTE = :d_must     # there must always be at least 1 promotion
+
 class Op < Struct.new(
     :name,
     :sym, # optional
     :type,
     :min_zip_level,
-    :prefer_promote,
-    :must_promote,
+    :promote,
     :impl)
   def narg
     type ? type[0].specs.size : 0
@@ -25,8 +29,7 @@ def create_op(
   sym: nil,
   type: ,
   min_zip_level: 0,
-  prefer_promote: false, # over replication
-  must_promote: false, # must promote at least 1 arg
+  promote: ALLOW_PROMOTE,
   poly_impl: nil, # impl that needs type info
   impl: nil,
   impl_with_loc: nil # impl that could throw, needs token location for err msgs
@@ -40,7 +43,7 @@ def create_op(
   else
     built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
-  Op.new(name,sym,type,min_zip_level,prefer_promote||must_promote,must_promote,built_impl)
+  Op.new(name,sym,type,min_zip_level,promote,built_impl)
 end
 
 OpsList = [
@@ -62,10 +65,12 @@ OpsList = [
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "head on empty list",from if a.value==[]
       a.value[0].value
-    }}
+    }},
+    promote: NO_PROMOTE,
   ), create_op(
     name: "last",
     sym: "]",
+    promote: NO_PROMOTE,
     # Example: ]"abc" -> 'c
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
@@ -76,6 +81,7 @@ OpsList = [
     name: "tail",
     # Example: tail "abc" -> "bc"
     sym: ">",
+    promote: NO_PROMOTE,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "tail on empty list",from if a.value==[]
@@ -84,6 +90,7 @@ OpsList = [
     name: "init",
     # Example: init "abc" -> "ab"
     sym: "<",
+    promote: NO_PROMOTE,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "init on empty list",from if a.value==[]
@@ -140,7 +147,6 @@ OpsList = [
     sym: "~",
     type: { Int => Int,
             Str => Int },
-    prefer_promote: true,
     poly_impl: -> t {
       case t
       when Int
@@ -174,6 +180,7 @@ OpsList = [
     name: "len",
     # Example: # "asdf" -> 4
     sym: "#",
+    promote: NO_PROMOTE,
     type: { [A] => Int },
     impl: -> a { len(a.value) }
   ), create_op(
@@ -286,7 +293,7 @@ OpsList = [
     sym: " ", # although you don't need a space with parens/etc.
     type: { [[A],[A]] => [A] },
     impl: -> a,b { append(a.value,b) },
-    must_promote: true,
+    promote: MUST_PROMOTE,
   ), create_op(
     name: "transpose",
     sym: "\\",
@@ -294,7 +301,6 @@ OpsList = [
     # Test: \"abc":;"1234" -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a.value) },
-    prefer_promote: true,
   )
 ]
 
@@ -316,8 +322,9 @@ OpsList.each{|op|
   else; error; end
   AllOps[op.name] = AllOps[op.sym] = op
 }
-RepOp = Ops1["rep"]
-PromoteOp = Ops1["single"]
+RepOp = AllOps["rep"]
+PromoteOp = AllOps["single"]
+NilOp = AllOps['nil']
 
 def create_int(str)
   create_op(

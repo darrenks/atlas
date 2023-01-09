@@ -15,6 +15,7 @@ tests.each{|test_filename|
   sections = test.scan(section_regex)
   datum = test.split(section_regex)[1..-1]
   prog = nil
+  args = ""
   expected_stderr = input = expected_stdout = ""
   sections.zip(datum){|section,data|
     case section.chomp[1...-1].downcase
@@ -26,6 +27,8 @@ tests.each{|test_filename|
       expected_stderr = (data||"").strip
     when "prog"
       prog = data.strip
+    when "args"
+      args=data.strip
     else
       raise "unknown section %p" % section
     end
@@ -33,7 +36,7 @@ tests.each{|test_filename|
 
   File.write("test/input", input)
   File.write("test/prog.atl",prog)
-  stdout, stderr, status = Open3.capture3("ruby atlas.rb test/prog.atl < test/input")
+  stdout, stderr, status = Open3.capture3("ruby atlas.rb test/prog.atl #{args} < test/input")
 
   stdout.strip!
   stderr.strip!

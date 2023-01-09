@@ -1,5 +1,3 @@
-# todo some ops may only error because return type if using head, but no other ops like it
-
 tests = <<'EOF'
 // 1 arg ////////
 
@@ -7,26 +5,43 @@ tests = <<'EOF'
 `1 -> `1
 `;1 -> `;1
 `;;1 -> `;;1
+!`1 -> AtlasTypeError
+!`;1 -> !`;1
 
 // scalar (negate)
 ~1 -> ~1
 ~;1 -> !~;1
 ~;;1 -> !!~;;1
+!~1 -> AtlasTypeError
+!~;1 -> AtlasTypeError
 
 // [scalar] (read)
 ~'c -> ~;'c
 ~"c" -> ~"c"
 ~;"c" -> !~;"c"
+!~"c" -> !~!;"c"
+!~;"c" -> !!~!!;;"c"
+!!~"c" -> AtlasTypeError
+!!~;;"c" -> AtlasTypeError
 
 // [A] (head)
 [1 -> AtlasTypeError
 [;1 -> [;1
 [;;1 -> [;;1
+![;1 -> AtlasTypeError
+![;;1 -> ![;;1
+
+]1 -> ];1
+!]1 -> AtlasTypeError
+!];1 -> !]!;;1
 
 // [[A]] (transpose)
 \1 -> \;;1
 \;1 -> \;;1
 \;;1 -> \;;1
+!\1 -> AtlasTypeError
+!\;1 -> !\!;!;;1
+!\;;1 -> !\!;;;1
 
 // 2 arg ///////////
 // A,A (eq)
@@ -39,29 +54,57 @@ tests = <<'EOF'
 (;;1)==1 -> (;;1)!!==,,1
 (;;1)==;1 -> (;;1)!==,;1
 (;;1)==;;1 -> (;;1)==;;1
+(;1)!==;;1 -> (,;1)!!==;;1
+1!==1 -> AtlasTypeError
+1!==;1 -> AtlasTypeError
+1!==;1 -> AtlasTypeError
+;1!!==;1 -> AtlasTypeError
 
 // A,[A] (cons)
-1:1 -> AtlasTypeError
+1:1 -> 1:;1
 1:;1 -> 1:;1
 1:;;1 -> (,1)!:;;1
-(;1):1 -> AtlasTypeError
+(;1):1 -> (;1)!:,;1
 (;1):;1 -> (;1)!:,;1
 (;1):;;1 -> (;1):;;1
 
-// [A],[A] (append todo)
+// [A],[A] (append)
+1@1 -> (;1)@;1
+1@;1 -> (;1)@;1
+(;1)@1 -> (;1)@;1
+(;1)@(;;1) -> (,;1)!@;;1
+1@;;1 -> (,;1)!@;;1
+
+1!@1 -> AtlasTypeError
+(;1)@;;1 -> (,;1)!@;;1
+(;1)!@;1 -> AtlasTypeError
+(;;1)!@(;;1) -> (;;1)!@;;1
 
 // scalar scalar (add)
 1+2 -> 1+2
 (;1)+2 -> (;1)!+,2
 1+;2 -> (,1)!+;2
+1!+2 -> AtlasTypeError
 
 // Int,[A] (take)
-1[1 -> AtlasTypeError
+1[1 -> 1[;1
 1[;1 -> 1[;1
 1[;;1 -> 1[;;1
-(;1)[1 -> AtlasTypeError
+(;1)[1 -> (;1)![,;1
 (;1)[;1 -> (;1)![,;1
 (;1)[;;1 -> (;1)![;;1
+1![;1 -> AtlasTypeError
+
+// [a] [a] must promote
+1 2 -> (;1)@;2
+1(;2) -> (;1)@;2
+(;1) 2 -> (;1)@;2
+;1(;2) -> ;(;1)@;2
+1 ;1 -> (;1)@;1
+1(;;1) -> (;;1)@;;1
+(;1)! ;1 -> (!;;1)!@!;;1
+1! ;1 -> (,;1)!@!;;1
+1! 2 -> AtlasTypeError
 
 // 3 arg ////////////////
 // A,B,B
@@ -95,6 +138,9 @@ if ;;1 then ;;2 else 3 -> !!if ;;1 then ;;2 else ,,3
 if ;;1 then ;;2 else ;3 -> !if ;;1 then ;;2 else ,;3
 if ;;1 then ;;2 else ;;3 -> if ;;1 then ;;2 else ;;3
 
+!if 1 then 2 else 3 -> AtlasTypeError
+!if ;1 then 2 else ;3 -> AtlasTypeError
+
 /// Nil tests ////////
 
 // A (inspect)
@@ -112,7 +158,7 @@ if ;;1 then ;;2 else ;;3 -> if ;;1 then ;;2 else ;;3
 [;$ -> [;$
 
 // [[A]] (concat)
-// _$ -> AtlasTypeError todo
+_$ -> _$
 _;$ -> _;$
 _;;$ -> _;;$
 
@@ -130,8 +176,10 @@ $==;;1 -> $==;;1
 
 
 // A,[A] (cons)
+// : todo or remove
 
-// [A],[A] (append todo)
+// [A],[A] (append)
+1@$ -> (;1)@$
 
 // scalar scalar (add)
 $+1 -> AtlasTypeError
@@ -150,6 +198,9 @@ $+;1 -> AtlasTypeError
 $[;1 -> AtlasTypeError
 $[;;1 -> AtlasTypeError
 $[$ -> AtlasTypeError
+
+// [A],[A] Must promote
+$ $ -> (;$)@;$
 
 // 3 arg //////////
 // A,B,B
@@ -177,27 +228,6 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 !3 -> ParseError
 // !"" -> ParseError # todo better error
 ! -> ParseError
-!`1 -> AtlasTypeError
-!["a" -> AtlasTypeError
-1!+2 -> AtlasTypeError
-1![;1 -> AtlasTypeError
-1!==1 -> AtlasTypeError
-1!==;1 -> AtlasTypeError
-1!==;1 -> AtlasTypeError
-;1!!==;1 -> AtlasTypeError
-!if 1 then 2 else 3 -> AtlasTypeError
-!if ;1 then 2 else ;3 -> AtlasTypeError
-
-// promote
-1 2 -> (;1) ;2
-1(;2) -> (;1) ;2
-(;1) 2 -> (;1) ;2
-;1(;2) -> ;(;1) ;2
-'a "bc" -> (;'a) "bc"
-'a(;"bc") -> (;;'a) ;"bc"
-// todo clean up
-"ab"! "cd" -> (!;"ab")! !;"cd"
-'a! "cd" -> (!;,'a)! !;"cd"
 
 EOF
 
@@ -208,6 +238,9 @@ require "./type.rb"
 require "./infer.rb"
 require "./lazylib.rb"
 require "./to_infix.rb"
+
+# There are no ops of type [a] that allow promote, make one for testing
+Ops1[']'].promote=ALLOW_PROMOTE
 
 def doit(source)
   tokens = lex(source)

@@ -32,6 +32,7 @@ def r(node, is_lhs)
 
   op_name = (node.op.sym||node.op.name).to_s
   op_name = "if" if node.op.name == "if"
+  op_name = "@" if node.op.sym == " "
 
   op = "!" * (node.zip_level || node.explicit_zip_level) + op_name
 

@@ -3,21 +3,28 @@
 There are 4 types in Atlas.
 -   Integers (arbitrary precision).
 -   Chars which are just integers that may have a different set of operations allowed on them including how they are displayed. Construct them using a single leading `'`.
--   Lists, which may also be of other lists. Construct them by creating an empty list with `$` and then add things to them with cons (`:`) (or create a single element list more concisely with just `;`).
--   Nil which means a list of unknown type. It will become the smallest rank type it can when used in ops with type constraints like cons. This is also the type of circular code that could be any type. E.g. `a=a`. It is the type of the empty list which is different than Haskell, it allows for purely top down type inference which I find more intuitive since it more closely resembles how types work in dynamic languages.
+-   Lists, which may also be of other lists. A list of a list of integers is what I call a 2D list AKA a rank 2 list. This is not a matrix, each sublist may have a different length.
+-   Nil which means a list of unknown type. This is the type of `()`, the empty list. It needs its own type in order for top down type inference to work (which is what Atlas uses). It becomes the smallest rank type it can when used in ops with type constraints like `append`. You may also see this type displayed as the arg type in invalid circular program's error messages, this is because unknown types start off as nil during inference since it can become anything.
 
 Strings are just lists of characters.
 
--   `123` this is an integer
--   `'x` this is char of the letter x
--   `"abc"` this is a string
--   `1:2:3:$` this is the list [1,2,3]
+    123 // This is an integer
+    'x // This is a char
+    "abc" // This is a string, aka list of chars
+    1 2 3 // This is a list of integers constructed via implicit cons.
+    show () // This is an empty list pretty printed
+    ──────────────────────────────────
+    123
+    x
+    abc
+    1 2 3
+    []
 
 Some escapes are possible in chars/strings:
 
 `\0` `\n` `\"` `\\` `\x[0-9a-f][0-9a-f]`
 
-You may also use any unicode character the Atlas files are assumed to be UTF-8 encoded.
+You may also use any unicode character, the Atlas files are assumed to be UTF-8 encoded.
 
 Integers are truthy if >0, chars if non whitespace, lists if non empty. This is only used by the if/else operator.
 

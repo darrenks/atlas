@@ -39,7 +39,7 @@ $%2 -> AtlasTypeError
 $ -> [] : Nil
 
 5:$ -> [5]
-5:6 -> AtlasTypeError
+5:6 -> [5,6]
 5:6:$ -> [5,6]
 
 
@@ -162,7 +162,7 @@ _"hi":"there":$ -> "hithere"
 (_(,"abc"))@"123" -> "abcabcabc...
 "abc"!@"123" -> AtlasTypeError
 ("a":;"b")!@"1":;"2" -> ["a1","b2"]
-'a@"b" -> AtlasTypeError
+'a@"b" -> "ab"
 
 1eq 2 -> []
 1eq 1 -> [1]
@@ -250,8 +250,12 @@ _!if "______MA_" eq '_ then !;"CHISTMAS" else $ -> "CHISTM"
 'a "c" ? 1 ) "b" -> "ab"
 0 !if "asdf" then ,1 else ,2 -> [0,1,1,1,1]
 
+// Test promotion
 1 ~2 -> [1,-2]
-
 'a! "cd" -> ["ac","ad"]
-// todo make this work:
-// 'a!"cd" -> ["ac","ad"]
+!~"123" -> [1,2,3]
+\"asdf" -> ["a","s","d","f"]
+
+
+// Test parse uses previous token correct
+(1) ~2 -> [1,-2]

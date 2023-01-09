@@ -1,4 +1,4 @@
-class AST < Struct.new(:op,:args,:token,:type,:zip_level,:promise,:expected_type,:id,:used_by,:replicated_args,:promoted_args,:last_error,:replaced)
+class AST < Struct.new(:op,:args,:token,:type,:zip_level,:promise,:expected_type,:id,:used_by,:replicated_args,:last_error,:replaced)
   def explicit_zip_level
     token ? token.str[/^!*/].size : 0
   end

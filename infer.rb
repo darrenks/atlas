@@ -59,12 +59,11 @@ def possible_types(node)
     fn_type = fn_types[0]
   end
 
-  node.promoted_args = promote_as_needed(fn_type, node)
-
-  arg_types = node.promoted_args.map(&:type)
+  arg_types = node.args.map(&:type)
 #STDERR.puts arg_types.inspect
-  #p node.token.str if node.token
-  min_implicit_zip_level = implicit_zip_level(arg_types, fn_type.specs)
+#   p node.token.str if node.token
+
+  min_implicit_zip_level = implicit_zip_level(node.op, arg_types, fn_type.specs)
   zip_level = node.explicit_zip_level + min_implicit_zip_level + node.op.min_zip_level
 #STDERR.puts "zip_level = %d" % zip_level
 
@@ -72,48 +71,32 @@ def possible_types(node)
 
   vars = solve_type_vars(arg_types, fn_type.specs)
 
-  replicated_args = replicate_as_needed(fn_type, node, vars, arg_types, zip_level)
+  replicated_args = replicate_and_promote_as_needed(fn_type, node, vars, arg_types, zip_level)
 #       replicated_args.each{|arg| t=arg.type;raise AtlasTypeError.new("cannot zip into nil",nil) if t.is_nil && t.dim <= node.zip_level }
   t = spec_to_type(fn_type.ret, vars) + zip_level
-#       raise AtlasTypeError.new "can't replicate this case",nil if node.type && node.type != :PENDING && node.type != t # e.g. from cons hardcoded
-#       raise AtlasTypeError.new "expecting type %p, found %p" % [node.expected_type, t], nil if node.expected_type && !t.can_be(node.expected_type)  }
 
   node.replicated_args = replicated_args
   node.zip_level = zip_level
   t
 end
 
-def promote_as_needed(fn_type, node)
-  args = node.args
-  if node.op.prefer_promote
-    args = args.map{|arg|
-      implicit_repn(arg, [0,node.explicit_zip_level-arg.type.dim].max)
-    }
-    arg_types = args.map{|n|n.type - node.explicit_zip_level }
-
-    vars = solve_type_vars(arg_types, fn_type.specs)
-    rank_deficits = rank_deficits(arg_types, fn_type.specs, vars, 0)
-    rank_deficits = [1,1] if rank_deficits == [0,0] && node.op.must_promote
-  else
-    rank_deficits = [0] * args.size
-  end
-  args.map.with_index{|arg,i|
-    implicit_promoten(arg, rank_deficits[i], node.explicit_zip_level)
-  }
-end
-
-def replicate_as_needed(fn_type, node, vars, arg_types,zip_level)
+def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level)
   all_repped = true
   rank_deficits = rank_deficits(arg_types, fn_type.specs, vars, zip_level)
-  replicated_args = node.promoted_args.map.with_index{|arg,i|
-    rep_level = rank_deficits[i]
-    node.last_error ||= AtlasTypeError.new "rank is too low for argument %d" % [i+1], node if rep_level > zip_level
-    all_repped &&= rep_level > 0
 
+  promote_levels = promote_levels(node,rank_deficits,zip_level,vars)
+
+  replicated_args = node.args.map.with_index{|arg,i|
+    arg = implicit_promoten(arg, promote_levels[i],[zip_level,arg.type.dim].min)
+    rep_level = rank_deficits[i] - promote_levels[i]
+
+    all_repped &&= rep_level > 0
 #     raise AtlasTypeError.new "can't replicate nil",nil if arg == Nil && rep_level > 0
     implicit_repn(arg, rep_level)
   }
-  node.last_error ||= AtlasTypeError.new "zip level too high", node if node.args.size > 0 && all_repped
+  if node.args.size > 0 && all_repped
+    node.last_error ||= AtlasTypeError.new "zip level too high", node
+  end
   replicated_args
 end
 
@@ -152,7 +135,7 @@ end
 # constraints:
 #   0 <= rep levels <= z
 #   type vars satisfiable
-def implicit_zip_level(arg_types, specs)
+def implicit_zip_level(op, arg_types, specs)
   vars = {}
   min_z = 0
   arg_types.zip(specs) { |arg,spec|
@@ -160,19 +143,19 @@ def implicit_zip_level(arg_types, specs)
     when VarTypeSpec
       (vars[spec.var_name]||=[]) << (arg - spec.extra_dims)
     when ExactTypeSpec
-      this_z = arg.is_nil ?
-        arg.dim - spec.req_dim : # nil has only min req rank
-        (arg.dim - spec.req_dim).abs
+      this_z = arg.dim - spec.req_dim
       min_z = [min_z, this_z].max
     else
       error
     end
   }
-  vars.each{|_,uses|
-    min_use = uses.map{|t| t.max_pos_dim }.min
-    max_use = [uses.map{|t| t.dim }.max, 0].max
-    min_z = [min_z, max_use-min_use].max
-  }
+  if op.promote < PREFER_PROMOTE
+    vars.each{|_,uses|
+      min_use = [uses.map{|t| t.max_pos_dim }.min, 0].max
+      max_use = [uses.map{|t| t.dim }.max, 0].max
+      min_z = [min_z, max_use-min_use].max
+    }
+  end
   return min_z
 end
 
@@ -221,4 +204,27 @@ def rank_deficits(arg_types, specs, vars, zip_level)
       spec_dim - arg.dim
     end
   }
+end
+
+def promote_levels(node,rank_deficits,zip_level,vars)
+  promote_levels = node.args.zip(rank_deficits,(0..)).map{|arg,deficit,i|
+    if node.args.size == 1 && node.op.promote >= ALLOW_PROMOTE && arg.type.dim >= zip_level
+      deficit
+    elsif node.op.promote >= PREFER_PROMOTE
+      [zip_level <= arg.type.dim ? deficit : arg.type.dim, deficit - zip_level].max
+    elsif node.op.promote >= ALLOW_PROMOTE
+      [deficit - zip_level, 0].max
+    else
+      if deficit > zip_level
+        node.last_error ||= AtlasTypeError.new "rank is too low for argument %d" % [i+1], node
+      end
+      0
+    end
+  }
+
+  if node.op.promote == MUST_PROMOTE && promote_levels == [0,0]
+    promote_levels = [1,1]
+    vars.each{|k,v|v.dim += 1}
+  end
+  promote_levels
 end

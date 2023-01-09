@@ -4,8 +4,12 @@ require_relative "./parse.rb"
 require_relative "./infer.rb"
 require_relative "./to_infix.rb"
 
-raise "usage: > ruby atlas.rb filename.atl" if ARGV.size != 1
-source = File.read(ARGV[0])
+options,filenames = ARGV.partition{|arg|arg[0,2]=="--"}
+debug = options.delete("--debug")
+
+raise "Usage: ruby atlas.rb [--debug] filename.atl" if filenames.size != 1 || !options.empty?
+
+source = File.read(filenames[0])
 
 begin
   tokens = lex(source)
@@ -18,20 +22,21 @@ begin
     AST.new(Ops2[':'],[line,AST.new(Ops2[':'],[newline,after])])
   }])
 
-#  root = AST.new(Ops['tostring'],roots)
-
-#
-#   puts to_infix(root)
-
   infer(root)
 
-#   STDERR.puts to_infix(root)
-#   STDERR.puts roots[0].type.inspect
+  if debug
+    STDERR.puts "ANNOTATED PROGRAM:"
+    roots.each{|r|
+      STDERR.puts to_infix(r) + " // " + r.type.inspect
+    }
+#     exit
+    STDERR.puts "OUTPUT:"
+  end
 
   make_promises(root)
   run(root)
 
-  #STDERR.puts "dynamic reductions: %d" % $reductions
+  STDERR.puts "REDUCTIONS: %d" % $reductions if debug
 rescue AtlasError => e
   STDERR.puts if DynamicError === e
   STDERR.puts e.message

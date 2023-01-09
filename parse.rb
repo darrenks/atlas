@@ -44,11 +44,13 @@ def parse_top_level(tokens,context)
   exprs.empty? ? last_stmt : exprs
 end
 
+$prev = $curr = nil
 def get_expr(tokens,context,delimiter)
   raise ParseError.new "unexpected EOF",nil if tokens.empty?
-  t = tokens.shift
+  $prev = $curr
+  t = $curr = tokens.shift
   raise ParseError.new "unexpected end of line",t if t.str == "\n"
-  raise ParseError.new "unexpected )",t if t.str == ")" # later will be empty parens which means empty list
+  return AST.new(NilOp, [], t) if t.str == ")" # todo what about other delimeters?
   raise ParseError.new "unexpected then",t if t.str == "then"
   raise ParseError.new "unexpected else",t if t.str == "else"
   op = get_op(t,Ops1,"unary")
@@ -74,7 +76,8 @@ def get_expr(tokens,context,delimiter)
     raise ParseError.new "unexpected end of expression, expecting '#{delimiter}'",t if delimiter != :EOF
     return lhs
   end
-  t = tokens.shift
+  $prev = $curr
+  t = $curr = tokens.shift
   if [')','then','else'].include? t.str
     raise ParseError.new "unmatched #{t.str}", t if delimiter == :EOF
     raise ParseError.new "expecting #{delimiter}" if t.str != delimiter
@@ -86,12 +89,13 @@ def get_expr(tokens,context,delimiter)
     context[lhs_t.str] = get_expr(tokens,context,delimiter)
   elsif t.str == "(" ||
         t.str =~ /^\!*if$/ ||
-        (lhs_t.space_after && !t.space_after) ||
+        ($prev.space_after && !t.space_after) ||
         (op = get_op(t,Ops2,"non-unary")).narg == 0
     tokens.unshift(t)
+    $curr = $prev
     rhs = get_expr(tokens,context,delimiter)
     implicit_t = t.dup
-    implicit_t.str = "implicit" # replace, could have been !if, etc. which would zip
+    implicit_t.str = "implicit"
     AST.new(Ops2[' '], [lhs, rhs], implicit_t)
   elsif op.narg == 2 # binop
     AST.new(op, [lhs, get_expr(tokens,context,delimiter)], t)

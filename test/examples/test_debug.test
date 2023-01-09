@@ -1,0 +1,11 @@
+[prog]
+'a! "asdf"
+[args]
+--debug
+[stdout]
+aa as ad af
+[stderr]
+ANNOTATED PROGRAM:
+(,;'a)!@!;"asdf" // [[Char]]
+OUTPUT:
+REDUCTIONS: 96
