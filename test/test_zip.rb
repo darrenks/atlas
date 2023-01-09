@@ -184,7 +184,7 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 1!==1 -> AtlasTypeError
 1!==;1 -> AtlasTypeError
 1!==;1 -> AtlasTypeError
-;1 !!==;1 -> AtlasTypeError
+;1!!==;1 -> AtlasTypeError
 !if 1 then 2 else 3 -> AtlasTypeError
 !if ;1 then 2 else ;3 -> AtlasTypeError
 
@@ -196,8 +196,8 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 'a "bc" -> (;'a) "bc"
 'a(;"bc") -> (;;'a) ;"bc"
 // todo clean up
-"ab"!implicit_promote_and_append"cd" -> (!;"ab")! !;"cd"
-'a!implicit_promote_and_append"cd" -> (!;,'a)! !;"cd"
+"ab"! "cd" -> (!;"ab")! !;"cd"
+'a! "cd" -> (!;,'a)! !;"cd"
 
 EOF
 

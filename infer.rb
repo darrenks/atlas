@@ -137,11 +137,7 @@ def implicit_promoten(arg, promote_level,zip_level)
 end
 
 def implicit_promote(arg,zip_level)
-  # needed?
-  t = Token.new("!"*zip_level+PromoteOp.name,0,0)
-  r = AST.new(PromoteOp,[arg],t,arg.type+1,0)
-  r.zip_level = zip_level
-  r
+  AST.new(PromoteOp,[arg],nil,arg.type+1,zip_level)
 end
 
 def check_base_elem_constraints(specs, arg_types)

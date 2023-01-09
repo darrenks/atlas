@@ -84,12 +84,15 @@ def get_expr(tokens,context,delimiter)
   if t.str == "="
     warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
     context[lhs_t.str] = get_expr(tokens,context,delimiter)
-  elsif t.str == "(" || t.str == "if" || (op = get_op(t,Ops2,"non-unary")).narg == 0
+  elsif t.str == "(" ||
+        t.str =~ /^\!*if$/ ||
+        (lhs_t.space_after && !t.space_after) ||
+        (op = get_op(t,Ops2,"non-unary")).narg == 0
     tokens.unshift(t)
     rhs = get_expr(tokens,context,delimiter)
-    AST.new(Ops2[' '], [lhs, rhs], t)
-  elsif op.narg == 1
-    raise ParseError.new "found unary op used as a binary op", t
+    implicit_t = t.dup
+    implicit_t.str = "implicit" # replace, could have been !if, etc. which would zip
+    AST.new(Ops2[' '], [lhs, rhs], implicit_t)
   elsif op.narg == 2 # binop
     AST.new(op, [lhs, get_expr(tokens,context,delimiter)], t)
   elsif op.sym == "?"

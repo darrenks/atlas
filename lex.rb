@@ -1,4 +1,4 @@
-Token=Struct.new(:str,:char_no,:line_no)
+Token=Struct.new(:str,:char_no,:line_no,:space_after)
 
 # todo gsub \r\n -> \n and \t -> 8x" " and \r -> \n
 
@@ -14,8 +14,12 @@ def lex(code) # returns a list of tokens
 
 	scan_with_pos(code,
 	    /#{AtomRegex}|#{CommentRegex}|#{IdRegex}/m){|token|
-	  next if token.str =~ /^(#{CommentRegex}| +)$/
-	  tokens << token
+	  if token.str =~ /^ +$/
+	    tokens[-1].space_after = true unless tokens.empty?
+	  elsif token.str =~ /^#{CommentRegex}$/
+	  else
+  	  tokens << token
+  	end
 	}
 	tokens
 end
@@ -23,7 +27,7 @@ end
 def scan_with_pos(str,regex)
   char_no = line_no = 1
   str.scan(regex) {|matches|
-    yield($from=Token.new($&,char_no,line_no))
+    yield($from=Token.new($&,char_no,line_no,false))
     if $&.include?($/)
 			char_no = $&.size - $&.rindex($/)
 			line_no += $&.count($/)

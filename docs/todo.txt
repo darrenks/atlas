@@ -4,9 +4,7 @@ a=a - should be nil
 infinite type - would be nice to give proper error
 
 ==== syntax ====
-implicit cons:
-   note that it should be able to handle stuff "asd" 'a because really it promotes as needed and appends
-   !atom should do a zipped cons since atoms cannot zip (!space should always zip cons)
+in implicit cons !atom should do a zipped cons since atoms cannot zip
 consider trying to make == a single op and be smart about deciding when it means assignment
 allow indented multiline strings with no delimiters
 allow newlines followed by indentation in complicated expressions

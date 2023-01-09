@@ -248,3 +248,10 @@ _!if "______MA_" eq '_ then !;"CHISTMAS" else $ -> "CHISTM"
 1 a@a=;2 -> [1,2,2]
 'a if 1 then "b" else "c" -> "ab"
 'a "c" ? 1 ) "b" -> "ab"
+0 !if "asdf" then ,1 else ,2 -> [0,1,1,1,1]
+
+1 ~2 -> [1,-2]
+
+'a! "cd" -> ["ac","ad"]
+// todo make this work:
+// 'a!"cd" -> ["ac","ad"]
