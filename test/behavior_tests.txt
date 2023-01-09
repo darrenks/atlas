@@ -181,9 +181,9 @@ init "asdf" -> "asd"
 \"abc":"12":"xyz":$ -> ["a1x","b2y","c"]
 !\("abc":"123":$):("xyz":"789":$):$ -> [["a1","b2","c3"],["x7","y8","z9"]]
 
-\"abcd" -> AtlasTypeError
-\4 -> AtlasTypeError
-!\"abc":"123":$ -> AtlasTypeError
+\"abcd" -> ["a","b","c","d"]
+\4 -> [[4]]
+!\"abc":"123":$ -> [["a","b","c"],["1","2","3"]]
 
 (;5)|6 -> [5,6,6,6,6...
 // should not evaluate / 1 0 because outer ? should be known to be true
@@ -213,7 +213,7 @@ v1=init 0:v1 -> InfiniteLoopError
 ~"--45" -> 45
 ~"- 45" -> 45
 
-~'5 -> AtlasTypeError
+~'5 -> 5
 !~'5 -> AtlasTypeError
 
 ~"1 2":"3 4":$ -> [1,3]

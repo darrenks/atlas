@@ -59,7 +59,9 @@ def possible_types(node)
     fn_type = fn_types[0]
   end
 
-  arg_types = node.args.map(&:type)
+  node.promoted_args = promote_as_needed(fn_type, node)
+
+  arg_types = node.promoted_args.map(&:type)
 #STDERR.puts arg_types.inspect
   #p node.token.str if node.token
   min_implicit_zip_level = implicit_zip_level(arg_types, fn_type.specs)
@@ -81,10 +83,29 @@ def possible_types(node)
   t
 end
 
+def promote_as_needed(fn_type, node)
+  args = node.args
+  if node.op.prefer_promote
+    args = args.map{|arg|
+      implicit_repn(arg, [0,node.explicit_zip_level-arg.type.dim].max)
+    }
+    arg_types = args.map{|n|n.type - node.explicit_zip_level }
+
+    vars = solve_type_vars(arg_types, fn_type.specs)
+    rank_deficits = rank_deficits(arg_types, fn_type.specs, vars, 0)
+    rank_deficits = [1,1] if rank_deficits == [0,0] && node.op.must_promote
+  else
+    rank_deficits = [0] * args.size
+  end
+  args.map.with_index{|arg,i|
+    implicit_promoten(arg, rank_deficits[i], node.explicit_zip_level)
+  }
+end
+
 def replicate_as_needed(fn_type, node, vars, arg_types,zip_level)
   all_repped = true
   rank_deficits = rank_deficits(arg_types, fn_type.specs, vars, zip_level)
-  replicated_args = node.args.map.with_index{|arg,i|
+  replicated_args = node.promoted_args.map.with_index{|arg,i|
     rep_level = rank_deficits[i]
     node.last_error ||= AtlasTypeError.new "rank is too low for argument %d" % [i+1], node if rep_level > zip_level
     all_repped &&= rep_level > 0
@@ -105,6 +126,22 @@ end
 
 def implicit_rep(arg)
   AST.new(RepOp,[arg],nil,arg.type+1,0)
+end
+
+
+def implicit_promoten(arg, promote_level,zip_level)
+  # do nothing since this actually valid
+  #raise "would need negative promote level" if promote_level < 0
+  promote_level.times { arg = implicit_promote(arg,zip_level) }
+  return arg
+end
+
+def implicit_promote(arg,zip_level)
+  # needed?
+  t = Token.new("!"*zip_level+PromoteOp.name,0,0)
+  r = AST.new(PromoteOp,[arg],t,arg.type+1,0)
+  r.zip_level = zip_level
+  r
 end
 
 def check_base_elem_constraints(specs, arg_types)

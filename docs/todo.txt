@@ -49,6 +49,6 @@ using white space presense to lower precedence
 flip, an op modifier
 
 ==== type improvements ====
-allow swapping and promoting if arg types don't match
+allow swapping if arg types don't match
 if knew what the return type needed to be could do things like make max lazy (like logical or) if number used as bool (also fyi, should truthy be >0 or non zero?)
 

@@ -87,7 +87,7 @@ def get_expr(tokens,context,delimiter)
   elsif t.str == "(" || t.str == "if" || (op = get_op(t,Ops2,"non-unary")).narg == 0
     tokens.unshift(t)
     rhs = get_expr(tokens,context,delimiter)
-    AST.new(Ops2['cons'], [lhs, rhs], t)
+    AST.new(Ops2[' '], [lhs, rhs], t)
   elsif op.narg == 1
     raise ParseError.new "found unary op used as a binary op", t
   elsif op.narg == 2 # binop

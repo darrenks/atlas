@@ -9,6 +9,8 @@ class Op < Struct.new(
     :sym, # optional
     :type,
     :min_zip_level,
+    :prefer_promote,
+    :must_promote,
     :impl)
   def narg
     type ? type[0].specs.size : 0
@@ -23,6 +25,8 @@ def create_op(
   sym: nil,
   type: ,
   min_zip_level: 0,
+  prefer_promote: false, # over replication
+  must_promote: false, # must promote at least 1 arg
   poly_impl: nil, # impl that needs type info
   impl: nil,
   impl_with_loc: nil # impl that could throw, needs token location for err msgs
@@ -36,7 +40,7 @@ def create_op(
   else
     built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
-  Op.new(name,sym,type,min_zip_level,built_impl)
+  Op.new(name,sym,type,min_zip_level,prefer_promote||must_promote,must_promote,built_impl)
 end
 
 OpsList = [
@@ -136,6 +140,7 @@ OpsList = [
     sym: "~",
     type: { Int => Int,
             Str => Int },
+    prefer_promote: true,
     poly_impl: -> t {
       case t
       when Int
@@ -167,7 +172,7 @@ OpsList = [
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? [a,Null] : [] } }
   ), create_op(
     name: "len",
-    # Example: # "asdf" -> 5
+    # Example: # "asdf" -> 4
     sym: "#",
     type: { [A] => Int },
     impl: -> a { len(a.value) }
@@ -272,18 +277,16 @@ OpsList = [
     # Example: "abc"@"123" -> "abc123"
     type: { [[A],[A]] => [A] },
     impl: -> a,b { append(a.value,b) },
-#   ), create_op(
-#     name: "box",
-# #     sym: "@",
-#     # Example: box 1:2:$ -> {1,2}
-#     type: { [A] => [box(A)] },
-#     impl: -> a { a.value },
-#   ), create_op(
-#     name: "unbox",
-# #     sym: "@",
-#     # Example: unbox box 1:2:$ -> [1,2]
-#     type: { box(A) => [A] },
-#     impl: -> a { a.value },
+  ), create_op(
+    name: "implicit_promote_and_append",
+    # Example: "abc" "123" -> ["abc","123"]
+    # Example: 1 2 3 -> [1,2,3]
+    # Test: 'a "123" -> "a123"
+    # Test: "123" 'a -> "123a"
+    sym: " ", # although you don't need a space with parens/etc.
+    type: { [[A],[A]] => [A] },
+    impl: -> a,b { append(a.value,b) },
+    must_promote: true,
   ), create_op(
     name: "transpose",
     sym: "\\",
@@ -291,6 +294,7 @@ OpsList = [
     # Test: \"abc":;"1234" -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a.value) },
+    prefer_promote: true,
   )
 ]
 
@@ -313,6 +317,7 @@ OpsList.each{|op|
   AllOps[op.name] = AllOps[op.sym] = op
 }
 RepOp = Ops1["rep"]
+PromoteOp = Ops1["single"]
 
 def create_int(str)
   create_op(

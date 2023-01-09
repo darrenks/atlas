@@ -14,7 +14,7 @@ tests = <<'EOF'
 ~;;1 -> !!~;;1
 
 // [scalar] (read)
-~'c -> AtlasTypeError
+~'c -> ~;'c
 ~"c" -> ~"c"
 ~;"c" -> !~;"c"
 
@@ -24,8 +24,8 @@ tests = <<'EOF'
 [;;1 -> [;;1
 
 // [[A]] (transpose)
-\\1 -> AtlasTypeError
-\;1 -> AtlasTypeError
+\1 -> \;;1
+\;1 -> \;;1
 \;;1 -> \;;1
 
 // 2 arg ///////////
@@ -187,6 +187,17 @@ if 1 then !$ else ;$ -> if 1 then !$ else ;$
 ;1 !!==;1 -> AtlasTypeError
 !if 1 then 2 else 3 -> AtlasTypeError
 !if ;1 then 2 else ;3 -> AtlasTypeError
+
+// promote
+1 2 -> (;1) ;2
+1(;2) -> (;1) ;2
+(;1) 2 -> (;1) ;2
+;1(;2) -> ;(;1) ;2
+'a "bc" -> (;'a) "bc"
+'a(;"bc") -> (;;'a) ;"bc"
+// todo clean up
+"ab"!implicit_promote_and_append"cd" -> (!;"ab")! !;"cd"
+'a!implicit_promote_and_append"cd" -> (!;,'a)! !;"cd"
 
 EOF
 
