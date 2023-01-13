@@ -5,126 +5,104 @@ require_relative "./ast.rb"
 # higher indentation = higher parse depth
 # must go to orig parse depth for unindent
 
-def parse_infix(tokens)
-  context={}
-  roots = parse_top_level(tokens,context)
-  replace_vars(roots, context)
-end
-
 Var=Struct.new(:token)
 
-def replace_vars(nodes,context)
-  nodes.size.times{|i|
-    while Var === nodes[i]
-      var_name = nodes[i].token.str
-      nodes[i] = context[var_name] || raise(ParseError.new("unset identifier %p" % var_name, nodes[i].token))
-    end
-    next if nodes[i].replaced
-    nodes[i].replaced = true
-    replace_vars(nodes[i].args,context)
-  }
-  nodes
+def replace_vars(node,context)
+  if Var === node
+    var_name = node.token.str
+    raise(ParseError.new("unset identifier %p" % var_name, node.token)) unless context.include? var_name
+    return replace_vars(context[var_name], context)
+  end
+  return node if node.replaced
+  node.replaced = true
+  node.args.map!{|arg|replace_vars(arg,context)}
+  node
 end
 
-# return a list of ASTs to print (only the exprs or last statement if none)
-def parse_top_level(tokens,context)
-  last_stmt = []
-  lines = tokens.chunk_while{|token|token.str != "\n" }
-  exprs = []
-  lines.each{|line_tokens|
-    next if line_tokens.empty? || line_tokens[0].str == "\n"
-    is_stmt = line_tokens.size > 1 && line_tokens[1].str == "="
-    expr = get_expr(line_tokens,context,:EOF)
-    if is_stmt
-      last_stmt = [expr]
+def parse_line(tokens,context)
+  get_expr(tokens,context,:EOF,nil)
+end
+
+def get_expr(tokens,context,delimiter,last)
+  lastop = nil
+  loop {
+    atom,t = get_atom(tokens,context)
+    if atom # bin op
+
+      # spaces indicate it was to actually be a unary op
+      if lastop && last && $prev && !$prev.space_after && lastop.space_after
+        last = AST.new(get_op1(t),[last],t)
+        lastop = nil
+      end
+
+      if lastop
+        if lastop.str == "="
+          warn("duplicate assignment to var: " + t.str, t) if context[t.str]
+          context[t.str] = last
+        else
+          raise ParseError.new "value missing and implicit value isn't implemented yet",lastop if !last
+          if (op=Ops3[lastop.name])
+            arg2 = get_expr(tokens,context,lastop.name=="then"?"else":")",atom)
+            arg3,_ = get_atom(tokens,context)
+            last = AST.new(op,[last,arg2,arg3],lastop)
+          else # actual regular binary op
+            last = AST.new(Ops2[lastop.name],[last,atom],lastop)
+          end
+        end
+      elsif !last #first atom
+        last = atom
+      else # implict cons
+        implicit_t = t.dup
+        implicit_t.str = "implicit_promote_and_append"
+        last = AST.new(get_op2(implicit_t),[last,atom],implicit_t)
+      end
+      lastop = nil
     else
-      exprs << expr
+      if lastop
+        raise ParseError.new "value missing and implicit value isn't implemented yet",lastop if !last
+        last = AST.new(get_op1(lastop),[last],lastop)
+      end
+      if Delimiters[t.str]
+        raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t if t.str != delimiter
+        return last || AST.new(NilOp,[],t)
+      end
+      lastop = t
     end
   }
-  exprs.empty? ? last_stmt : exprs
 end
 
-$prev = $curr = nil
-def get_expr(tokens,context,delimiter)
-  raise ParseError.new "unexpected EOF",nil if tokens.empty?
+Delimiters = {}; [')','else',:EOF].each{|k|Delimiters[k]=true}
+
+$curr=nil
+$prev=nil
+# return atom or nil
+def get_atom(tokens,context)
   $prev = $curr
-  t = $curr = tokens.shift
-  raise ParseError.new "unexpected end of line",t if t.str == "\n"
-  return AST.new(NilOp, [], t) if t.str == ")" # todo what about other delimeters?
-  raise ParseError.new "unexpected then",t if t.str == "then"
-  raise ParseError.new "unexpected else",t if t.str == "else"
-  op = get_op(t,Ops1,"unary")
-  lhs = if t.str == "("
-    get_expr(tokens,context,')')
-  elsif op.name == "var"
-    Var.new(t)
-  elsif op.narg == 0
-    AST.new(op, [], t)
-  elsif op.narg == 1
-    return AST.new(op, [get_expr(tokens,context,delimiter)], t)
-  elsif op.name == "if"
-    c=get_expr(tokens,context,"then")
-    a=get_expr(tokens,context,"else")
-    b=get_expr(tokens,context,delimiter)
-    return AST.new(op, [c,a,b], t)
-  else # op.narg > 1
-    raise ParseError.new "found non unary op with no left hand side", t
-  end
-
-  lhs_t = t
-  if tokens.empty? || tokens[0].str =="\n"
-    raise ParseError.new "unexpected end of expression, expecting '#{delimiter}'",t if delimiter != :EOF
-    return lhs
-  end
-  $prev = $curr
-  t = $curr = tokens.shift
-  if [')','then','else'].include? t.str
-    raise ParseError.new "unmatched #{t.str}", t if delimiter == :EOF
-    raise ParseError.new "expecting #{delimiter}" if t.str != delimiter
-    return lhs
-  end
-
-  if t.str == "="
-    warn("duplicate assignment to var: " + lhs_t.str, t) if context[lhs_t.str]
-    context[lhs_t.str] = get_expr(tokens,context,delimiter)
-  elsif t.str == "(" ||
-        t.str =~ /^\!*if$/ ||
-        ($prev.space_after && !t.space_after) ||
-        (op = get_op(t,Ops2,"non-unary")).narg == 0
-    tokens.unshift(t)
-    $curr = $prev
-    rhs = get_expr(tokens,context,delimiter)
-    implicit_t = t.dup
-    implicit_t.str = "implicit"
-    AST.new(Ops2[' '], [lhs, rhs], implicit_t)
-  elsif op.narg == 2 # binop
-    AST.new(op, [lhs, get_expr(tokens,context,delimiter)], t)
-  elsif op.sym == "?"
-    c=get_expr(tokens,context,")")
-    a=get_expr(tokens,context,delimiter)
-    AST.new(op, [c,a,lhs], t)
-  else
-    impossible2
-  end
-end
-
-def get_op(token,ops,ops_name)
-  str = token.str
-  if str[0] =~ /[0-9]/
-    create_int(str)
+  $curr = t = tokens.shift
+  str = t.str
+  [if str == "("
+    get_expr(tokens,context,')',nil)
+  elsif str[0] =~ /[0-9]/
+    AST.new(create_int(str),[],t)
   elsif str[0] == '"'
-    create_str(str)
+    AST.new(create_str(str),[],t)
   elsif str[0] == "'"
-    create_char(str)
+    AST.new(create_char(str),[],t)
 #   elsif is_special_zip(str)
 #     Ops[str].dup
-  elsif ops.include? str[/!*(.*)/m,1]
-    ops[str[/!*(.*)/m,1]]
-  elsif AllOps.include? str[/!*(.*)/m,1]
-    raise ParseError.new("op not defined for %s operations" % ops_name,token)
-  elsif str != $/
-    Op.new("var")
+  elsif (op=Ops0[t.name])
+    AST.new(op,[],t)
+  elsif Delimiters[str] || AllOps.include?(str[/!*(.*)/m,1]) || str=="="
+    nil
   else
-    raise
-  end
+    Var.new(t)
+  end,t]
+end
+
+def get_op1(t)
+  Ops1[t.name] || raise(ParseError.new("op not defined for unary operations",t))
+end
+
+def get_op2(t)
+  Ops2[t.name] || raise(ParseError.new("op not defined for binary operations",t))
 end

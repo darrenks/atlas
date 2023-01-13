@@ -1,0 +1,10 @@
+#!ruby
+
+require_relative "./lex.rb"
+require_relative "./lazylib.rb"
+require_relative "./parse.rb"
+require_relative "./infer.rb"
+require_relative "./to_infix.rb"
+require_relative "./repl.rb"
+
+repl

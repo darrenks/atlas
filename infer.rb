@@ -16,8 +16,6 @@ def infer(root)
   }
   errors[0...-1].each{|error| STDERR.puts error.message }
   raise errors[-1] if !errors.empty?
-
-  all.each{|node| node.args = node.replicated_args }
 end
 
 def dfs_infer(node)
@@ -108,7 +106,9 @@ def implicit_repn(arg, rep_level)
 end
 
 def implicit_rep(arg)
-  AST.new(RepOp,[arg],nil,arg.type+1,0)
+  n=AST.new(RepOp,[arg],nil,arg.type+1,0)
+  n.replicated_args = n.args
+  n
 end
 
 
@@ -120,7 +120,9 @@ def implicit_promoten(arg, promote_level,zip_level)
 end
 
 def implicit_promote(arg,zip_level)
-  AST.new(PromoteOp,[arg],nil,arg.type+1,zip_level)
+  n=AST.new(PromoteOp,[arg],nil,arg.type+1,zip_level)
+  n.replicated_args = n.args
+  n
 end
 
 def check_base_elem_constraints(specs, arg_types)

@@ -9,10 +9,10 @@ require 'stringio'
 
 def doit(source,limit)
   tokens = lex(source)
-  roots = parse_infix(tokens)
-  raise "must be 1 expr but found %d in %s" % [roots.size,source] if roots.size != 1
-  root = roots[0]
-  inspect_root = AST.new(Ops1['show'],roots)
+  context = {}
+  root = parse_line(tokens,context)
+  inspect_root = AST.new(Ops1['show'],[root])
+  replace_vars(inspect_root,context)
   infer(inspect_root)
 
   output = StringIO.new

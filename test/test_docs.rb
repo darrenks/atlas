@@ -25,9 +25,9 @@ end
     expected.gsub!(/\.\.\.$/,'')
 
     if truncate
-      stdout, stderr, status = Open3.capture3("ruby atlas.rb test/prog.atl | head -c #{truncate}")
+      stdout, stderr, status = Open3.capture3("ruby atlas test/prog.atl | head -c #{truncate}")
     else
-      stdout, stderr, status = Open3.capture3("ruby atlas.rb test/prog.atl")
+      stdout, stderr, status = Open3.capture3("ruby atlas test/prog.atl")
     end
 
     output = stdout + stderr

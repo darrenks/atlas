@@ -1,4 +1,10 @@
-class AST < Struct.new(:op,:args,:token,:type,:zip_level,:promise,:expected_type,:id,:used_by,:replicated_args,:last_error,:replaced)
+$ast_node_count = 0
+
+class AST < Struct.new(:op,:args,:token,:type,:zip_level,:promise,:id,:used_by,:replicated_args,:last_error,:replaced)
+  def initialize(*args)
+    super(*args)
+    self.id = $ast_node_count += 1
+  end
   def explicit_zip_level
     token ? token.str[/^!*/].size : 0
   end
@@ -17,7 +23,6 @@ module Status
 end
 
 def dfs(root,cycle_fn:->_{},&post_fn)
-  enumerate_nodes(root,0) if !root.id
   dfs_helper(root,[],cycle_fn,post_fn)
 end
 
@@ -35,14 +40,4 @@ def dfs_helper(node,been,cycle_fn,post_fn)
   end
   been[node.id] = Status::SEEN
   return
-end
-
-def enumerate_nodes(node,count)
-  return count if node.id
-  node.id = count
-  node.args.each{|arg|
-
-    count=enumerate_nodes(arg,count+1)
-  }
-  count
 end

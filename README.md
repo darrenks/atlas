@@ -12,7 +12,11 @@ The purpose of this README is to teach you about circular programming without yo
 
 You can run code by downloading the Atlas source and saving your Atlas code to a file then running:
 
-    ruby atlas.rb filename.atl
+    atlas filename.atl
+
+Or you can use it as a repl with:
+
+    atlas
 
 I have tested with ruby 2.7 and 3.1.
 

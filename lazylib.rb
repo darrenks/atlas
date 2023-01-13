@@ -9,12 +9,12 @@ end
 
 def make_promises(node)
   return node.promise if node.promise
-  arg_types = node.args.map{|arg|arg.type-node.zip_level}
+  arg_types = node.replicated_args.map{|arg|arg.type-node.zip_level}
   args = nil
   node.promise = Promise.new {
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
-  args = node.args.map{|arg| make_promises(arg) }
+  args = node.replicated_args.map{|arg| make_promises(arg) }
   node.promise
 end
 

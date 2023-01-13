@@ -5,11 +5,11 @@
 "" -> "" : [Char]
 "hi" -> "hi"
 "//" -> "//"
-!;"\n\\" -> ["\n","\\"]
-!;"\x02\x20\xaa" -> ["\x02"," ","\xaa"]
+"\n\\"!; -> ["\n","\\"]
+"\x02\x20\xaa"!; -> ["\x02"," ","\xaa"]
 
 // test utf8 encoding chars
-!;"├───╯" -> ["├","─","─","─","╯"]
+"├───╯"!; -> ["├","─","─","─","╯"]
 
 'a -> 'a
 '\n -> '\n
@@ -27,10 +27,10 @@
 // '\' -> '''
 
 /////////////////// test basic ops
-~5 -> -5
-~~5 -> 5
+5~ -> -5
+5~~ -> 5
 1+2 -> 3
-1+["a" -> 'b
+"a"[+1 -> 'b
 1+$ -> AtlasTypeError
 $%2 -> AtlasTypeError
 // leading 0 is separate number
@@ -40,32 +40,32 @@ $ -> [] : Nil
 
 5:$ -> [5]
 5:6 -> [5,6]
-5:6:$ -> [5,6]
+5:(6:$) -> [5,6]
 
 
-[5:6:$ -> 5
-[$ -> DynamicError
-]5:6:$ -> 6
-]$ -> DynamicError
-> 5:6:$ -> [6]
-> 5:$ -> []
+5:(6:$)[ -> 5
+$[ -> DynamicError
+5:(6:$)] -> 6
+$] -> DynamicError
+5:(6:$)> -> [6]
+5:$> -> []
 // todo may want to reconsider and make empty
-tail $ -> DynamicError
+$ tail -> DynamicError
 
 /////////// test vars
-(v1=5)+v1 -> 10
+5=v1+v1 -> 10
 
 //////// test infinite list
-v1=1:v1 -> [1,1,1,1,1,1,...
-v1='-:v1 -> "-------------...
+1:v1=v1 -> [1,1,1,1,1,1,...
+'-:v1=v1 -> "-------------...
 
 ////////////// test zips
-1+3:4:$ -> [4,5]
-((3:4:$):(5:7:$):$)+1 -> [[4,5],[6,8]]
+1+(3:(4:$)) -> [4,5]
+3:(4:$):((5:(7:$)):$)+1 -> [[4,5],[6,8]]
 1+"asdf" -> "bteg"
 "asdf"+1 -> "bteg"
-(1:2:$)+4:6:8:$ -> [5,8]
-(4:6:8:$)+1:2:$ -> [5,8]
+1 2+(4 6 8) -> [5,8]
+4 6 8+(1 2) -> [5,8]
 
 4*5 -> 20
 
@@ -75,72 +75,73 @@ v1='-:v1 -> "-------------...
 
 10/5 -> 2
 9/5 -> 1
-11/~5 -> -3
-10/~5 -> -2
-(~11)/5 -> -3
-(~10)/5 -> -2
-(~10)/~5 -> 2
-(~9)/~5 -> 1
+11/(5~) -> -3
+10/(5~) -> -2
+11~/5 -> -3
+10~/5 -> -2
+10~/(5~) -> 2
+9~/(5~) -> 1
 1/0 -> DynamicError
 0/0 -> DynamicError
 
 10%5 -> 0
 9%5 -> 4
-11%~5 -> -4
-10%~5 -> 0
-(~11)%5 -> 4
-(~10)%5 -> 0
-(~10)%~5 -> 0
-(~9)%~5 -> -4
+11%(5~) -> -4
+10%(5~) -> 0
+11~%5 -> 4
+10~%5 -> 0
+10~%(5~) -> 0
+9~%(5~) -> -4
 //% "abcd" 2 -> [1,0,1,0]
 5%0 -> DynamicError
 
-~4:5:$ -> [-4,-5]
+4 5~ -> [-4,-5]
 
-["abcd":"xzy":$ -> "abcd"
-!["abcd":"xzy":$ -> "ax"
-!]"abcd":"xzy":$ -> "dy"
-!!["abcd":"xzy":$ -> AtlasTypeError
+"abcd" "xzy"[ -> "abcd"
+"abcd" "xzy"![ -> "ax"
+"abcd" "xzy"!] -> "dy"
+"abcd" "xzy"!![ -> AtlasTypeError
 
-> "abcd":"xzy":$ -> ["xzy"]
-!tail "abcd":"xzy":$ -> ["bcd","zy"]
-tail 'c -> AtlasTypeError
+"abcd" "xzy"> -> ["xzy"]
+"abcd" "xzy"!tail -> ["bcd","zy"]
+'c tail -> AtlasTypeError
 
-"abc":"def":"xzy":$ -> ["abc","def","xzy"]
-"abc"!:"def":"xzy":$ -> ["adef","bxzy"]
+"abc" "def" "xzy" -> ["abc","def","xzy"]
+"abc"!:("def":("xzy":$)) -> ["adef","bxzy"]
 "abc"!!:"def":"xzy":$ -> AtlasTypeError
 
-if 0 then 2 else 3 -> 3
-if 1 then 2 else 3 -> 2
-if $ then 2 else 3 -> 3
-if 0:$ then 2 else 3 -> 2
-if [" " then 2 else 3 -> 3
-if ["a" then 2 else 3 -> 2
+0 then 2 else 3 -> 3
+1 then 2 else 3 -> 2
+$ then 2 else 3 -> 3
+0:$ then 2 else 3 -> 2
+" "[ then 2 else 3 -> 3
+"a"[ then 2 else 3 -> 2
 
-if 1 then 'a else "b" -> "a"
-if 1 then 'a else "bcd" -> "aaa"
-if "a " then '1 else "23" -> "13"
-if "a " then "1" else "2":"3":$ -> ["1","3"]
+1 then 'a else "b" -> "a"
+1 then 'a else "bcd" -> "aaa"
+"a " then '1 else "23" -> "13"
+"a " then "1" else ("2" "3") -> ["1","3"]
 
-!if "a b " then "fghi" else "jklm" -> "fkhm"
-!if "a b " then 1 else 0 -> [1,0,1,0]
+"a b " !then "fghi" else "jklm" -> "fkhm"
+"a b " !then 1 else 0 -> [1,0,1,0]
 
-2 ? 0 ) 1 -> 2
-2 ? 5 ) 1 -> 1
-10 + 2 ? 0 ) 1 -> 12
-10 + 2 ? 5 ) 1 -> 11
+0 ? 1 ) 2 -> 2
+1 ? 2 ) 3 -> 2
+0 ? 1 ) 2 + 10 -> 12
+5 ? 1 ) 2 + 10 -> 11
 
-!`1:2:$ -> ["1","2"]
+1 2!` -> ["1","2"]
 
 4["asdfg" -> "asdf"
 0["" -> ""
 1["" -> ""
-(1:2:$)["asdf" -> ["a","as"]
-2!["abc":"123":$ -> ["ab","12"]
+1 2["asdf" -> ["a","as"]
+2![("abc" "123") -> ["ab","12"]
 
 ////////// more advanced circular programming
-v1=1:1+v1 -> [1,2,3,4,5...
-v1=1:v2=1:v1+v2 -> [1,1,2,3,5,8,13,21...
+1:(1+v1)=v1 -> [1,2,3,4,5...
+// v1=1:v2=1:v1+v2 -> [1,1,2,3,5,8,13,21...
+1:(1:(v1+v2)=v2)=v1 -> [1,1,2,3,5,8,13,21...
 v1=(0:v1)+v2=1:1+v2 -> [1,3,6,10,15...
 v1=1+v1 -> AtlasTypeError
 

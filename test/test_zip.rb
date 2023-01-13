@@ -244,9 +244,9 @@ Ops1[']'].promote=ALLOW_PROMOTE
 
 def doit(source)
   tokens = lex(source)
-  roots = parse_infix(tokens)
-  raise "must be 1 expr but found %d in %s" % [roots.size,source] if roots.size != 1
-  root = roots[0]
+  context={}
+  root = parse_line(tokens,context)
+  replace_vars(root,context)
   infer(root)
   to_infix(root)
 end

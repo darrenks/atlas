@@ -203,19 +203,19 @@ OpsList = [
     min_zip_level: 1,
     impl: -> a,b { a.value }
   ), create_op(
-    name: "if",
+    name: "then",
     sym: "?",
-    # Example: if 1 then "yes" else "no" -> "yes"
+    # Example: 1 then "yes" else "no" -> "yes"
     type: { [A,B,B] => B },
     poly_impl: -> ta,tb,tc {
       if ta == Int
-        # Test: !if (~1):;2 then 1 else 0 -> [0,1]
+        # Test: (~1):;2 !then 1 else 0 -> [0,1]
         lambda{|a,b,c| a.value > 0 ? b.value : c.value }
       elsif ta == Char
-        # Test: !if " d" then 1 else 0 -> [0,1]
+        # Test: " d" !then 1 else 0 -> [0,1]
         lambda{|a,b,c| a.value.chr[/\S/] ? b.value : c.value }
       else # List
-        # Test: !if "":;"a" then 1 else 0 -> [0,1]
+        # Test: "":;"a" !then 1 else 0 -> [0,1]
         lambda{|a,b,c| a.value != [] ? b.value : c.value }
       end
     }
@@ -304,21 +304,21 @@ OpsList = [
   )
 ]
 
+Ops0 = {}
 Ops1 = {}
 Ops2 = {}
+Ops3 = {}
 AllOps = {}
 OpsList.each{|op|
   ops = case op.narg
   when 0
-    Ops1[op.name] = Ops1[op.sym] = op
-    Ops2[op.name] = Ops2[op.sym] = op
+    Ops0[op.name] = Ops0[op.sym] = op
   when 1
     Ops1[op.name] = Ops1[op.sym] = op
   when 2
     Ops2[op.name] = Ops2[op.sym] = op
-  when 3 # if
-    Ops1[op.name] = op
-    Ops2[op.sym] = op
+  when 3 # then/else
+    Ops3[op.name] = Ops3[op.sym] = op
   else; error; end
   AllOps[op.name] = AllOps[op.sym] = op
 }
