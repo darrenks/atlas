@@ -38,34 +38,27 @@ $%2 -> AtlasTypeError
 0/12 -> 0
 $ -> [] : Nil
 
-5:$ -> [5]
-5:6 -> [5,6]
-5:(6:$) -> [5,6]
-
-
-5:(6:$)[ -> 5
 $[ -> DynamicError
-5:(6:$)] -> 6
 $] -> DynamicError
-5:(6:$)> -> [6]
-5:$> -> []
+5 6> -> [6]
+5;> -> []
 // todo may want to reconsider and make empty
 $ tail -> DynamicError
 
 /////////// test vars
-5=v1+v1 -> 10
+5:v1+v1 -> 10
 
 //////// test infinite list
-1:v1=v1 -> [1,1,1,1,1,1,...
-'-:v1=v1 -> "-------------...
+1 v1:v1 -> [1,1,1,1,1,1,...
+'- v1:v1 -> "-------------...
 
 ////////////// test zips
-1+(3:(4:$)) -> [4,5]
-3:(4:$):((5:(7:$)):$)+1 -> [[4,5],[6,8]]
+3 4+1 -> [4,5]
+3 4(5 7;)+1 -> [[4,5],[6,8]]
 1+"asdf" -> "bteg"
 "asdf"+1 -> "bteg"
-1 2+(4 6 8) -> [5,8]
-4 6 8+(1 2) -> [5,8]
+(1 2)+(4 6 8) -> [5,8]
+(4 6 8)+(1 2) -> [5,8]
 
 4*5 -> 20
 
@@ -95,32 +88,34 @@ $ tail -> DynamicError
 //% "abcd" 2 -> [1,0,1,0]
 5%0 -> DynamicError
 
+4 (5~) -> [4,-5]
+4~ 5 -> [-4,5]
 4 5~ -> [-4,-5]
 
-"abcd" "xzy"[ -> "abcd"
-"abcd" "xzy"![ -> "ax"
-"abcd" "xzy"!] -> "dy"
-"abcd" "xzy"!![ -> AtlasTypeError
+"abcd"; "xzy" [ -> "abcd"
+"abcd"; "xzy" ![ -> "ax"
+"abcd"; "xzy" !] -> "dy"
+"abcd"; "xzy" !![ -> AtlasTypeError
 
-"abcd" "xzy"> -> ["xzy"]
-"abcd" "xzy"!tail -> ["bcd","zy"]
+"abcd"; "xzy" > -> ["xzy"]
+"abcd"; "xzy" !tail -> ["bcd","zy"]
 'c tail -> AtlasTypeError
 
-"abc" "def" "xzy" -> ["abc","def","xzy"]
-"abc"!:("def":("xzy":$)) -> ["adef","bxzy"]
-"abc"!!:"def":"xzy":$ -> AtlasTypeError
+"abc"; ("def"; "xzy") -> ["abc","def","xzy"]
+"abc"! ("def"; "xzy") -> ["adef","bxzy"]
+"abc"!! ("def"; "xzy") -> [["ad","be","cf"],["ax","bz","cy"]]
 
 0 then 2 else 3 -> 3
 1 then 2 else 3 -> 2
 $ then 2 else 3 -> 3
-0:$ then 2 else 3 -> 2
+0; then 2 else 3 -> 2
 " "[ then 2 else 3 -> 3
 "a"[ then 2 else 3 -> 2
 
 1 then 'a else "b" -> "a"
 1 then 'a else "bcd" -> "aaa"
 "a " then '1 else "23" -> "13"
-"a " then "1" else ("2" "3") -> ["1","3"]
+"a " then "1" else ("2"; "3") -> ["1","3"]
 
 "a b " !then "fghi" else "jklm" -> "fkhm"
 "a b " !then 1 else 0 -> [1,0,1,0]
@@ -130,23 +125,21 @@ $ then 2 else 3 -> 3
 0 ? 1 ) 2 + 10 -> 12
 5 ? 1 ) 2 + 10 -> 11
 
-1 2!` -> ["1","2"]
+1 2 !` -> ["1","2"]
 
-4["asdfg" -> "asdf"
-0["" -> ""
-1["" -> ""
-1 2["asdf" -> ["a","as"]
-2![("abc" "123") -> ["ab","12"]
+ "asdf"[(1 2) -> ["a","as"]
+"abc"; "123"![2 -> ["ab","12"]
 
 ////////// more advanced circular programming
-1:(1+v1)=v1 -> [1,2,3,4,5...
+1 1+v1 = v1 -> [1,2,3,4,5...
 // v1=1:v2=1:v1+v2 -> [1,1,2,3,5,8,13,21...
-1:(1:(v1+v2)=v2)=v1 -> [1,1,2,3,5,8,13,21...
-v1=(0:v1)+v2=1:1+v2 -> [1,3,6,10,15...
-v1=1+v1 -> AtlasTypeError
+1(1 v1+v2 =v2)=v1 -> [1,1,2,3,5,8,13,21...
+// v1=(0:v1)+v2=1:1+v2 -> [1,3,6,10,15...
+// 0(1:(1+v2)+v2+v1)=v1 -> [1,3,6,10,15...
+1+v1=v1 -> AtlasTypeError
 
 //// test more ops and zips
-,1 -> [1,1,1,1...
+1, -> [1,1,1,1...
 5![!,"hi" -> ["hhhhh","iiiii"]
 
 ;1 -> [1]

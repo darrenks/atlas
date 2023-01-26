@@ -5,7 +5,10 @@ require_relative "./ast.rb"
 # higher indentation = higher parse depth
 # must go to orig parse depth for unindent
 
-Var=Struct.new(:token)
+# todo raw string indent idea
+# "asdf""1234" = ["asdf","1234"]
+
+Var =  Struct.new(:token)
 
 def replace_vars(node,context)
   if Var === node
@@ -20,68 +23,78 @@ def replace_vars(node,context)
 end
 
 def parse_line(tokens,context)
-  get_expr(tokens,context,:EOF,nil)
+  get_expr(tokens,context,:EOF,DelimiterPriority[:EOF],nil)
 end
 
-def get_expr(tokens,context,delimiter,last)
+def get_expr(tokens,context,delimiter,priority,last)
   lastop = nil
   loop {
     atom,t = get_atom(tokens,context)
-    if atom # bin op
-
+    if atom
       # spaces indicate it was to actually be a unary op
-      if lastop && last && $prev && !$prev.space_after && lastop.space_after
-        last = AST.new(get_op1(t),[last],t)
+      if lastop && last && lastop.space_after && !lastop.space_before
+        last = AST.new(get_op1(lastop),[last],lastop)
         lastop = nil
       end
 
       if lastop
-        if lastop.str == "="
-          warn("duplicate assignment to var: " + t.str, t) if context[t.str]
-          context[t.str] = last
-        else
-          raise ParseError.new "value missing and implicit value isn't implemented yet",lastop if !last
-          if (op=Ops3[lastop.name])
-            arg2 = get_expr(tokens,context,lastop.name=="then"?"else":")",atom)
-            arg3,_ = get_atom(tokens,context)
-            last = AST.new(op,[last,arg2,arg3],lastop)
-          else # actual regular binary op
-            last = AST.new(Ops2[lastop.name],[last,atom],lastop)
-          end
+        implicit_value_check(lastop, last)
+        if (op=Ops3[lastop.name])
+          arg2 = get_expr(tokens,context,lastop.name=="then"?"else":")",DelimiterPriority['else'],atom)
+          arg3,t2 = get_atom(tokens,context)
+          check_for_delimiter(t2, delimiter, priority, tokens, nil){|ret| return AST.new(op,[last,arg2,ret])}
+          implicit_value_check(t2, arg3)
+          last = AST.new(op,[last,arg2,arg3],lastop)
+        elsif lastop.str == ":" # to do, don't do this in parsing...
+          warn("duplicate assignment to var: " + atom.token.str, t) if context[t.str]
+          context[atom.token.str] = last
+        else# actual regular binary op
+          last = AST.new(get_op2(lastop),[last,atom],lastop)
         end
       elsif !last #first atom
         last = atom
       else # implict cons
-        implicit_t = t.dup
-        implicit_t.str = "implicit_promote_and_append"
-        last = AST.new(get_op2(implicit_t),[last,atom],implicit_t)
+        last = AST.new(Ops2[" "],[last,atom],t)
       end
       lastop = nil
-    else
+    else # not an atom
       if lastop
-        raise ParseError.new "value missing and implicit value isn't implemented yet",lastop if !last
+        implicit_value_check(lastop, last)
         last = AST.new(get_op1(lastop),[last],lastop)
       end
-      if Delimiters[t.str]
-        raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t if t.str != delimiter
-        return last || AST.new(NilOp,[],t)
-      end
+
+      check_for_delimiter(t, delimiter, priority, tokens, last){|ret| return ret}
       lastop = t
     end
   }
 end
 
-Delimiters = {}; [')','else',:EOF].each{|k|Delimiters[k]=true}
+def implicit_value_check(lastop, last)
+  raise ParseError.new "value missing and implicit value isn't implemented yet",lastop if !last
+end
 
-$curr=nil
-$prev=nil
+def check_for_delimiter(t, delimiter, priority, tokens, last)
+  if DelimiterPriority[t.str]
+    if t.str != delimiter
+      if DelimiterPriority[t.str] >= priority
+        raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t
+      else # e.g. token is eof, expecting )
+        # return without consuming token
+        tokens.unshift t
+      end
+    end
+    yield last || AST.new(NilOp,[],t)
+  end
+end
+
+DelimiterPriority = {:EOF => 0, 'else' => 0, ')' => 1}
+
 # return atom or nil
 def get_atom(tokens,context)
-  $prev = $curr
-  $curr = t = tokens.shift
+  t = tokens.shift
   str = t.str
   [if str == "("
-    get_expr(tokens,context,')',nil)
+    get_expr(tokens,context,')',DelimiterPriority[')'],nil)
   elsif str[0] =~ /[0-9]/
     AST.new(create_int(str),[],t)
   elsif str[0] == '"'
@@ -92,7 +105,7 @@ def get_atom(tokens,context)
 #     Ops[str].dup
   elsif (op=Ops0[t.name])
     AST.new(op,[],t)
-  elsif Delimiters[str] || AllOps.include?(str[/!*(.*)/m,1]) || str=="="
+  elsif  AllOps.include?(str[/!*(.*)/m,1]) && !Ops0.include?(str[/!*(.*)/m,1]) || str==":" || DelimiterPriority[str]
     nil
   else
     Var.new(t)

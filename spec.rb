@@ -43,8 +43,6 @@ def parse_raw_arg_spec(raw,list_nest_depth=0)
     parse_raw_arg_spec(raw[0],list_nest_depth+1)
   when Type
     ExactTypeSpec.new(raw.dim+list_nest_depth, raw)
-  when TypeSpec
-    raw
   else
     p raw
     error

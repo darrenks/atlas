@@ -127,7 +127,7 @@ end
 
 def check_base_elem_constraints(specs, arg_types)
   solve_type_vars(arg_types, specs) # consistency check
-  specs.zip(arg_types).all?{|spec,type|
+  arg_types.zip(specs).all?{|type,spec|
     spec.check_base_elem(type)
   }
 end
@@ -223,10 +223,5 @@ def promote_levels(node,rank_deficits,zip_level,vars)
       0
     end
   }
-
-  if node.op.promote == MUST_PROMOTE && promote_levels == [0,0]
-    promote_levels = [1,1]
-    vars.each{|k,v|v.dim += 1}
-  end
   promote_levels
 end

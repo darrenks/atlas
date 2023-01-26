@@ -1,9 +1,9 @@
 require_relative "./escape.rb"
 require_relative "./error.rb"
 
-$reductions = 0
-
-def run(root,output_limit=10000,out=STDOUT)
+def run(root,out=STDOUT,output_limit=10000,step_limit=Float::INFINITY)
+  $step_limit = step_limit
+  $reductions = 0
   print_string(make_promises(root).value, out, output_limit)
 end
 
@@ -28,6 +28,7 @@ class Promise
       raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
       @calculating=true
       $reductions+=1
+      raise DynamicError.new "step limit exceeded",nil if $reductions > $step_limit
       begin
         @impl=@impl[]
       ensure

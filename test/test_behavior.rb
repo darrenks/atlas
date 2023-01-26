@@ -16,7 +16,7 @@ def doit(source,limit)
   infer(inspect_root)
 
   output = StringIO.new
-  run(inspect_root, limit, output)
+  run(inspect_root, output, limit)
   [output.string,root.type.inspect]
 end
 

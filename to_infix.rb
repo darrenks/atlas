@@ -1,6 +1,9 @@
 class AST
   attr_accessor :var_name
   attr_accessor :references
+  def rargs
+    replicated_args || args
+  end
 end
 
 def count_references(node,nodes)
@@ -10,7 +13,7 @@ def count_references(node,nodes)
   end
   nodes << node
   node.references = 1
-  node.args.each{|t| count_references(t,nodes) }
+  node.rargs.each{|t| count_references(t,nodes) }
 end
 
 
@@ -26,32 +29,32 @@ def to_infix(root)
   ret
 end
 
-def r(node, is_lhs)
+def r(node, is_rhs)
   return node.var_name if node.var_name
   node.var_name = "v#{$vars+=1}" if node.references > 1 && !node.var_name
 
-  op_name = (node.op.sym||node.op.name).to_s
-  op_name = "if" if node.op.name == "if"
-  op_name = "@" if node.op.sym == " "
+  op_name = (node.op.sym||(" "+node.op.name+" ")).to_s
+  op_name = "then" if node.op.name == "then"
+  op_name = "‿" if node.op.sym == " " # todo and type inferred/promoted already
 
   op = "!" * (node.zip_level || node.explicit_zip_level) + op_name
 
-  name_it = node.var_name ? node.var_name + "=" : ""
-  expr = case node.args.size
+  name_it = node.var_name ? ":" + node.var_name : ""
+  expr = case node.rargs.size
   when 0
     op
   when 1
-    op + r(node.args[0], false)
+    r(node.rargs[0], false) + op
   when 2
-    r(node.args[0], true) + op + r(node.args[1], false)
+    r(node.rargs[0], false) + op + r(node.rargs[1], true)
   when 3 # only if statement is 3
-    op + " " + r(node.args[0], false) + " then " + r(node.args[1], false) + " else " + r(node.args[2], false)
+    r(node.rargs[0], false) + " then " + r(node.rargs[1], false) + " else " + r(node.rargs[2], true)
   else error
   end
-  statement = name_it + expr
-  (node.var_name ? 1 : 0) + node.args.size > 0 && is_lhs ?
-    "(" + statement + ")" :
-    statement
+  statement = expr + name_it
+  maybe_paren(statement, (node.var_name ? 1 : 0) + node.rargs.size > 0 && is_rhs)
 end
 
-# todo look at ~5  it becomes _((~5)):"\n":$ which has extra parens
+def maybe_paren(statement,maybe)
+  maybe ? "(" + statement + ")" : statement
+end

@@ -7,7 +7,6 @@ require_relative "./spec.rb"
 NO_PROMOTE = :a_no         #
 ALLOW_PROMOTE = :b_allow   # promote if only way to satisfy type spec
 PREFER_PROMOTE = :c_prefer # promote instead of replicate
-MUST_PROMOTE = :d_must     # there must always be at least 1 promotion
 
 class Op < Struct.new(
     :name,
@@ -47,16 +46,6 @@ def create_op(
 end
 
 OpsList = [
-  create_op(
-    name: "cons",
-    sym: ":",
-    # Example: 'a:"bc" -> "abc"
-    # Test: 1:$ -> [1]
-    # todo
-    ## Test: :$ $ -> [1]
-    type: { [A,[A]] => [A] },
-    impl: -> a,b { [a,b] },
-  ),
   create_op(
     name: "head",
     sym: "[",
@@ -171,9 +160,9 @@ OpsList = [
     impl: -> a { repeat(a) }
   ), create_op(
     name: "eq",
-    # Example: 3==3 -> [3]
-    # Test: 3==2 -> []
-    sym: "==",
+    # Example: 3=3 -> [3]
+    # Test: 3=2 -> []
+    sym: "=",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? [a,Null] : [] } }
   ), create_op(
@@ -259,19 +248,19 @@ OpsList = [
   ), create_op(
     name: "take",
     sym: "[",
-    # Example: 3["abcd" -> "abc"
-    # Test: (~2)["abc" -> ""
-    # Test: 2["" -> ""
-    type: { [Int,[A]] => [A] },
-    impl: -> a,b { take(a.value, b) }
+    # Example: "abcd"[3 -> "abc"
+    # Test: "abc"[(~2) -> ""
+    # Test: ""[2 -> ""
+    type: { [[A],Int] => [A] },
+    impl: -> a,b { take(b.value, a) }
   ), create_op(
     name: "drop",
     sym: "]",
-    # Example: 3]"abcd" -> "d"
-    # Test: (~2)]"abc" -> "abc"
-    # Test: 2]"" -> ""
-    type: { [Int,[A]] => [A] },
-    impl: -> a,b { drop(a.value, b) }
+    # Example: "abcd"]3 -> "d"
+    # Test: "abc"](~2) -> "abc"
+    # Test: ""]2 -> ""
+    type: { [[A],Int] => [A] },
+    impl: -> a,b { drop(b.value, a) }
   ), create_op(
     name: "concat",
     sym: "_",
@@ -280,20 +269,11 @@ OpsList = [
     impl: -> a { concat_map(a.value,[]){|i,r,first|append(i,r)} },
   ), create_op(
     name: "append",
-    sym: "@",
-    # Example: "abc"@"123" -> "abc123"
+    sym: " ",
+    # Example: "abc" "123" -> "abc123"
     type: { [[A],[A]] => [A] },
     impl: -> a,b { append(a.value,b) },
-  ), create_op(
-    name: "implicit_promote_and_append",
-    # Example: "abc" "123" -> ["abc","123"]
-    # Example: 1 2 3 -> [1,2,3]
-    # Test: 'a "123" -> "a123"
-    # Test: "123" 'a -> "123a"
-    sym: " ", # although you don't need a space with parens/etc.
-    type: { [[A],[A]] => [A] },
-    impl: -> a,b { append(a.value,b) },
-    promote: MUST_PROMOTE,
+    promote: PREFER_PROMOTE,
   ), create_op(
     name: "transpose",
     sym: "\\",

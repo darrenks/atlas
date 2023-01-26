@@ -1,25 +1,30 @@
 require "readline"
 
-def repl
+def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
   line_no = 0
-  assignment = false
   ast = nil
   file_args = !ARGV.empty?
+  assignment = false
   loop {
-    line=file_args ? gets : Readline.readline("> ", true)
+    line=file_args ? gets : input ? input.gets : Readline.readline("> ", true)
     line_no += 1
     begin
-      if line==nil
-        printit(ast, context) if assignment # was last
-        exit
+      if line==nil # eof??
+        printit(ast, context, output, step_limit) if assignment # was last
+        break
       end
       tokens = lex(line.chomp, line_no)
       next if tokens[0].str == :EOF
-      assignment = tokens.size > 2 && tokens[-3].str=="="
-      ast = parse_line(tokens,context)
-      next if assignment
-      printit(ast, context)
+
+      if tokens.size > 2 && tokens[1].str==":="
+        assignment = true
+        ast = context[tokens[0].str] = parse_line(tokens[2..-1],context)
+      else
+        assignment = false
+        ast = parse_line(tokens,context)
+        printit(ast, context, output, step_limit)
+      end
     rescue AtlasError => e
       STDERR.puts e.message
       assignment = false
@@ -30,11 +35,11 @@ def repl
   }
 end
 
-def printit(ast,context)
+def printit(ast,context,output,step_limit)
     str_ast = AST.new(Ops1['tostring'],[ast])
     replace_vars(str_ast,context)
+    puts to_infix(str_ast)
     infer(str_ast)
-    make_promises(str_ast)
-    run(str_ast)
-    puts
+    run(str_ast,output,10000,step_limit)
+    output.puts
 end
