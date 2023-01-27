@@ -56,16 +56,11 @@ tests = <<'EOF'
 1 ? -> ParseError
 1 then 2 -> ParseError
 
-// test assignments
-a:=1 -> f
-1:=a -> ParseError
-1:=1 -> ParseError
-
 !3 -> ParseError
 // !"" -> ParseError # todo better error
 ! -> ParseError
 
-"ab"!"cd" -> f
+//"ab"!"cd" -> todo
 EOF
 
 require "./test/run_lines.rb"

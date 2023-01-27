@@ -1,9 +1,4 @@
-require "./ops.rb"
-require "./lex.rb"
-require "./parse.rb"
-require "./type.rb"
-require "./to_infix.rb"
-require "./infer.rb"
+require "./repl.rb"
 
 def run_tests(tests,start_line=2)
   pass = 0

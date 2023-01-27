@@ -12,7 +12,7 @@ Strings are just lists of characters.
     'x // This is a char
     "abc" // This is a string, aka list of chars
     1 2 3 // This is a list of integers constructed via implicit cons.
-    show () // This is an empty list pretty printed
+    () show // This is an empty list pretty printed
     ──────────────────────────────────
     123
     x

@@ -1,6 +1,3 @@
-require_relative "./ops.rb"
-require_relative "./ast.rb"
-
 # old indentation idea:
 # higher indentation = higher parse depth
 # must go to orig parse depth for unindent
@@ -18,7 +15,14 @@ def replace_vars(node,context)
   end
   return node if node.replaced
   node.replaced = true
-  node.args.map!{|arg|replace_vars(arg,context)}
+  orig = node.args.dup
+  begin
+    node.args.map!{|arg|replace_vars(arg,context)}
+  rescue ParseError => pe
+    node.args.replace(orig)
+    node.replaced = false
+    raise pe
+  end
   node
 end
 
@@ -46,6 +50,7 @@ def get_expr(tokens,context,delimiter,priority,last)
           implicit_value_check(t2, arg3)
           last = AST.new(op,[last,arg2,arg3],lastop)
         elsif lastop.str == ":" # to do, don't do this in parsing...
+          assertVar(atom.token)
           warn("duplicate assignment to var: " + atom.token.str, t) if context[t.str]
           context[atom.token.str] = last
         else# actual regular binary op

@@ -1,5 +1,3 @@
-#AtlasError = Struct.new(:char_no,:line_no,:message)
-
 def warn(msg, from=nil)
   STDERR.puts to_location(from) + " " + msg + " (Warning)"
 end
@@ -65,5 +63,3 @@ class LexError < StaticError
     super(message,$from)
   end
 end
-
-#raise AtlasTypeError.new("hi",5)

@@ -1,5 +1,3 @@
-require_relative "./error.rb"
-
 def infer(root)
   all = all_nodes(root)
   all.each{|node|node.used_by = []}

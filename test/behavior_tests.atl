@@ -131,60 +131,59 @@ $ then 2 else 3 -> 3
 "abc"; "123"![2 -> ["ab","12"]
 
 ////////// more advanced circular programming
-1 1+v1 = v1 -> [1,2,3,4,5...
-// v1=1:v2=1:v1+v2 -> [1,1,2,3,5,8,13,21...
-1(1 v1+v2 =v2)=v1 -> [1,1,2,3,5,8,13,21...
-// v1=(0:v1)+v2=1:1+v2 -> [1,3,6,10,15...
-// 0(1:(1+v2)+v2+v1)=v1 -> [1,3,6,10,15...
-1+v1=v1 -> AtlasTypeError
+1 (1+v1):v1 -> [1,2,3,4,5...
+1(1(v1+v2):v2):v1 -> [1,1,2,3,5,8,13,21...
+0 v1+(1(1+v2):v2):v1 -> [1,3,6,10,15...
+1+v1:v1 -> AtlasTypeError
 
 //// test more ops and zips
 1, -> [1,1,1,1...
-5![!,"hi" -> ["hhhhh","iiiii"]
+"hi"!,![5 -> ["hhhhh","iiiii"]
 
-;1 -> [1]
-!;"hi" ->["h","i"]
-2]"asdfg" -> "dfg"
-2!]"abc":"123":$ -> ["c","3"]
 
-_"hi":"there":$ -> "hithere"
-!_("hi":"there":$):("asdf":"123":$):$ -> ["hithere","asdf123"]
-5[_,;1 -> [1,1,1,1,1]
+1; -> [1]
+"hi"!; ->["h","i"]
+"asdfg"]2 -> "dfg"
+"abc"; "123"!]2 -> ["c","3"]
 
-"abc"@"123" -> "abc123"
-"abc"@_,"123" -> "abc123123...
-(_(,"abc"))@"123" -> "abcabcabc...
-"abc"!@"123" -> AtlasTypeError
-("a":;"b")!@"1":;"2" -> ["a1","b2"]
-'a@"b" -> "ab"
+"hi"; "there"_ -> "hithere"
+"hi"; "there"; ("asdf"; "123";)!_ -> ["hithere","asdf123"]
+1;,_[5 -> [1,1,1,1,1]
 
-1eq 2 -> []
-1eq 1 -> [1]
-'aeq 'a -> "a"
-'deq 100 -> AtlasTypeError
-"abc"=="abc" -> ["abc"]
-"abc"eq "abd" -> []
-"abc"eq 'a -> ["a","",""]
-"abc"!eq 'a -> AtlasTypeError
-"abc"!eq "abd" -> ["a","b",""]
+"abc" "123" -> "abc123"
+"abc" ("123",_) -> "abc123123...
+"abc",_ "123" -> "abcabcabc...
+"abc"! "123" -> ["a1","b2","c3"]
+"a"; "b"! ("1"; "2") -> ["a1","b2"]
+'a "b" -> "ab"
 
-init "asdf" -> "asd"
-!init "abc":"123":$ -> ["ab","12"]
+1=2 -> []
+1=1 -> [1]
+'a='a -> "a"
+'d=100 -> AtlasTypeError
+"abc"="abc" -> ["abc"]
+"abc"="abd" -> []
+"abc"='a -> ["a","",""]
+"abc"!='a -> AtlasTypeError
+"abc"!="abd" -> ["a","b",""]
 
-\"abc":"123":$ -> ["a1","b2","c3"]
-\"abc":"12":"xyz":$ -> ["a1x","b2y","c"]
-!\("abc":"123":$):("xyz":"789":$):$ -> [["a1","b2","c3"],["x7","y8","z9"]]
+"asdf"< -> "asd"
+"abc"; "123"!< -> ["ab","12"]
 
-\"abcd" -> ["a","b","c","d"]
-\4 -> [[4]]
-!\"abc":"123":$ -> [["a","b","c"],["1","2","3"]]
+"abc"; "123"\ -> ["a1","b2","c3"]
+"abc"; "12" ("xyz";)\ -> ["a1x","b2y","c"]
+"abc"; "123"; ("xyz"; "789")!\ -> [["a1","b2","c3"],["x7","y8","z9"]]
 
-(;5)|6 -> [5,6,6,6,6...
+"abcd"\ -> ["a","b","c","d"]
+4\ -> [[4]]
+"abc"; "123"!\ -> [["a","b","c"],["1","2","3"]]
+
+5;|6 -> [5,6,6,6,6...
 // should not evaluate / 1 0 because outer ? should be known to be true
-if (if 1/0 then $ else $)|5 then "T" else "F" -> "T"
+1/0 then $ else $|5 then "T" else "F" -> "T"
 
 // circular programming foldr
-[v1=(4:5:;6)+(> v1)|0 -> 15
+4 5 6+(v1>|0):v1[ -> 15
 
 5&4 -> AtlasTypeError
 //"asdf"&4 -> AtlasTypeError
@@ -192,25 +191,25 @@ if (if 1/0 then $ else $)|5 then "T" else "F" -> "T"
 "asdf"&"123" -> "asd"
 
 // error and catching
-v1=init 0:v1 -> InfiniteLoopError
-["" -> DynamicError
+0 (v1<):v1 -> InfiniteLoopError
+""[ -> DynamicError
 //catch /9 :1:2:0:3;4 -> f
 
 
-~"45" -> 45
-~" 45" -> 45
-~"45 50" -> 45
-~"" -> 0
-~" " -> 0
-~"-a" -> 0
-~"-45" -> -45
-~"--45" -> 45
-~"- 45" -> 45
+"45"~ -> 45
+" 45"~ -> 45
+"45 50"~ -> 45
+""~ -> 0
+" "~ -> 0
+"-a"~ -> 0
+"-45"~ -> -45
+"--45"~ -> 45
+"- 45"~ -> 45
 
-~'5 -> 5
-!~'5 -> AtlasTypeError
+'5~ -> 5
+'5!~ -> AtlasTypeError
 
-~"1 2":"3 4":$ -> [1,3]
+"1 2"; "3 4"~ -> [1,3]
 
 // !~ "" -> []
 // !~ "45 50" -> [45,50]
@@ -218,38 +217,38 @@ v1=init 0:v1 -> InfiniteLoopError
 // !~ :"1 2" :"3 4" $ -> [[1,2],[3,4]]
 
 // complicated test (primes)
-_!if (1+v1=1:(v2=2:1+v2)*v1)%v2 then ,$ else !;v2 -> [2,3,5,7,11...
+(1+(1 (v2*v1):v1))%(2 (1+v2):v2) !then $, else (v2!;) _ -> [2,3,5,7,11...
 
 // aliases of special zip
 //!read "4 5 6" -> [4,5,6]
 
-!]v1=(,0)!:v1+(1:2:;3):;4:5:;6 -> [6,15]
+0,! (v1+(1 2 3; (4 5 6))):v1!] -> [6,15]
 
-;$ -> [[]]
-[;$ -> []
+$; -> [[]]
+$;[ -> []
 
 // check incorrect faith attempt
 // this would attempt to access invalid elements if said check was not in place
-(`(v1=if (;0)!:v2=v1+;;3 then 0[;;4 else 0[;;5))@`v2 -> InfiniteLoopError
+0;! (v1+(3;;):v2) then 4;;[0 else (5;;[0):v1` (v2`) -> InfiniteLoopError
 
 // Test auto replicating of nil
-_!if "______MA_" eq '_ then !;"CHISTMAS" else $ -> "CHISTM"
+"______MA_"='_ !then "CHISTMAS"!; else $_ -> "CHISTM"
 
 // Test implicit cons
-1 (;2+3) -> [1,5]
-'a "234" -> "a234"
-1 a=;2 -> [1,2]
-1 a@a=;2 -> [1,2,2]
-'a if 1 then "b" else "c" -> "ab"
-'a "c" ? 1 ) "b" -> "ab"
-0 !if "asdf" then ,1 else ,2 -> [0,1,1,1,1]
+1(2+3;) -> [1,5]
+'a"234" -> "a234"
+1(2;) -> [1,2]
+1 (2;:a) a  -> [1,2,2]
+'a(1 then "b" else "c") -> "ab"
+'a(1 then "b" else "c") -> "ab"
+0("asdf" !then 1, else (2,)) -> [0,1,1,1,1]
 
 // Test promotion
-1 ~2 -> [1,-2]
+1(2~) -> [1,-2]
 'a! "cd" -> ["ac","ad"]
-!~"123" -> [1,2,3]
-\"asdf" -> ["a","s","d","f"]
+"123"!~ -> [1,2,3]
+"asdf"\ -> ["a","s","d","f"]
 
 
 // Test parse uses previous token correct
-(1) ~2 -> [1,-2]
+1 (2~) -> [1,-2]

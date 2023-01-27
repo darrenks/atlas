@@ -1,9 +1,4 @@
-require "./ops.rb"
-require "./lex.rb"
-require "./parse.rb"
-require "./type.rb"
-require "./infer.rb"
-require "./lazylib.rb"
+require "./repl.rb"
 
 require 'stringio'
 
@@ -22,7 +17,7 @@ end
 
 line = 1
 pass = 0
-behavior_tests = File.read("./test/behavior_tests.txt").lines.to_a
+behavior_tests = File.read("./test/behavior_tests.atl").lines.to_a
 example_regex = /^ *# ?(Example|Test): */
 example_tests = File.read("ops.rb").lines.grep(example_regex).map{|line|line.gsub(example_regex,"")}
 (behavior_tests + example_tests).map{|test|

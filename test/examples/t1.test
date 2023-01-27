@@ -10,6 +10,6 @@ hi
 [stdout]
 ij
 line2
-
+line3
 [stderr]
 3:2 (/) div 0 (DynamicError)

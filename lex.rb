@@ -11,8 +11,13 @@ NumRegex = /0|[0-9]+/m
 CharRegex = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRegex = /"(\\.|[^"])*"?/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}/m
-IdRegex = /!*([a-zA-Z][a-zA-Z0-9_]*|:=|.)/m
+VarRegex = /[a-zA-Z][a-zA-Z0-9_]*/m
+IdRegex = /!*(#{VarRegex}|:=|.)/m
 CommentRegex = /\/\/.*/
+
+def assertVar(token)
+  raise ParseError.new "cannot set #{token.str}", token unless token.str =~ /^#{VarRegex}$/
+end
 
 def lex(code,line_no=1) # returns a list of tokens
   last_was_space = false

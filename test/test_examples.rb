@@ -33,10 +33,11 @@ tests.each{|test_filename|
       raise "unknown section %p" % section
     end
   }
+  raise "invalid test #{test_filename}" if expected_stdout=="" && expected_stderr==""
 
   File.write("test/input", input)
   File.write("test/prog.atl",prog)
-  stdout, stderr, status = Open3.capture3("atlas test/prog.atl #{args} < test/input")
+  stdout, stderr, status = Open3.capture3("ruby atlas test/prog.atl < test/input")
 
   stdout.strip!
   stderr.strip!

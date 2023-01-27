@@ -1,5 +1,6 @@
-require_relative "./escape.rb"
-require_relative "./error.rb"
+# Set this to default because these get used a bit during parse (e.g. creating a string)
+$step_limit=Float::INFINITY
+$reductions = 0
 
 def run(root,out=STDOUT,output_limit=10000,step_limit=Float::INFINITY)
   $step_limit = step_limit

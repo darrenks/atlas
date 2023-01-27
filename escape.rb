@@ -1,5 +1,3 @@
-require_relative "./error.rb"
-
 def inspect_char(char)
   return "'\"" if char=='"'.ord # Don't escape this char (we would in a string)
   "'" + escape_str_char(char)

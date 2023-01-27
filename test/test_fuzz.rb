@@ -1,19 +1,21 @@
 require 'stringio'
-require_relative "../repl.rb"
-require_relative "../lex.rb"
-require_relative "../lazylib.rb"
-require_relative "../parse.rb"
-require_relative "../infer.rb"
-require_relative "../to_infix.rb"
+require "./repl.rb"
 
 #symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
+
+
 symbols = "~!!$()-=[]';?"
 numbers = "012"
 letters = "ab"
 spaces = "  \n" # twice as likely
-all = (symbols+numbers+letters+spaces).chars.to_a
 
-srand 777
+# Just the interesting characters to focus on testing parse
+all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=']
+
+#all = (symbols+numbers+letters+spaces).chars.to_a
+
+# todo take all tests and make larger programs that are almost correct
+
 n = 100000
 step_limit = 1000
 
