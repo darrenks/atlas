@@ -278,7 +278,40 @@ OpsList = [
     # Test: "abc"; "1234"\ -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a.value) },
+
+  # Repl/Debug ops
+  ), create_op(
+    name: "seeType",
+    # Example: 1 seeType -> "Int"
+    # Test: "hi" seeType -> "[Char]"
+    # Test: $ seeType -> "Nil"
+    type: { A => Str },
+    poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
+  ), create_op(
+    name: "seeParse",
+    # Example: 1 ~2 seeParse -> "1‿(2~)"
+    type: { A => Str },
+    impl_with_loc: -> from { -> a { str_to_lazy_list(to_infix(from.args[0],type_info: false)) }},
+  ), create_op(
+    name: "seeInference",
+    # Example: 1 ~2 seeInference -> "1;‿(2~;)"
+    type: { A => Str },
+    impl_with_loc: -> from { -> a { str_to_lazy_list(to_infix(from.args[0])) }},
+  ), create_op(
+    name: "seeVersion",
+    type: Str,
+    impl: -> { str_to_lazy_list("Atlas Alpha (Jan 28, 2023)") },
+  ), create_op(
+    name: "seeOpInfoTodo",
+    # TodoExample: seeInfo + -> "add + Int Int->Int
+    type: Str,
+    impl: -> { str_to_lazy_list("Todo") },
+  ), create_op(
+    name: "seeTableTodo",
+    type: Str,
+    impl: -> { str_to_lazy_list("Todo") },
   )
+
 ]
 
 Ops0 = {}

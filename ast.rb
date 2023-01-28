@@ -1,6 +1,7 @@
 $ast_node_count = 0
 
-class AST < Struct.new(:op,:args,:token,:type,:zip_level,:promise,:id,:used_by,:replicated_args,:last_error,:replaced)
+class AST < Struct.new(:op,:args,:token,:type,:zip_level,:promise,:id,:used_by,:replicated_args,:last_error,:replaced,:from_var)
+# todo, from_var is a bit hacky, since it could be overwritten if used multiple times
   def initialize(*args)
     super(*args)
     self.id = $ast_node_count += 1

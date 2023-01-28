@@ -1,20 +1,24 @@
-===
-programs that infinite loop statically
+=== programs that infinite loop statically ===
 a=a - should be nil
 infinite type - would be nice to give proper error
 
 ==== syntax ====
 in implicit cons !atom should do a zipped cons since atoms cannot zip
-consider trying to make == a single op and be smart about deciding when it means assignment
 allow indented multiline strings with no delimiters
-allow newlines followed by indentation in complicated expressions
-   this is even lower precedence than a space
-   make sure else/then don't need to be indented
+allow newlines followed by indentation in complicated expressions (e.g. parens/then)
+what should implicit value do? e.g. (+1)
 
 brackets to increase zip level, op to not be replicated inside, optimization to not replicate constants
    every brackets must then have a use of that special op so make it implicit to last list atom if missing, similarly if no brackets are present but that special op is, the whole program should be bracketed
 
+add a special syntax for clean list construction that matches a show style display, e.g. ((1 2) (3 4)) is a 2d list
+   one way to do this is detect when a cons AST is used in append (same for strings)
+   also need to make single atom in parens a list (or make excess parens = promote)
+   also would then be nice to allow stuff like (-2)
+
 ==== runtime improvements ====
+consider making the internal list structure append (tree) oriented rather than list (cons) oriented
+
 remove need for pad, better greatest fixed point calculation
 
 use heap for computation instead of lambdas so that it can handle large lists
@@ -35,18 +39,29 @@ min/max
 add !+ /etc to fold or scan on + and other scalar ops (maybe !!+ for scanl)
 more read/parsing options on strings
 
+errors are values - that could make ops like && return a or error instead of [a]
+negative stuff in take/etc
+
+`error` and `undefined` ops, not sure if useful
+
 ===== misc ====
 take command line args
-repl mode (possibly reverse tokens to make it more like a calculator)
 
 ==== assignment reduction ====
 add ops for looking forward and back, a=a+1 -> [+], (a=1+2)+a -> {+}1+2
 
 ==== paren reduction ====
-using white space presense to lower precedence
 flip, an op modifier
+or `push` to do a flipped cons
 
 ==== type improvements ====
 allow swapping if arg types don't match
+str coerce in append
 if knew what the return type needed to be could do things like make max lazy (like logical or) if number used as bool (also fyi, should truthy be >0 or non zero?)
 
+=== repl improvements ===
+save/load session (as commands are raw state), be able to merge multiple sessions
+see ops table
+when seeing stuff, don't expand vars unless they asked for a single var
+ability to undo last line
+can set N (endl) to change how the implicit print works, same for other vars (like precision if add floats)

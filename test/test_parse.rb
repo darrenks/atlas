@@ -82,5 +82,5 @@ run_tests(tests) { |source|
   context={}
   root = parse_line(tokens,context)
   replace_vars(root,context)
-  to_infix(root)
+  to_infix(root,type_info: false)
 }

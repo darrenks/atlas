@@ -1,0 +1,14 @@
+[prog]
+1+2
+:1
+:2
+a:=10
+::
+:100
+[stdout]
+3
+3
+3
+10
+[stderr]
+6:1 (:100) line 100 not set yet (ParseError)

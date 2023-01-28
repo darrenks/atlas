@@ -4,14 +4,30 @@ Dir["*.rb"].each{|f| require_relative f }
 def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
   line_no = 0
+
+  if !ARGV.empty?
+    input_fn = lambda { gets }
+  elsif input
+    input_fn = lambda { input.gets }
+  else
+    input_fn = lambda { Readline.readline(" #{line_no}> ", true) }
+    Readline.completion_append_character = " "
+    Readline.completion_proc = lambda{|s|
+      all = context.keys + AllOps.values.filter(&:name).map(&:name) + ["then"]
+      all -= all.grep(/^see/) if !s[/^see/]
+      all.grep(/^#{Regexp.escape(s)}/)
+    }
+  end
+
   ast = nil
   file_args = !ARGV.empty?
   assignment = false
   loop {
     prev_context = context.dup
-    line=file_args ? gets : input ? input.gets : Readline.readline("> ", true)
     line_no += 1
+    line=input_fn.call
     begin
+      # todo set context[line_no] for circular programming, e.g. 1:1
       if line==nil # eof
         printit(ast, context, output, step_limit) if assignment # was last
         break
@@ -28,6 +44,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
         ast = parse_line(tokens,context)
         printit(ast, context, output, step_limit)
       end
+      context[line_no] = ast
     rescue AtlasError => e
       STDERR.puts e.message
       assignment = false

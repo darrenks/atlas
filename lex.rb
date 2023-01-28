@@ -10,7 +10,8 @@ end
 NumRegex = /0|[0-9]+/m
 CharRegex = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRegex = /"(\\.|[^"])*"?/m
-AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}/m
+ArgRegex = /(:[0-9]+)|::/m
+AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}|#{ArgRegex}/m
 VarRegex = /[a-zA-Z][a-zA-Z0-9_]*/m
 IdRegex = /!*(#{VarRegex}|:=|.)/m
 CommentRegex = /\/\/.*/

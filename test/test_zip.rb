@@ -98,33 +98,33 @@ tests = <<'EOF'
 // 3 arg ////////////////
 // A,B,B
 1 then 2 else 3 -> 1 then 2 else 3
-1 then 2 else (3;) -> 1, then 2, else (3;)
-1 then 2 else (3;;) -> 1,, then 2,, else (3;;)
-1 then 2; else 3 -> 1, then 2; else (3,)
+1 then 2 else (3;) -> 1,!then 2, else (3;)
+1 then 2 else (3;;) -> 1,,!!then 2,, else (3;;)
+1 then 2; else 3 -> 1,!then 2; else (3,)
 1 then 2; else (3;) -> 1 then 2; else (3;)
-1 then 2; else (3;;) -> 1, then 2;, else (3;;)
-1 then 2;; else 3 -> 1,, then 2;; else (3,,)
-1 then 2;; else (3;) -> 1, then 2;; else (3;,)
+1 then 2; else (3;;) -> 1,!then 2;, else (3;;)
+1 then 2;; else 3 -> 1,,!!then 2;; else (3,,)
+1 then 2;; else (3;) -> 1,!then 2;; else (3;,)
 1 then 2;; else (3;;) -> 1 then 2;; else (3;;)
 
 1; then 2 else 3 -> 1; then 2 else 3
-1; then 2 else (3;) -> 1; then 2, else (3;)
-1; then 2 else (3;;) -> 1;, then 2,, else (3;;)
-1; then 2; else 3 -> 1; then 2; else (3,)
+1; then 2 else (3;) -> 1;!then 2, else (3;)
+1; then 2 else (3;;) -> 1;,!!then 2,, else (3;;)
+1; then 2; else 3 -> 1;!then 2; else (3,)
 1; then 2; else (3;) -> 1; then 2; else (3;)
-1; then 2; else (3;;) -> 1; then 2;, else (3;;)
-1; then 2;; else 3 -> 1;, then 2;; else (3,,)
-1; then 2;; else (3;) -> 1; then 2;; else (3;,)
+1; then 2; else (3;;) -> 1;!then 2;, else (3;;)
+1; then 2;; else 3 -> 1;,!!then 2;; else (3,,)
+1; then 2;; else (3;) -> 1;!then 2;; else (3;,)
 1; then 2;; else (3;;) -> 1; then 2;; else (3;;)
 
 1;; then 2 else 3 -> 1;; then 2 else 3
-1;; then 2 else (3;) -> 1;; then 2, else (3;)
-1;; then 2 else (3;;) -> 1;; then 2,, else (3;;)
-1;; then 2; else 3 -> 1;; then 2; else (3,)
+1;; then 2 else (3;) -> 1;;!then 2, else (3;)
+1;; then 2 else (3;;) -> 1;;!!then 2,, else (3;;)
+1;; then 2; else 3 -> 1;;!then 2; else (3,)
 1;; then 2; else (3;) -> 1;; then 2; else (3;)
-1;; then 2; else (3;;) -> 1;; then 2;, else (3;;)
-1;; then 2;; else 3 -> 1;; then 2;; else (3,,)
-1;; then 2;; else (3;) -> 1;; then 2;; else (3;,)
+1;; then 2; else (3;;) -> 1;;!then 2;, else (3;;)
+1;; then 2;; else 3 -> 1;;!!then 2;; else (3,,)
+1;; then 2;; else (3;) -> 1;;!then 2;; else (3;,)
 1;; then 2;; else (3;;) -> 1;; then 2;; else (3;;)
 
 1 !then 2 else 3 -> AtlasTypeError
@@ -196,13 +196,13 @@ $[$ -> AtlasTypeError
 // 3 arg //////////
 // A,B,B
 $ then 2 else 3 -> $ then 2 else 3
-$ then 2 else (3;) -> $ then 2, else (3;)
+$ then 2 else (3;) -> $!then 2, else (3;)
 $; then 2 else 3 -> $; then 2 else 3
 $ then 2; else (3;) -> $ then 2; else (3;)
-1 then $ else 3 -> 1, then $ else (3,)
+1 then $ else 3 -> 1,!then $ else (3,)
 1 then $ else (3;) -> 1 then $ else (3;)
-1 then $; else 3 -> 1,, then $; else (3,,)
-1 then $; else (3;) -> 1, then $; else (3;,)
+1 then $; else 3 -> 1,,!!then $; else (3,,)
+1 then $; else (3;) -> 1,!then $; else (3;,)
 1 then $ else $ -> 1 then $ else $
 1 then $ else ($;) -> 1 then $ else ($;)
 1 then !$ else ($;) -> 1 then !$ else ($;)

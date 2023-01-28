@@ -11,6 +11,7 @@ def replace_vars(node,context)
   if Var === node
     var_name = node.token.str
     raise(ParseError.new("unset identifier %p" % var_name, node.token)) unless context.include? var_name
+    context[var_name].from_var = var_name
     return replace_vars(context[var_name], context)
   end
   return node if node.replaced
@@ -106,6 +107,14 @@ def get_atom(tokens,context)
     AST.new(create_str(str),[],t)
   elsif str[0] == "'"
     AST.new(create_char(str),[],t)
+  elsif str =~ ArgRegex
+    i = if str=="::"
+      context.keys.grep(Integer).max
+    else
+      str[1..-1].to_i
+    end
+
+    context[i] || raise(ParseError.new("line #{i} not set yet", t))
 #   elsif is_special_zip(str)
 #     Ops[str].dup
   elsif (op=Ops0[t.name])
