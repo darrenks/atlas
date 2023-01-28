@@ -12,12 +12,12 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     line=file_args ? gets : input ? input.gets : Readline.readline("> ", true)
     line_no += 1
     begin
-      if line==nil # eof??
+      if line==nil # eof
         printit(ast, context, output, step_limit) if assignment # was last
         break
       end
       tokens = lex(line.chomp, line_no)
-      next if tokens[0].str == :EOF
+      next if tokens[0].str == :EOL
 
       if tokens.size > 2 && tokens[1].str==":="
         assignment = true

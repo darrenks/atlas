@@ -35,6 +35,6 @@ def lex(code,line_no=1) # returns a list of tokens
   	  tokens << token
   	end
   }
-  tokens<<Token.new(:EOF,char_no,line_no)
+  tokens<<Token.new(:EOL,char_no,line_no)
 end
 

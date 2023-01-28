@@ -27,7 +27,7 @@ def replace_vars(node,context)
 end
 
 def parse_line(tokens,context)
-  get_expr(tokens,context,:EOF,DelimiterPriority[:EOF],nil)
+  get_expr(tokens,context,:EOL,DelimiterPriority[:EOL],nil)
 end
 
 def get_expr(tokens,context,delimiter,priority,last)
@@ -36,8 +36,8 @@ def get_expr(tokens,context,delimiter,priority,last)
     atom,t = get_atom(tokens,context)
     if atom
       # spaces indicate it was to actually be a unary op
-      if lastop && last && lastop.space_after && !lastop.space_before
-        last = AST.new(get_op1(lastop),[last],lastop)
+      if lastop && last && lastop.space_after && !lastop.space_before && !is_op(t) && is_sym(lastop.str)
+        last = make_op1(lastop, last)
         lastop = nil
       end
 
@@ -54,7 +54,7 @@ def get_expr(tokens,context,delimiter,priority,last)
           warn("duplicate assignment to var: " + atom.token.str, t) if context[t.str]
           context[atom.token.str] = last
         else# actual regular binary op
-          last = AST.new(get_op2(lastop),[last,atom],lastop)
+          last = make_op2(lastop, last, atom)
         end
       elsif !last #first atom
         last = atom
@@ -65,7 +65,7 @@ def get_expr(tokens,context,delimiter,priority,last)
     else # not an atom
       if lastop
         implicit_value_check(lastop, last)
-        last = AST.new(get_op1(lastop),[last],lastop)
+        last = make_op1(lastop, last)
       end
 
       check_for_delimiter(t, delimiter, priority, tokens, last){|ret| return ret}
@@ -92,7 +92,7 @@ def check_for_delimiter(t, delimiter, priority, tokens, last)
   end
 end
 
-DelimiterPriority = {:EOF => 0, 'else' => 0, ')' => 1}
+DelimiterPriority = {:EOL => 0, 'else' => 0, ')' => 1}
 
 # return atom or nil
 def get_atom(tokens,context)
@@ -110,17 +110,53 @@ def get_atom(tokens,context)
 #     Ops[str].dup
   elsif (op=Ops0[t.name])
     AST.new(op,[],t)
-  elsif  AllOps.include?(str[/!*(.*)/m,1]) && !Ops0.include?(str[/!*(.*)/m,1]) || str==":" || DelimiterPriority[str]
+  elsif is_op(t)
+    if is_sym(str) && t.space_before && !t.space_after
+      atom, t2 = get_prefix_atom(tokens,context)
+      if atom
+        return [make_op1(t, atom), t]
+      else
+        tokens.unshift t2
+        return [nil, t]
+      end
+    else
+      nil
+    end
+  elsif DelimiterPriority[str]
     nil
   else
     Var.new(t)
   end,t]
 end
 
-def get_op1(t)
-  Ops1[t.name] || raise(ParseError.new("op not defined for unary operations",t))
+def get_prefix_atom(tokens,context)
+  if is_op(tokens[0])
+    t = tokens.shift
+    atom, t2 = get_prefix_atom(tokens,context)
+    if atom
+      [make_op1(t, atom), t]
+    else
+      [nil, t2]
+    end
+  else
+    get_atom(tokens,context)
+  end
 end
 
-def get_op2(t)
-  Ops2[t.name] || raise(ParseError.new("op not defined for binary operations",t))
+def make_op1(t,arg)
+  op = Ops1[t.name] || raise(ParseError.new("op not defined for unary operations",t))
+  AST.new(op, [arg], t)
+end
+
+def make_op2(t,arg1,arg2)
+  op = Ops2[t.name] || raise(ParseError.new("op not defined for binary operations",t))
+  AST.new(op,[arg1,arg2],t)
+end
+
+def is_op(t)
+  AllOps.include?(t.str[/!*(.*)/m,1]) && !Ops0.include?(t.str[/!*(.*)/m,1]) || t.str==":"
+end
+
+def is_sym(s)
+  !(s =~ /^\!*#{VarRegex}$/)
 end
