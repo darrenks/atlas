@@ -1,7 +1,7 @@
 require 'open3'
 runs = 0
 def failit(filename,line,prog,expected,output)
-  puts "FAIL example: "
+  puts "FAIL doc: "
   puts prog
   puts "Expecting:", expected
   puts "Found:", output
@@ -30,6 +30,8 @@ end
       stdout, stderr, status = Open3.capture3("ruby atlas test/prog.atl")
     end
 
+    stderr=stderr.split("\e[31m").join
+    stderr=stderr.split("\e[0m").join
     output = stdout + stderr
     output.gsub!(/ *$/,'')
     output.strip!

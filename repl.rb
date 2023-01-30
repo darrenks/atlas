@@ -10,7 +10,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   elsif input
     input_fn = lambda { input.gets }
   else
-    input_fn = lambda { Readline.readline(" #{line_no}> ", true) }
+    input_fn = lambda { Readline.readline("\e[33m #{line_no}> \e[0m", true) }
     Readline.completion_append_character = " "
     Readline.completion_proc = lambda{|s|
       all = context.keys + AllOps.values.filter(&:name).map(&:name) + ["then"]

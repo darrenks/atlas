@@ -62,6 +62,5 @@ if knew what the return type needed to be could do things like make max lazy (li
 === repl improvements ===
 save/load session (as commands are raw state), be able to merge multiple sessions
 see ops table
-when seeing stuff, don't expand vars unless they asked for a single var
 ability to undo last line
 can set N (endl) to change how the implicit print works, same for other vars (like precision if add floats)

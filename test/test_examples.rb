@@ -41,6 +41,8 @@ tests.each{|test_filename|
 
   stdout.strip!
   stderr.strip!
+  stderr=stderr.split("\e[31m").join
+  stderr=stderr.split("\e[0m").join
 
   if stdout != expected_stdout
     failit(test_filename,test,"stdout was\n"+stdout)

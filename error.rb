@@ -27,7 +27,7 @@ class AtlasError < StandardError
     @from = from
   end
   def message
-    to_location(@from) + " " + @message + " (" + class_name + ")"
+    to_location(@from) + " " + @message + " (\e[31m#{class_name}\e[0m)"
   end
   def class_name
     self.class.to_s
