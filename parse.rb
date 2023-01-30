@@ -31,6 +31,9 @@ def parse_line(tokens,context)
   get_expr(tokens,context,:EOL,DelimiterPriority[:EOL],nil)
 end
 
+DelimiterPriority = {:EOL => 0, 'else' => 0, ')' => 1, '}' => 2}
+LBrackets = {"(" => ")", "{" => "}"}
+
 def get_expr(tokens,context,delimiter,priority,last)
   lastop = nil
   loop {
@@ -93,14 +96,13 @@ def check_for_delimiter(t, delimiter, priority, tokens, last)
   end
 end
 
-DelimiterPriority = {:EOL => 0, 'else' => 0, ')' => 1}
-
 # return atom or nil
 def get_atom(tokens,context)
   t = tokens.shift
   str = t.str
-  [if str == "("
-    get_expr(tokens,context,')',DelimiterPriority[')'],nil)
+  [if LBrackets.include? t.str
+    rb = LBrackets[t.str]
+    get_expr(tokens,context,rb,DelimiterPriority[rb],nil)
   elsif str[0] =~ /[0-9]/
     AST.new(create_int(str),[],t)
   elsif str[0] == '"'
