@@ -1,0 +1,2 @@
+[A*4  // That is an up arrow (prev command 1+2)followed by *4
+1 2 seeI		// Two tabs to complete seeInference

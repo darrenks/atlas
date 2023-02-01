@@ -1,5 +1,8 @@
 require "readline"
 Dir["*.rb"].each{|f| require_relative f }
+HistFile = Dir.home + "/.atlas_history"
+# buffer these since if you paste in multiple lines they won't auto split
+$readlines = []
 
 def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
@@ -10,12 +13,22 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   elsif input
     input_fn = lambda { input.gets }
   else
-    input_fn = lambda { Readline.readline("\e[33m #{line_no}> \e[0m", true) }
+    if File.exists? HistFile
+      Readline::HISTORY.push *File.read(HistFile).split("\n")
+    end
+    input_fn = lambda {
+      if $readlines.empty?
+        $readlines = (Readline.readline("\e[33m #{line_no}> \e[0m", true)||return).lines.to_a
+      end
+      line = $readlines.shift
+      File.open(HistFile,'a'){|f|f.puts line} unless !line || line.empty?
+      line
+    }
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
       all = context.keys + AllOps.values.filter(&:name).map(&:name) + ["then"]
-      all -= all.grep(/^see/) if !s[/^see/]
+      all -= all.grep(/^see/) if !s[/^see/] # hide debug commands
       all.grep(/^#{Regexp.escape(s)}/)
     }
   end
