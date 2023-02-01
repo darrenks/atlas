@@ -23,6 +23,7 @@ def run_tests(tests,start_line=2)
       STDERR.puts "expected:"
       STDERR.puts expected
       STDERR.puts "found:"
+      raise found if Exception === found
       STDERR.puts found
       exit(1)
     end

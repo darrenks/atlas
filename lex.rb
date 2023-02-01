@@ -12,6 +12,7 @@ CharRegex = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRegex = /"(\\.|[^"])*"?/m
 ArgRegex = /(:[0-9]+)|::/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}|#{ArgRegex}/m
+# if change, then change auto complete chars
 VarRegex = /[a-zA-Z][a-zA-Z0-9_]*/m
 IdRegex = /!*(#{VarRegex}|:=|.)/m
 CommentRegex = /\/\/.*/

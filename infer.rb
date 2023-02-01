@@ -1,14 +1,14 @@
 def infer(root)
   all = all_nodes(root)
   all.each{|node|node.used_by = []}
-  all.each{|node|node.args.each{|arg| arg.used_by << node} }
+  all.each{|node|node.orig_args.each{|arg| arg.used_by << node} }
 
   dfs_infer(root)
 
   errors = []
   dfs(root) { |node|
     if node.last_error
-      errors << node.last_error if node.args.all?{|arg| arg.type != nil }
+      errors << node.last_error if node.orig_args.all?{|arg| arg.type != nil }
       node.type = nil
     end
   }
@@ -20,13 +20,13 @@ def dfs_infer(node)
   return if node.type
   node.type = Nil # for cycle, Nil instead of Unknown since cycle can't be scalar
 
-  node.args.each{|arg| dfs_infer(arg) }
+  node.orig_args.each{|arg| dfs_infer(arg) }
 
   update_type(node)
 end
 
 def update_type(node)
-  return if node.args.any?{|arg|!arg.type}
+  return if node.orig_args.any?{|arg|!arg.type}
   prev_type = node.type
   node.type = possible_types(node)
 
@@ -39,23 +39,23 @@ def possible_types(node)
   node.last_error = nil
   fn_types = node.op.type.select{|fn_type|
     begin
-      check_base_elem_constraints(fn_type.specs, node.args.map(&:type))
+      check_base_elem_constraints(fn_type.specs, node.orig_args.map(&:type))
     rescue AtlasTypeError
       false
     end
   }
 
   if fn_types.size == 0
-    node.last_error = AtlasTypeError.new("op is not definied for arg types: " + node.args.map{|arg|arg.type.inspect}*',', node)
+    node.last_error = AtlasTypeError.new("op is not definied for arg types: " + node.orig_args.map{|arg|arg.type.inspect}*',', node)
     return Nil
   elsif fn_types.size == 2
-    node.last_error = AtlasTypeError.new("op is ambiguous for arg types: " + node.args.map{|arg|arg.type.inspect}*',', node)
+    node.last_error = AtlasTypeError.new("op is ambiguous for arg types: " + node.orig_args.map{|arg|arg.type.inspect}*',', node)
     return Nil
   else
     fn_type = fn_types[0]
   end
 
-  arg_types = node.args.map(&:type)
+  arg_types = node.orig_args.map(&:type)
 #STDERR.puts arg_types.inspect
 #   p node.token.str if node.token
 
@@ -82,7 +82,7 @@ def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level)
 
   promote_levels = promote_levels(node,rank_deficits,zip_level,vars)
 
-  replicated_args = node.args.map.with_index{|arg,i|
+  replicated_args = node.orig_args.map.with_index{|arg,i|
     arg = implicit_promoten(arg, promote_levels[i],[zip_level,arg.type.dim].min)
     rep_level = rank_deficits[i] - promote_levels[i]
 
@@ -90,7 +90,7 @@ def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level)
 #     raise AtlasTypeError.new "can't replicate nil",nil if arg == Nil && rep_level > 0
     implicit_repn(arg, rep_level)
   }
-  if node.args.size > 0 && all_repped
+  if node.orig_args.size > 0 && all_repped
     node.last_error ||= AtlasTypeError.new "zip level too high", node
   end
   replicated_args
@@ -104,8 +104,8 @@ def implicit_repn(arg, rep_level)
 end
 
 def implicit_rep(arg)
-  n=AST.new(RepOp,[arg],nil,arg.type+1,0)
-  n.replicated_args = n.args
+  n=IR.new(RepOp,[arg],nil,arg.type+1,0)
+  n.replicated_args = n.orig_args
   n
 end
 
@@ -118,8 +118,8 @@ def implicit_promoten(arg, promote_level,zip_level)
 end
 
 def implicit_promote(arg,zip_level)
-  n=AST.new(PromoteOp,[arg],nil,arg.type+1,zip_level)
-  n.replicated_args = n.args
+  n=IR.new(PromoteOp,[arg],nil,arg.type+1,zip_level)
+  n.replicated_args = n.orig_args
   n
 end
 
@@ -207,8 +207,8 @@ def rank_deficits(arg_types, specs, vars, zip_level)
 end
 
 def promote_levels(node,rank_deficits,zip_level,vars)
-  promote_levels = node.args.zip(rank_deficits,(0..)).map{|arg,deficit,i|
-    if node.args.size == 1 && node.op.promote >= ALLOW_PROMOTE && arg.type.dim >= zip_level
+  promote_levels = node.orig_args.zip(rank_deficits,(0..)).map{|arg,deficit,i|
+    if node.orig_args.size == 1 && node.op.promote >= ALLOW_PROMOTE && arg.type.dim >= zip_level
       deficit
     elsif node.op.promote >= PREFER_PROMOTE
       [zip_level <= arg.type.dim ? deficit : arg.type.dim, deficit - zip_level].max

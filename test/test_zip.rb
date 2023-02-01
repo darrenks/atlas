@@ -225,9 +225,8 @@ Ops1[']'].promote=ALLOW_PROMOTE
 
 run_tests(tests) { |source|
   tokens = lex(source)
-  context={}
-  root = parse_line(tokens,context)
-  replace_vars(root,context)
-  infer(root)
-  to_infix(root)
+  root = parse_line(tokens)
+  ir = to_ir(root, {})
+  infer(ir)
+  ir.to_infix
 }

@@ -12,6 +12,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   else
     input_fn = lambda { Readline.readline("\e[33m #{line_no}> \e[0m", true) }
     Readline.completion_append_character = " "
+    Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
       all = context.keys + AllOps.values.filter(&:name).map(&:name) + ["then"]
       all -= all.grep(/^see/) if !s[/^see/]
@@ -22,14 +23,20 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   ast = nil
   file_args = !ARGV.empty?
   assignment = false
-  loop {
+  stop = false
+  until stop
     prev_context = context.dup
     line_no += 1
+    result_name = ":#{line_no}"
     line=input_fn.call
     begin
       # todo set context[line_no] for circular programming, e.g. 1:1
       if line==nil # eof
-        printit(ast, context, output, step_limit) if assignment # was last
+        stop = true # incase error is caught we still wish to stop
+        if assignment # was last
+          ir = to_ir(ast,context, result_name)
+          printit(ir, output, step_limit)
+        end
         break
       end
       tokens = lex(line.chomp, line_no)
@@ -38,13 +45,15 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       if tokens.size > 2 && tokens[1].str==":="
         assignment = true
         assertVar(tokens[0])
-        ast = context[tokens[0].str] = parse_line(tokens[2..-1],context)
+        ast = parse_line(tokens[2..-1])
+        ir = set(tokens[0], ast, context)
       else
         assignment = false
-        ast = parse_line(tokens,context)
-        printit(ast, context, output, step_limit)
+        ast = parse_line(tokens)
+        ir = to_ir(ast,context,result_name)
+        printit(ir, output, step_limit)
       end
-      context[line_no] = ast
+      context["::"] = context[result_name] = ir
     rescue AtlasError => e
       STDERR.puts e.message
       assignment = false
@@ -53,14 +62,13 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       STDERR.puts "!!!This is an internal Altas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!\n\n"
       raise e
     end
-  }
+  end # until
 end
 
-def printit(ast,context,output,step_limit)
-    str_ast = AST.new(Ops1['tostring'],[ast])
-    replace_vars(str_ast,context)
+def printit(ir,output,step_limit)
+    ir = IR.new(Ops1['tostring'], [ir])
 #     puts to_infix(str_ast)
-    infer(str_ast)
-    run(str_ast,output,10000,step_limit)
+    infer(ir)
+    run(ir,output,10000,step_limit)
     output.puts
 end

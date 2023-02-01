@@ -291,16 +291,16 @@ OpsList = [
     name: "seeParse",
     # Example: 1 ~2 seeParse -> "1‿(2~)"
     type: { A => Str },
-    impl_with_loc: -> from { -> a { str_to_lazy_list(to_infix(from.args[0],type_info: false)) }},
+    impl_with_loc: -> from { -> a { str_to_lazy_list(from.from.args[0].to_infix) }},
   ), create_op(
     name: "seeInference",
     # Example: 1 ~2 seeInference -> "1;‿(2~;)"
     type: { A => Str },
-    impl_with_loc: -> from { -> a { str_to_lazy_list(to_infix(from.args[0])) }},
+    impl_with_loc: -> from { -> a { str_to_lazy_list(from.replicated_args[0].to_infix) }},
   ), create_op(
     name: "seeVersion",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Jan 28, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 1, 2023)") },
   ), create_op(
     name: "seeOpInfoTodo",
     # TodoExample: seeInfo + -> "add + Int Int->Int
@@ -310,6 +310,12 @@ OpsList = [
     name: "seeTableTodo",
     type: Str,
     impl: -> { str_to_lazy_list("Todo") },
+
+  ), create_op(
+    name: "let",
+    sym: ":",
+    type: { [A,A] => [A] }, # only used to specify number of args
+    impl: -> {},
   )
 
 ]
@@ -335,6 +341,7 @@ OpsList.each{|op|
 RepOp = AllOps["rep"]
 PromoteOp = AllOps["single"]
 NilOp = AllOps['nil']
+Var = Op.new("var")
 
 def create_int(str)
   create_op(

@@ -11,4 +11,4 @@ a:=10
 3
 10
 [stderr]
-6:1 (:100) line 100 not set yet (ParseError)
+6:1 (:100) unset identifier ":100" (ParseError)

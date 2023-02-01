@@ -4,15 +4,14 @@ require 'stringio'
 
 def doit(source,limit)
   tokens = lex(source)
-  context = {}
-  root = parse_line(tokens,context)
-  inspect_root = AST.new(Ops1['show'],[root])
-  replace_vars(inspect_root,context)
-  infer(inspect_root)
+  root = parse_line(tokens)
+  root_ir = to_ir(root,{})
+  ir = IR.new(Ops1['show'],[root_ir])
+  infer(ir)
 
   output = StringIO.new
-  run(inspect_root, output, limit)
-  [output.string,root.type.inspect]
+  run(ir, output, limit)
+  [output.string,root_ir.type.inspect]
 end
 
 line = 1
@@ -48,6 +47,7 @@ example_tests = File.read("ops.rb").lines.grep(example_regex).map{|line|line.gsu
     if expected != found
       STDERR.puts "expected:"
       STDERR.puts expected
+      raise found if Exception === found
       STDERR.puts "found:"
       STDERR.puts found
     else

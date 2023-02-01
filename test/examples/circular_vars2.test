@@ -1,0 +1,11 @@
+[prog]
+a:=b+(5:b)
+b
+a
+d:=d
+c:=c
+[stdout]
+5
+10
+[stderr]
+5:4 (c) trivial self dependency is nonsensical (ParseError)

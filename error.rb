@@ -8,6 +8,8 @@ def to_location(from)
     from
   when AST
     from.token
+  when IR
+    from.from.token
   when NilClass
     nil
   else

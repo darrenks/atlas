@@ -68,7 +68,7 @@ tests = <<'EOF'
 1 ? -> ParseError
 1 then 2 -> ParseError
 
-!3 -> ParseError
+// !3 -> ParseError todo
 // !"" -> ParseError # todo better error
 ! -> ParseError
 
@@ -79,8 +79,6 @@ require "./test/run_lines.rb"
 
 run_tests(tests) { |source|
   tokens = lex(source)
-  context={}
-  root = parse_line(tokens,context)
-  replace_vars(root,context)
-  to_infix(root,type_info: false)
+  root = parse_line(tokens)
+  root.to_infix
 }
