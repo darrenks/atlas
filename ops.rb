@@ -300,7 +300,7 @@ OpsList = [
   ), create_op(
     name: "seeVersion",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 1, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 2, 2023)") },
   ), create_op(
     name: "seeOpInfoTodo",
     # TodoExample: seeInfo + -> "add + Int Int->Int
