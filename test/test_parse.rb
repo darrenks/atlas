@@ -73,6 +73,12 @@ tests = <<'EOF'
 ! -> ParseError
 
 //"ab"!"cd" -> todo
+
+// Identifiers ->
+AA -> A‿A
+aA -> aA
+a_a -> a_a
+A_ A -> A_‿A
 EOF
 
 require "./test/run_lines.rb"

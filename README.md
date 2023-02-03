@@ -468,12 +468,12 @@ In Atlas the solution is simple:
 
     nats:=1 (nats+1)
     prisoners:=nats take 40
-    gun_holders := prisoners (nats % 3 !then gun_holders!; else $ concat)
-    gun_holders tail != gun_holders !then gun_holders!; else $ concat head
+    gunHolders := prisoners (nats % 3 !then gunHolders!; else $ concat)
+    gunHolders tail != gunHolders !then gunHolders!; else $ concat head
     ──────────────────────────────────
     28
 
-The `!then gun_holders!; else $ concat` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
+The `!then gunHolders!; else $ concat` which is used twice may look scary but that's actually just a common pattern for doing a filter, not a fault of circular programming that Atlas lacks that operator for now. That last line is just selecting the first case it is the same person twice in a row. That catch op I alluded to earlier would be really handy here then we could just take the last before encountering an error.
 
 I guess it is no surprise that a problem involving a circle has a nice circular programming solution. But calculating primes using the Sieve of Eratosthenesis is our next example. Typically the sieve is done on a fixed size, but if you use circular programming you can stream it.
 

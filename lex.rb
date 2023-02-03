@@ -13,7 +13,7 @@ StrRegex = /"(\\.|[^"])*"?/m
 ArgRegex = /(:[0-9]+)|::/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}|#{ArgRegex}/m
 # if change, then change auto complete chars
-VarRegex = /[a-zA-Z][a-zA-Z0-9_]*/m
+VarRegex = /[a-z][a-zA-Z0-9_]*|A/m
 IdRegex = /!*(#{VarRegex}|:=|.)/m
 CommentRegex = /\/\/.*/
 
