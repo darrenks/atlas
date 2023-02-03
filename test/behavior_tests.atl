@@ -252,3 +252,7 @@ $;[ -> []
 
 // Test parse uses previous token correct
 1 (2~) -> [1,-2]
+
+
+1@-2 -> 1
+1 2 3!@ S -> [[1],[1,2],[1,2,3]]

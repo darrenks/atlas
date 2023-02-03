@@ -1,6 +1,6 @@
 class Token<Struct.new(:str,:char_no,:line_no,:space_before,:space_after)
   def name
-    str[/!*(.*)/m,1]
+    str[/!*@?(.*)/m,1]
   end
 end
 
@@ -14,7 +14,7 @@ ArgRegex = /(:[0-9]+)|::/m
 AtomRegex = /#{CharRegex}|#{NumRegex}|#{StrRegex}|#{ArgRegex}/m
 # if change, then change auto complete chars
 VarRegex = /[a-z][a-zA-Z0-9_]*|A/m
-IdRegex = /!*(#{VarRegex}|:=|.)/m
+IdRegex = /!*@?(#{VarRegex}|:=|.)/m
 CommentRegex = /\/\/.*/
 
 def assertVar(token)

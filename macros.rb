@@ -1,3 +1,10 @@
+def apply_macros(ast)
+  ast = replace_scans(ast)
+  ast = replace_folds(ast)
+  apply_flips(ast)
+  ast
+end
+
 # todo auto replicate so that 1+S works
 
 # a+(S+1) -> a[ (a>+(T+1)):T
@@ -13,7 +20,7 @@ def replace_scans(ast)
         AST.new(ast.op, [
           AST.new(Ops1['tail'], [a]),
           ast.args[1]
-        ]),
+        ], ast.token),
       ]),
       v
     ])
@@ -38,7 +45,7 @@ def replace_folds(ast)
         AST.new(ast.op, [
           AST.new(Ops1['tail'], [a]),
           ast.args[1]
-        ]),
+        ], ast.token),
       ]),
       v
     ])])
@@ -46,6 +53,14 @@ def replace_folds(ast)
     ast.args.map!{|arg| replace_scans(arg) }
     ast
   end
+end
+
+def apply_flips(ast)
+  if ast.is_flipped
+    raise ParseError.new "can only flip ops with 2 args", t if ast.args.size != 2
+    ast.args.reverse!
+  end
+  ast.args.each{|arg|apply_flips(arg)}
 end
 
 def lhs_has(needle,ast)

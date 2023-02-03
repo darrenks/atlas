@@ -15,9 +15,6 @@ class Op < Struct.new(
   def narg
     type ? type[0].specs.size : 0
   end
-  def str
-    token.str
-  end
 end
 
 def create_op(
