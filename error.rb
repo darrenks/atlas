@@ -17,7 +17,7 @@ def to_location(from)
   end
 
   if token
-    "%d:%d (%s)" % [token.line_no, token.char_no, token.str]
+    "%s:%s (%s)" % [token.line_no||"?", token.char_no||"?", token.str]
   else
     "?:?"
   end

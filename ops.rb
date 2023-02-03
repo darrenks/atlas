@@ -311,10 +311,23 @@ OpsList = [
     type: Str,
     impl: -> { str_to_lazy_list("Todo") },
 
+  # Macros, type only used to specify number of args
   ), create_op(
     name: "let",
     sym: ":",
-    type: { [A,A] => [A] }, # only used to specify number of args
+    type: { [A,A] => [A] },
+    impl: -> {},
+  ), create_op(
+    name: "scan",
+    # Example: 1 2 3 4+S -> [1,3,6,10]
+    sym: "S",
+    type: Int,
+    impl: -> {},
+  ), create_op(
+    name: "fold",
+    # Example: 1 2 3 4+F -> 10
+    sym: "F",
+    type: Int,
     impl: -> {},
   )
 

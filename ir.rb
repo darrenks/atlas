@@ -22,6 +22,9 @@ end
 
 # creates an IR from an AST, replacing vars
 def to_ir(ast,context,result_name=nil)
+  ast = replace_scans(ast)
+  ast = replace_folds(ast)
+#   puts ast.to_infix
   ir = create_ir(ast,context)
   context[result_name] = ir if result_name # for circular
   check_missing(ir,context,{})
