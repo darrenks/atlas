@@ -4,15 +4,15 @@ require "./repl.rb"
 #symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
 
 
-symbols = "~!!$()-=[]';?:"
+symbols = "~!!@@$()-=[]';?:"
 numbers = "012"
-letters = "ab"
+letters = "abCFS"
 spaces = "  \n\n" # twice as likely
 
 # Just the interesting characters to focus on testing parse
-all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
+# all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
 
-#all = (symbols+numbers+letters+spaces).chars.to_a
+all = (symbols+numbers+letters+spaces).chars.to_a
 
 # todo take all tests and make larger programs that are almost correct
 

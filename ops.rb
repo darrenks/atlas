@@ -348,6 +348,7 @@ OpsList.each{|op|
   else; error; end
   AllOps[op.name] = AllOps[op.sym] = op
 }
+AllOps[""]=Ops2[""]=Ops2[" "]
 RepOp = AllOps["rep"]
 PromoteOp = AllOps["single"]
 NilOp = AllOps['nil']

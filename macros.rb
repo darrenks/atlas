@@ -9,6 +9,7 @@ end
 
 # a+(S+1) -> a[ (a>+(T+1)):T
 def replace_scans(ast)
+  raise ParseError.new"scan must be on rhs of an op",ast if ast.op.name == "scan"
   if ast.args.size == 2 && (s=lhs_has("scan", ast.args[1]))
     a = ast.args[0]
     v = new_var
@@ -33,6 +34,7 @@ end
 # a+(S+1) -> [(a[ (a>+(T+1)):T)
 # todo do a foldr1 instead for better laziness
 def replace_folds(ast)
+  raise ParseError.new"fold must be on rhs of an op",ast if ast.op.name == "fold"
   if ast.args.size == 2 && (s=lhs_has("fold", ast.args[1]))
     a = ast.args[0]
     v = new_var
@@ -50,14 +52,14 @@ def replace_folds(ast)
       v
     ])])
   else
-    ast.args.map!{|arg| replace_scans(arg) }
+    ast.args.map!{|arg| replace_folds(arg) }
     ast
   end
 end
 
 def apply_flips(ast)
   if ast.is_flipped
-    raise ParseError.new "can only flip ops with 2 args", t if ast.args.size != 2
+    raise ParseError.new "can only flip ops with 2 args", ast if ast.args.size != 2
     ast.args.reverse!
   end
   ast.args.each{|arg|apply_flips(arg)}

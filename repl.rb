@@ -17,7 +17,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
     input_fn = lambda {
-      if $readlines.empty?
+      while $readlines.empty?
         $readlines = (Readline.readline("\e[33m #{line_no}> \e[0m", true)||return).lines.to_a
       end
       line = $readlines.shift

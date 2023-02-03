@@ -25,11 +25,11 @@ class Promise
     @impl=block
   end
   def value
+    $reductions+=1
+    raise DynamicError.new "step limit exceeded",nil if $reductions > $step_limit
     if Proc===@impl
       raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
       @calculating=true
-      $reductions+=1
-      raise DynamicError.new "step limit exceeded",nil if $reductions > $step_limit
       begin
         @impl=@impl[]
       ensure

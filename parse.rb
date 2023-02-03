@@ -18,7 +18,7 @@ def get_expr(tokens,delimiter,priority,last)
     atom,t = get_atom(tokens)
     if atom
       # spaces indicate it was to actually be a unary op
-      if lastop && last && lastop.space_after && !lastop.space_before && !is_op(t) && is_sym(lastop)
+      if lastop && last && lastop.space_after && !lastop.space_before && !is_op(t) && !is_alpha(lastop)
         last = make_op1(lastop, last)
         lastop = nil
       end
@@ -88,7 +88,7 @@ def get_atom(tokens)
   elsif (op=Ops0[t.name])
     AST.new(op,[],t)
   elsif is_op(t)
-    if is_sym(t) && t.space_before && !t.space_after
+    if !is_alpha(t) && t.space_before && !t.space_after
       atom, t2 = get_prefix_atom(tokens)
       if atom
         return [make_op1(t, atom), t]
@@ -131,9 +131,9 @@ def make_op2(t,arg1,arg2)
 end
 
 def is_op(t)
-  AllOps.include?(t.name) && !Ops0.include?(t.name) || t.str==":"
+  AllOps.include?(t.name) && !Ops0.include?(t.name)
 end
 
-def is_sym(t)
-  !(t.name =~ /^#{VarRegex}$/)
+def is_alpha(t)
+  t.name =~ /^#{IdRx}$/
 end

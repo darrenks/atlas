@@ -51,8 +51,6 @@ take command line args
 add ops for looking forward and back, a=a+1 -> [+], (a=1+2)+a -> {+}1+2
 
 ==== paren reduction ====
-flip, an op modifier
-or `push` to do a flipped cons
 
 ==== type improvements ====
 allow swapping if arg types don't match
