@@ -59,15 +59,18 @@ def possible_types(node)
 #STDERR.puts arg_types.inspect
 #   p node.token.str if node.token
 
+  pre_zip_level = node.from ? node.from.pre_zip_level || 0 : 0
+  arg_types.map!{|t| t-pre_zip_level }
+
   min_implicit_zip_level = implicit_zip_level(node.op, arg_types, fn_type.specs)
-  zip_level = node.explicit_zip_level + min_implicit_zip_level + node.op.min_zip_level
+  zip_level = node.explicit_zip_level + min_implicit_zip_level + node.op.min_zip_level + pre_zip_level
 #STDERR.puts "zip_level = %d" % zip_level
 
-  arg_types.map!{|t| t-zip_level }
+  arg_types.map!{|t| t-(zip_level-pre_zip_level) }
 
   vars = solve_type_vars(arg_types, fn_type.specs)
 
-  replicated_args = replicate_and_promote_as_needed(fn_type, node, vars, arg_types, zip_level)
+  replicated_args = replicate_and_promote_as_needed(fn_type, node, vars, arg_types, zip_level, pre_zip_level)
 #       replicated_args.each{|arg| t=arg.type;raise AtlasTypeError.new("cannot zip into nil",nil) if t.is_nil && t.dim <= node.zip_level }
   t = spec_to_type(fn_type.ret, vars) + zip_level
 
@@ -76,7 +79,7 @@ def possible_types(node)
   t
 end
 
-def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level)
+def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level,pre_zip_level)
   all_repped = true
   rank_deficits = rank_deficits(arg_types, fn_type.specs, vars, zip_level)
 
@@ -88,7 +91,7 @@ def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level)
 
     all_repped &&= rep_level > 0
 #     raise AtlasTypeError.new "can't replicate nil",nil if arg == Nil && rep_level > 0
-    implicit_repn(arg, rep_level)
+    implicit_repn(arg, rep_level, pre_zip_level)
   }
   if node.orig_args.size > 0 && all_repped
     node.last_error ||= AtlasTypeError.new "zip level too high", node
@@ -96,15 +99,15 @@ def replicate_and_promote_as_needed(fn_type, node, vars, arg_types,zip_level)
   replicated_args
 end
 
-def implicit_repn(arg, rep_level)
+def implicit_repn(arg, rep_level, pre_zip_level)
   # should be solved so that check is not needed
 #   raise AtlasTypeError.new "would need negative rep level", nil if rep_level < 0
-  rep_level.times { arg = implicit_rep(arg) }
+  rep_level.times { arg = implicit_rep(arg,pre_zip_level) }
   return arg
 end
 
-def implicit_rep(arg)
-  n=IR.new(RepOp,[arg],nil,arg.type+1,0)
+def implicit_rep(arg,pre_zip_level)
+  n=IR.new(RepOp,[arg],nil,arg.type+1,pre_zip_level)
   n.replicated_args = n.orig_args
   n
 end

@@ -45,7 +45,9 @@ class AST
     self
   end
   alias infix_args args
-  alias zip_level explicit_zip_level
+  def zip_level
+    explicit_zip_level + (pre_zip_level || 0)
+  end
   include ToInfix
 end
 

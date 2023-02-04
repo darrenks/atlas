@@ -5,6 +5,8 @@ NO_PROMOTE = :a_no         #
 ALLOW_PROMOTE = :b_allow   # promote if only way to satisfy type spec
 PREFER_PROMOTE = :c_prefer # promote instead of replicate
 
+MacroImpl = -> *args { raise "macro impl called" }
+
 class Op < Struct.new(
     :name,
     :sym, # optional
@@ -286,7 +288,12 @@ OpsList = [
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
   ), create_op(
     name: "seeParse",
-    # Example: 1 ~2 seeParse -> "1‿(2~)"
+    # Example: 1 2 3% 4. seeParse -> "1‿2‿3%‿4."
+    type: { A => Str },
+    impl_with_loc: -> from { -> a { str_to_lazy_list(from.from.orig.args[0].to_infix) }},
+  ), create_op(
+    name: "seeMacros",
+    # Example: 1 2 3% 4. seeMacros -> "1‿2‿3!‿(4,)"
     type: { A => Str },
     impl_with_loc: -> from { -> a { str_to_lazy_list(from.from.args[0].to_infix) }},
   ), create_op(
@@ -313,19 +320,31 @@ OpsList = [
     name: "let",
     sym: ":",
     type: { [A,A] => [A] },
-    impl: -> {},
+    impl: MacroImpl,
   ), create_op(
     name: "scan",
     # Example: 1 2 3 4+S -> [1,3,6,10]
     sym: "S",
     type: Int,
-    impl: -> {},
+    impl: MacroImpl,
   ), create_op(
     name: "fold",
     # Example: 1 2 3 4+F -> 10
     sym: "F",
     type: Int,
-    impl: -> {},
+    impl: MacroImpl,
+  ), create_op(
+    name: "mapVar",
+    # Example: "hi"; "there"%[ "ab". -> ["hab","tab"]
+    sym: "%",
+    type: { [A] => A },
+    impl: MacroImpl,
+  ), create_op(
+    name: "map",
+    # Example: "hi"; "there"%[ "ab". -> ["hab","tab"]
+    sym: ".", # todo change it to ! before a delimiter
+    type: { [A] => [A] },
+    impl: MacroImpl,
   )
 
 ]
