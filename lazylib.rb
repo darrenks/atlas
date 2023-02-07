@@ -2,18 +2,54 @@
 $step_limit=Float::INFINITY
 $reductions = 0
 
+'
+Instructions for using CPS trampolined style definitions:
+you may only return thunks
+calling a continuation returns a thunk
+promise.get_value returns a thunk
+
+if you use recursion you should put the recursive call inside a new thunk unless you know for a fact it will be called only to a constant depth (I think)
+
+I\'m not 100% sure that all of these new thunks are necessary, should do some testing and checking max stack depth. For now error on side of safety.
+
+The purpose of all this complexity is to avoid arbitrary recursion depth which would stack overflow on biggish data (around size 1000 lists).
+'
+
+
+class Thunk
+  def initialize(&fn)
+    @fn=fn
+  end
+  def go
+    @fn.call
+  end
+end
+
+class Proc
+  def cont(arg)
+    Thunk.new{ call arg }
+  end
+end
+
+
 def run(root,out=STDOUT,output_limit=10000,step_limit=Float::INFINITY)
   $step_limit = step_limit
   $reductions = 0
-  print_string(make_promises(root).value, out, output_limit)
+  #root = root.replicated_args[0] #rm tostring
+  ret = proc{|_| return }
+
+  thunk = Thunk.new{
+    print_string(make_promises(root), out, output_limit, ret)
+  }
+  loop { thunk = thunk.go }
 end
 
 def make_promises(node)
   return node.promise if node.promise
   arg_types = node.replicated_args.map{|arg|arg.type-node.zip_level}
   args = nil
-  node.promise = Promise.new {
-    zipn(node.zip_level, args, node.op.impl[arg_types, node])
+  node.promise = Promise.new { |cont|
+    zipn(node.zip_level, args, node.op.impl[arg_types, node], cont)
   }
   args = node.replicated_args.map{|arg| make_promises(arg) }
   node.promise
@@ -40,14 +76,39 @@ class Promise
     end
     @impl
   end
+  def get_value(&cont)
+    if Proc===@impl
+#         @impl[lambda{|v|@impl=v;Thunk.new{cont[v]}}]
+      @impl[->v { @impl = v; cont.cont v }]
+    else
+      cont.cont(@impl)
+    end
+  end
+  def ret_value(cont) # todo use this more, but is it even necessary??
+    get_value{|i|cont.cont i}
+  end
   def inspect
     "promise"
   end
 end
 
-def take(n, a)
-  return [] if n <= 0 || a.value == []
-  [a.value[0], Promise.new{ take(n-1, a.value[1]) }]
+# A simple promise that just returns the result of an atomic operation
+def spromise(&b)
+  Promise.new{|cont|cont.cont b[]}
+end
+
+def take(n, a, cont)
+  if n <= 0
+    cont.cont []
+  else
+    a.get_value{|av|
+      if av == []
+        cont.cont []
+      else
+        cont.cont [av[0], Promise.new{|c2| take(n-1, av[1], c2) }]
+      end
+    }
+  end
 end
 
 def drop(n, a)
@@ -85,22 +146,24 @@ def transpose(a)
    Promise.new{transpose [a[0].value[1],tls]}]
 end
 
-def last(a)
-  prev=nil
-  until a.empty?
-    prev = a
-    a = a[1].value
+def last(a,cont,prev=nil)
+  if a.empty?
+    prev.get_value{|pv|cont.cont pv}
+  else
+    a[1].get_value{|a1v|
+      Thunk.new{ last(a1v,cont,a[0]) }
+    }
   end
-  raise DynamicError.new("empty last", nil) if prev == nil
-  prev[0].value
 end
+
+
 
 # n = int number of dims to zip
 # a = args, [promise]
 # f = impl, promises -> value
 # returns value
-def zipn(n,a,f)
-  return f[*a] if n <= 0 || a==[]
+def old_zipn(n,a,f,c)
+  return f[*a,c] if n <= 0 || a==[]
   faith = []
   return [] if a.any?{|i|
     begin
@@ -118,13 +181,31 @@ def zipn(n,a,f)
    Promise.new{zipn(n,a.map{|i|i.value[1]},f) }]
 end
 
-def repn(n,v)
-  n <= 0 ? v : Promise.new { repeat(repn(n-1,v)) }
+def zipn(n,a,f,c)
+  return f[*a,c] if n <= 0 || a==[]
+  getn_values(a,c) {|av|
+    [Promise.new{|c2|          zipn(n-1,av.map{|i|i[0]},f,c2) },
+     Promise.new{|c2|Thunk.new{zipn(n,  av.map{|i|i[1]},f,c2)} }]
+  }
+end
+
+def getn_values(a,c,i=0,av=[],&b)
+  if i>=a.size
+    c.cont(yield(av))
+  else
+    a[i].get_value{|aiv|
+      if aiv == []
+        c.cont []
+      else
+        getn_values(a,c,i+1,av<<aiv,&b)
+      end
+    }
+  end
 end
 
 def repeat(a)
   ret = [a]
-  ret << Promise.new{ret}
+  ret << spromise{ret}
   ret
 end
 
@@ -152,75 +233,92 @@ def len(a)
 end
 
 # value -> Promise -> value
-def append(v,r)
-  v==[] ? r.value : [v[0],Promise.new{append(v[1].value, r)}]
+def append(v,r,cont)
+  v==[] ? r.get_value{|rv|cont.cont rv} : cont.cont([v[0],Promise.new{|c2|v[1].get_value{|v1v|Thunk.new{append(v1v, r, c2)}}}])
   #concat_map(v,r){|v2,r2|[Promise.new{v2},r2]}
 end
 
 # value -> value -> bool -> (value -> promise -> ... -> value) -> value
-def concat_map(v,rhs,first=true,&b)
+def concat_map(v,rhs,cont,first=true,&b)
   if v==[]
-    rhs
+    cont.cont rhs
   else
-    b[v[0].value,Promise.new{concat_map(v[1].value,rhs,false,&b)},first]
+    v[0].get_value{|v0v|
+      b[v0v,Promise.new{|c2|
+        v[1].get_value{|v1v|
+          Thunk.new{concat_map(v1v,rhs,c2,false,&b)}
+        }
+      },first,cont]
+    }
   end
 end
 
-def inspect_value(t,value)
-  inspect_value_h(t,value,Null)
+def inspect_value(t,value,cont)
+  inspect_value_h(t,value,Null,cont)
 end
 
-def inspect_value_h(t,value,rhs)
+def inspect_value_h(t,value,rhs,cont)
   if t == Nil
-    str_to_lazy_list("[]",rhs)
+    str_to_lazy_list("[]",cont,rhs)
   elsif t==Str
-    [Promise.new{'"'.ord}, Promise.new{
-      concat_map(value,str_to_lazy_list('"',rhs)){|v,r,first|
-       str_to_lazy_list(escape_str_char(v),r)
-      }
+    cont.cont [spromise{'"'.ord}, Promise.new{|c2|
+      str_to_lazy_list('"',lambda{|quote|
+        concat_map(value,quote,c2){|v,r,first,c3|
+          str_to_lazy_list(escape_str_char(v),c3,r)
+        }
+      }, rhs)
     }]
   elsif t==Int
-    str_to_lazy_list(value.to_s,rhs)
+    str_to_lazy_list(value.to_s,cont,rhs)
   elsif t==Char
-    str_to_lazy_list(inspect_char(value),rhs)
+    str_to_lazy_list(inspect_char(value),cont,rhs)
   else #List
-    [Promise.new{"[".ord}, Promise.new{
-      concat_map(value,str_to_lazy_list("]",rhs)){|v,r,first|
-        first ?
-          inspect_value_h(t-1,v,r) :
-          [Promise.new{','.ord},Promise.new{inspect_value_h(t-1,v,r)}]
-      }
+    cont.cont [spromise{"[".ord}, Promise.new{|c2|
+      str_to_lazy_list("]",lambda{|quote|
+        concat_map(value,quote,c2){|v,r,first,c3|
+          first ?
+            inspect_value_h(t-1,v,r,c3) :
+            c3.cont([spromise{','.ord},Promise.new{|c4|inspect_value_h(t-1,v,r,c4)}])
+        }
+      },rhs)
     }]
   end
 end
 
-def to_string(t, value)
-  to_string_h(t,value,t.string_dim,Null)
+def to_string(t, a, cont)
+  a.get_value{|v| to_string_h(t,v,t.string_dim,Null,cont) }
 end
 
-def to_string_h(t, value, orig_dim, rhs)
+def to_string_h(t, value, orig_dim, rhs,cont)
   if t == Int
-    inspect_value_h(t, value, rhs)
+    inspect_value_h(t, value, rhs, cont)
   elsif t == Char
-    [Promise.new{value}, rhs]
+    cont.cont [spromise{value}, rhs]
   else # List
     dim = t.string_dim
     separator = [""," ","\n"][dim] || "\n\n"
     # this would make the lang a bit better on golf.shinh.org but not intuitive
     #separator = "\n" if orig_dim == 1 && dim == 1
-    concat_map(value,rhs.value){|v,r,first|
-      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, r) }
-      first ? svalue.value : str_to_lazy_list(separator, svalue)
+    rhs.get_value{|rhsv|
+      concat_map(value,rhsv,cont){|v,r,first,c2|
+        svalue = Promise.new{|c3| to_string_h(t-1, v, orig_dim, r, c3) }
+        first ? svalue.get_value{|sv|c2.cont sv} : str_to_lazy_list(separator, c2, svalue)
+      }
     }
   end
 end
 
-def print_string(value, out, limit)
-  while value != [] && limit > 0
-    out.print "%c" % value[0].value
-    value = value[1].value
-    limit -= 1
-  end
+def print_string(str, out, limit, cont)
+  str.get_value{|v|
+    if v != [] && limit > 0
+      v[0].get_value{|v0v|
+        out.print "%c" % v0v
+        Thunk.new { print_string(v[1], out, limit-1, cont) }
+      }
+    else
+      cont.cont nil
+    end
+  }
 end
 
 # string value -> int value
@@ -279,12 +377,12 @@ def read_stdin
   end
 end
 
-Null = Promise.new{ [] }
+Null = spromise{ [] }
 
-def str_to_lazy_list(s,rhs=Null)
-  to_lazy_list(s.chars.map(&:ord), rhs)
+def str_to_lazy_list(s,cont,rhs=Null)
+  to_lazy_list(s.chars.map(&:ord), cont, rhs)
 end
 
-def to_lazy_list(l, rhs=Null, ind=0)
-  ind >= l.size ? rhs.value : [Promise.new{l[ind]}, Promise.new{to_lazy_list(l, rhs, ind+1)}]
+def to_lazy_list(l, cont, rhs=Null, ind=0)
+  ind >= l.size ? rhs.get_value{|e|cont.cont e} : cont.cont([spromise{l[ind]}, Promise.new{|cont2|to_lazy_list(l, cont2, rhs, ind+1)}])
 end

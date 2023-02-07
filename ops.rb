@@ -27,16 +27,19 @@ def create_op(
   promote: ALLOW_PROMOTE,
   poly_impl: nil, # impl that needs type info
   impl: nil,
+  simple_impl: nil, # strict impl that does an atomic operation
   impl_with_loc: nil # impl that could throw, needs token location for err msgs
 )
   type = create_specs(type)
-  raise "exactly on of [poly_impl,impl,impl_with_loc] must be set" if [poly_impl,impl,impl_with_loc].compact.size != 1
-  if poly_impl
-    built_impl = -> arg_types,from { poly_impl[*arg_types] }
+  raise "exactly on of [poly_impl,impl,impl_with_loc] must be set" if [poly_impl,impl,impl_with_loc,simple_impl].compact.size != 1
+  built_impl = if poly_impl
+    -> arg_types,from { poly_impl[*arg_types] }
   elsif impl_with_loc
-    built_impl = -> arg_types,from { impl_with_loc[from] }
+    -> arg_types,from { impl_with_loc[from] }
+  elsif simple_impl
+    -> arg_types,from { lambda{|*args,cont|getn_values(args,cont){|avs| simple_impl[*avs] } } }
   else
-    built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
+    -> arg_types,from { Proc===impl ? impl : ->cont{cont.cont(impl)} }
   end
   Op.new(name,sym,type,min_zip_level,promote,built_impl)
 end
@@ -47,9 +50,11 @@ OpsList = [
     sym: "[",
     # Example: "abc"[ -> 'a
     type: { [A] => A },
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "head on empty list",from if a.value==[]
-      a.value[0].value
+    impl_with_loc: -> from { -> a,cont {
+      a.get_value{|av|
+        raise DynamicError.new "head on empty list",from if av==[]
+        av[0].get_value{|a0v| cont.cont a0v }
+      }
     }},
     promote: NO_PROMOTE,
   ), create_op(
@@ -58,9 +63,11 @@ OpsList = [
     promote: NO_PROMOTE,
     # Example: "abc"] -> 'c
     type: { [A] => A },
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "last on empty list",from if a.value==[]
-      last(a.value)
+    impl_with_loc: -> from { -> a, cont {
+      a.get_value{|av|
+        raise DynamicError.new "last on empty list",from if av==[]
+        last(av,cont)
+      }
     }}
   ), create_op(
     name: "tail",
@@ -68,9 +75,12 @@ OpsList = [
     sym: ">",
     promote: NO_PROMOTE,
     type: { [A] => [A] },
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "tail on empty list",from if a.value==[]
-      a.value[1].value}}
+    impl_with_loc: -> from { -> a,cont {
+      a.get_value{|av|
+        raise DynamicError.new "tail on empty list",from if av==[]
+        av[1].ret_value(cont)
+      }
+    }}
   ), create_op(
     name: "init",
     # Example: "abc" init -> "ab"
@@ -88,7 +98,7 @@ OpsList = [
     type: { [Int,Int] => Int,
             [Int,Char] => Char,
             [Char,Int] => Char },
-    impl: -> a,b { a.value + b.value }
+    simple_impl: -> a,b { a + b }
   ), create_op(
     name: "sub",
     sym: "-",
@@ -96,36 +106,40 @@ OpsList = [
     type: { [Int,Int] => Int,
             [Char,Int] => Char,
             [Char,Char] => Int },
-    impl: -> a,b { a.value - b.value }
+    simple_impl: -> a,b { a - b }
   ), create_op(
     name: "mult",
     # Example: 2*3 -> 6
     sym: "*",
     type: { [Int,Int] => Int },
-    impl: -> a,b { a.value * b.value }
+    simple_impl: -> a,b { a * b }
   ), create_op(
     name: "div",
     # Example: 7/3 -> 2
     sym: "/",
     type: { [Int,Int] => Int },
-    impl_with_loc: -> from { -> a,b {
-      if b.value==0
-        raise DynamicError.new("div 0", from) # todo maybe too complicated to be worth it same for mod
-      else
-        a.value/b.value
-      end
+    impl_with_loc: -> from { -> a,b,cont {
+      b.get_value{|bv|
+        if bv==0
+          raise DynamicError.new("div 0", from) # todo maybe too complicated to be worth it same for mod
+        else
+          a.get_value{|av|cont.cont (av / bv) }
+        end
+      }
     }}
   ), create_op(
     name: "mod",
     # Example: 7%3 -> 1
     sym: "%",
     type: { [Int,Int] => Int },
-    impl_with_loc: -> from { -> a,b {
-      if b.value==0
-        raise DynamicError.new("mod 0",from)
-      else
-        a.value % b.value
-      end
+    impl_with_loc: -> from { -> a,b,cont {
+      b.get_value{|bv|
+        if bv==0
+          raise DynamicError.new("mod 0", from) # todo maybe too complicated to be worth it same for mod
+        else
+          a.get_value{|av|cont.cont (av % bv) }
+        end
+      }
     }}
   ), create_op(
     name: "neg",
@@ -136,7 +150,7 @@ OpsList = [
       case t
       when Int
         # Example: 2~ -> -2
-        -> a { -a.value }
+        -> a,cont { a.get_value{|av| cont.cont(-av) }}
       when Str
         # Example: "12"~ -> 12
         # Test: "a12b"~ -> 12
@@ -153,7 +167,7 @@ OpsList = [
     sym: ",",
     # Example: 2, -> [2,2,2,2,2...
     type: { A => [A] },
-    impl: -> a { repeat(a) }
+    impl: -> a,cont { cont.cont repeat(a) }
   ), create_op(
     name: "eq",
     # Example: 3=3 -> [3]
@@ -173,7 +187,7 @@ OpsList = [
     # Example: $ -> []
     sym: "$",
     type: Nil,
-    impl: -> { [] }
+    impl: []
   ), create_op(
     name: "pad",
     # Example: "abc"|'_ -> "abc_____...
@@ -225,7 +239,7 @@ OpsList = [
     # Test: 'a tostring -> "a"
     # Test: 2; 1 tostring -> "2 1"
     # Test: 2; 1; (3; 4) tostring -> "2 1\n3 4"
-    poly_impl: -> t { -> a { to_string(t,a.value) } }
+    poly_impl: -> t { -> a,cont { to_string(t,a,cont) } }
   ), create_op(
     name: "show",
     sym: "`",
@@ -234,13 +248,13 @@ OpsList = [
     # Test: "a"` -> "\"a\""
     # Test: 'a` -> "'a"
     # Test: 1;` -> "[1]"
-    poly_impl: -> t { -> a { inspect_value(t,a.value) } }
+    poly_impl: -> t { -> a,cont { a.get_value{|av| inspect_value(t,av,cont) } } }
   ), create_op(
     name: "single",
     sym: ";",
     # Example: 2; -> [2]
     type: { A => [A] },
-    impl: -> a { [a,Null] }
+    impl: -> a,cont { cont.cont [a,Null] }
   ), create_op(
     name: "take",
     sym: "[",
@@ -248,7 +262,7 @@ OpsList = [
     # Test: "abc"[(2~) -> ""
     # Test: ""[2 -> ""
     type: { [[A],Int] => [A] },
-    impl: -> a,b { take(b.value, a) }
+    impl: -> a,b,cont { b.get_value{|bv|take(bv, a, cont) } }
   ), create_op(
     name: "drop",
     sym: "]",
@@ -268,7 +282,7 @@ OpsList = [
     sym: " ",
     # Example: "abc" "123" -> "abc123"
     type: { [[A],[A]] => [A] },
-    impl: -> a,b { append(a.value,b) },
+    impl: -> a,b,cont { a.get_value{|av|append(av,b,cont) } },
     promote: PREFER_PROMOTE,
   ), create_op(
     name: "transpose",
@@ -388,7 +402,7 @@ def create_str(str)
     sym: str,
     name: str,
     type: Str,
-    impl: str_to_lazy_list(parse_str(str[1...-1]))
+    impl: ->cont{ str_to_lazy_list(parse_str(str[1...-1]), cont) }
   )
 end
 
