@@ -18,7 +18,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     end
     input_fn = lambda {
       while $readlines.empty?
-        $readlines = (Readline.readline("\e[33m #{line_no}> \e[0m", true)||return).lines.to_a
+        $readlines = (Readline.readline("\e[33m > \e[0m", true)||return).lines.to_a
       end
       line = $readlines.shift
       File.open(HistFile,'a'){|f|f.puts line} unless !line || line.empty?
@@ -40,14 +40,12 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   until stop
     prev_context = context.dup
     line_no += 1
-    result_name = ":#{line_no}"
     line=input_fn.call
     begin
-      # todo set context[line_no] for circular programming, e.g. 1:1
       if line==nil # eof
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
-          ir = to_ir(ast,context, result_name)
+          ir = to_ir(ast,context)
           printit(ir, output, step_limit)
         end
         break
@@ -63,10 +61,9 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       else
         assignment = false
         ast = parse_line(tokens)
-        ir = to_ir(ast,context,result_name)
+        ir = to_ir(ast,context)
         printit(ir, output, step_limit)
       end
-      context["::"] = context[result_name] = ir
     rescue AtlasError => e
       STDERR.puts e.message
       assignment = false

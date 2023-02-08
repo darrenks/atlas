@@ -21,11 +21,10 @@ class IR < Struct.new(
 end
 
 # creates an IR from an AST, replacing vars
-def to_ir(ast,context,result_name=nil)
+def to_ir(ast,context)
   ast = apply_macros(ast)
 #   puts ast.to_infix
   ir = create_ir(ast,context)
-  context[result_name] = ir if result_name # for circular
   check_missing(ir,context,{})
   ir = lookup_vars(ir,context,{})
   ir

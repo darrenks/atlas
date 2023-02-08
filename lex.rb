@@ -10,8 +10,7 @@ end
 NumRx = /0|[0-9]+/
 CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/
 StrRx = /"(\\.|[^"])*"?/
-ArgRx = /(:[0-9]+)|::/
-AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}|#{ArgRx}/
+AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-z][a-zA-Z0-9_]*|[A-Z]/
 SymRx = /#{' `~@#$%^&*-_=+[]\\|;<,>./?'.chars.map{|c|Regexp.escape c}*'|'}/

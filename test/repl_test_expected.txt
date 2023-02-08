@@ -1,7 +1,7 @@
-[33m 1> [0m1+2*4  // That is an up arrow (prev command 1+2)followed by *4
-[33m 2> [0m1 2 seeInference // Two tabs to complete seeInference
-[33m 3> [0m
-[33m 3> [0m5
-[33m 4> [0m12
+[33m > [0m1+2*4  // That is an up arrow (prev command 1+2)followed by *4
+[33m > [0m1 2 seeInference // Two tabs to complete seeInference
+[33m > [0m
+[33m > [0m5
+[33m > [0m12
 1;‿(2;)
 5
