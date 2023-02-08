@@ -118,10 +118,6 @@ def zipn(n,a,f)
    Promise.new{zipn(n,a.map{|i|i.value[1]},f) }]
 end
 
-def repn(n,v)
-  n <= 0 ? v : Promise.new { repeat(repn(n-1,v)) }
-end
-
 def repeat(a)
   ret = [a]
   ret << Promise.new{ret}

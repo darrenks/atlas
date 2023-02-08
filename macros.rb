@@ -1,6 +1,5 @@
 def apply_macros(ast)
   save_orig(ast)
-  ast = replace_folds_and_scans(ast)
   apply_flips(ast)
   ast = apply_maps(ast)
   check_any_map_vars_left_over(ast)
@@ -13,54 +12,6 @@ def save_orig(ast)
   dup.args = dup_args
   ast.orig = dup
   dup
-end
-
-# todo auto replicate so that 1+S works
-# todo if the op was zipped
-# todo avoid duplicating a, doubles compute, use a temp var
-# todo if empty use default value for type 0 or empty
-
-# a+(S+1) -> a[ (a>+(T+1)):T
-# a+(S+1) -> a[ (a>%+(T%+1).):T
-# a+(F+1) -> a[ (a>+(T+1)):T]
-# todo do a foldr instead for better laziness
-# todo be able to do a foldr1/scanl1 instead for type flexibility
-def replace_folds_and_scans(ast)
-  raise ParseError.new"scan/fold must be on rhs of an op",ast if ast.op.name == "scan" || ast.op.name == "fold"
-  if ast.args.size == 2 && (s=lhs_has_fold_or_scan(ast.args[1]))
-    a = replace_folds_and_scans(ast.args[0])
-    v = new_var
-    is_fold = s.op.name == "fold"
-    s.token = nil
-    s.op = Ops1['mapVar']
-    s.args = [AST.new(Var, [], v.token)]
-    ret =
-      AST.new(Ops2['let'], [
-        AST.new(Ops2['append'], [
-          AST.new(Ops1['head'], [a]),
-          AST.new(Ops1['map'], [AST.new(ast.op, [
-            AST.new(Ops1['mapVar'], [AST.new(Ops1['tail'], [a])]),
-            replace_folds_and_scans(ast.args[1])
-          ], ast.token)]),
-        ]),
-        v
-      ])
-    is_fold ? AST.new(Ops1['last'], [ret]) : ret
-  else
-    ast.args.map!{|arg| replace_folds_and_scans(arg) }
-    ast
-  end
-end
-
-def lhs_has_fold_or_scan(ast)
-  return ast if ast.op.name == "scan" || ast.op.name == "fold"
-  return nil if ast.args.size == 0
-  lhs_has_fold_or_scan(ast.args[0])
-end
-
-$new_vars = 0
-def new_var
-  AST.new(Var,[],Token.new("T#{$new_vars+=1}"))
 end
 
 def apply_flips(ast)
