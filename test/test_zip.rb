@@ -68,9 +68,9 @@ tests = <<'EOF'
 // [A],a (pad)
 1 pad 1 -> 1; pad 1
 1; pad 1 -> 1; pad 1
-1;; pad 1 -> 1;;! pad (1,)
-1 pad (1;) -> 1;,! pad (1;)
-1; pad (1;) -> 1;,! pad (1;)
+1;; pad 1 -> 1;;!pad (1,)
+1 pad (1;) -> 1;,!pad (1;)
+1; pad (1;) -> 1;,!pad (1;)
 1;; pad (1;) -> 1;; pad (1;)
 
 // [A],[A] (append, promote preferred)
@@ -138,9 +138,9 @@ $;;=(1;;) -> $;;!=(1;;,)
 // [A],A (pad)
 $ pad 1 -> $ pad 1
 $ pad (1;) -> $ pad (1;)
-$; pad 1 -> $;! pad (1,)
+$; pad 1 -> $;!pad (1,)
 // todo this is zipping into nil, should be error?
-1 pad $ -> 1;,! pad $
+1 pad $ -> 1;,!pad $
 1;; pad $ -> 1;; pad $
 
 // [A],[A] (append)

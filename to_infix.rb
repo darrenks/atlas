@@ -3,11 +3,9 @@ module ToInfix
   def to_infix(is_rhs=false)
     return "$" if from && from.token && from.token.str == :EOL
 
-    op_name = (op.sym||(" "+op.name+" ")).to_s
-    op_name = "then " if op.name == "then"
+    op_name = (op.sym||((zip_level>0 ? "" : " ")+op.name+" ")).to_s
     op_name = "‿" if op.sym == " " # todo and type inferred/promoted already
     op = "!" * zip_level + op_name
-    op = " then " if op == "then "
 
     a = infix_args
     expr = case a.size
@@ -17,8 +15,6 @@ module ToInfix
       a[0].to_infix + op
     when 2
       a[0].to_infix + op + a[1].to_infix(true)
-    when 3 # only if statement is 3
-      a[0].to_infix + op + a[1].to_infix + " else " + a[2].to_infix(true)
     else error
     end
     maybe_paren(expr, a.size > 0 && is_rhs)

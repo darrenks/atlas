@@ -18,7 +18,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     end
     input_fn = lambda {
       while $readlines.empty?
-        $readlines = (Readline.readline("\e[33m > \e[0m", true)||return).lines.to_a
+        $readlines = (Readline.readline("\e[33m ᐳ \e[0m", true)||return).lines.to_a
       end
       line = $readlines.shift
       File.open(HistFile,'a'){|f|f.puts line} unless !line || line.empty?
@@ -27,7 +27,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
-      all = context.keys + AllOps.values.filter(&:name).map(&:name) + ["then"]
+      all = context.keys + AllOps.values.filter(&:name).map(&:name)
       all -= all.grep(/^see/) if !s[/^see/] # hide debug commands
       all.grep(/^#{Regexp.escape(s)}/)
     }

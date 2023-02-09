@@ -6,13 +6,14 @@
 # "asdf""1234" = ["asdf","1234"]
 
 def parse_line(tokens)
-  get_expr(tokens,:EOL,DelimiterPriority[:EOL],nil)
+  get_expr(tokens,:EOL,DelimiterPriority[:EOL])
 end
 
-DelimiterPriority = {:EOL => 0, 'else' => 0, ')' => 1, '}' => 2}
+DelimiterPriority = {:EOL => 0, ')' => 1, '}' => 2}
 LBrackets = {"(" => ")", "{" => "}"}
 
-def get_expr(tokens,delimiter,priority,last)
+def get_expr(tokens,delimiter,priority)
+  last = nil
   lastop = nil
   loop {
     atom,t = get_atom(tokens)
@@ -25,15 +26,7 @@ def get_expr(tokens,delimiter,priority,last)
 
       if lastop
         implicit_value_check(lastop, last)
-        if (op=Ops3[lastop.name])
-          arg2 = get_expr(tokens,lastop.name=="then"?"else":")",DelimiterPriority['else'],atom)
-          arg3,t2 = get_atom(tokens)
-          check_for_delimiter(t2, delimiter, priority, tokens, nil){|ret| return AST.new(op,[last,arg2,ret])}
-          implicit_value_check(t2, arg3)
-          last = AST.new(op,[last,arg2,arg3],lastop)
-        else# actual regular binary op
-          last = make_op2(lastop, last, atom)
-        end
+        last = make_op2(lastop, last, atom)
       elsif !last #first atom
         last = atom
       else # implict cons
@@ -76,7 +69,7 @@ def get_atom(tokens)
   str = t.str
   [if LBrackets.include? t.str
     rb = LBrackets[t.str]
-    get_expr(tokens,rb,DelimiterPriority[rb],nil)
+    get_expr(tokens,rb,DelimiterPriority[rb])
   elsif str[0] =~ /[0-9]/
     AST.new(create_int(str),[],t)
   elsif str[0] == '"'

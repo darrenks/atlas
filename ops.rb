@@ -337,7 +337,6 @@ OpsList = [
 Ops0 = {}
 Ops1 = {}
 Ops2 = {}
-Ops3 = {}
 AllOps = {}
 OpsList.each{|op|
   ops = case op.narg
@@ -347,8 +346,6 @@ OpsList.each{|op|
     Ops1[op.name] = Ops1[op.sym] = op
   when 2
     Ops2[op.name] = Ops2[op.sym] = op
-  when 3 # then/else
-    Ops3[op.name] = Ops3[op.sym] = op
   else; error; end
   AllOps[op.name] = AllOps[op.sym] = op
 }
