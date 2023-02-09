@@ -140,11 +140,15 @@ end
 #   type vars satisfiable
 def implicit_zip_level(op, arg_types, specs)
   vars = {}
+  rep_vars = {}
   min_z = 0
-  arg_types.zip(specs) { |arg,spec|
+  arg_types.zip(specs,0..) { |arg,spec,i|
     case spec
     when VarTypeSpec
       (vars[spec.var_name]||=[]) << (arg - spec.extra_dims)
+      if op.promote < SECOND_PROMOTE || op.promote == SECOND_PROMOTE && i==1
+        (rep_vars[spec.var_name]||=[]) << (arg - spec.extra_dims)
+      end
     when ExactTypeSpec
       this_z = arg.dim - spec.req_dim
       min_z = [min_z, this_z].max
@@ -152,13 +156,13 @@ def implicit_zip_level(op, arg_types, specs)
       error
     end
   }
-  if op.promote < PREFER_PROMOTE
-    vars.each{|_,uses|
+  #if op.promote < SECOND_PROMOTE
+    vars.each{|k,uses|
       min_use = [uses.map{|t| t.max_pos_dim }.min, 0].max
-      max_use = [uses.map{|t| t.dim }.max, 0].max
+      max_use = [(rep_vars[k]||[]).map{|t| t.dim }.max || 0, 0].max
       min_z = [min_z, max_use-min_use].max
     }
-  end
+  #end
   return min_z
 end
 
@@ -213,7 +217,7 @@ def promote_levels(node,rank_deficits,zip_level,vars)
   promote_levels = node.orig_args.zip(rank_deficits,(0..)).map{|arg,deficit,i|
     if node.orig_args.size == 1 && node.op.promote >= ALLOW_PROMOTE && arg.type.dim >= zip_level
       deficit
-    elsif node.op.promote >= PREFER_PROMOTE
+    elsif node.op.promote >= PREFER_PROMOTE || node.op.promote == SECOND_PROMOTE && i==1
       [zip_level <= arg.type.dim ? deficit : arg.type.dim, deficit - zip_level].max
     elsif node.op.promote >= ALLOW_PROMOTE
       [deficit - zip_level, 0].max

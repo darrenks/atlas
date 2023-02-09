@@ -61,13 +61,17 @@ tests = <<'EOF'
 1!=(1;) -> AtlasTypeError
 1;!!=(1;) -> AtlasTypeError
 
+// A,A promote second preferred
+"as " | 'b -> "as "|('b;)
+'a | "as" -> 'a,!|"as"
+
 // [A],a (pad)
-1|1 -> 1;|1
-1;|1 -> 1;|1
-1;;|1 -> 1;;!|(1,)
-1|(1;) -> 1;,!|(1;)
-1;|(1;) -> 1;,!|(1;)
-1;;|(1;) -> 1;;|(1;)
+1 pad 1 -> 1; pad 1
+1; pad 1 -> 1; pad 1
+1;; pad 1 -> 1;;! pad (1,)
+1 pad (1;) -> 1;,! pad (1;)
+1; pad (1;) -> 1;,! pad (1;)
+1;; pad (1;) -> 1;; pad (1;)
 
 // [A],[A] (append, promote preferred)
 1 1 -> 1;‿(1;)
@@ -95,40 +99,7 @@ tests = <<'EOF'
 1;;[(1;) -> 1;;![(1;)
 1;![1 -> AtlasTypeError
 
-// 3 arg ////////////////
-// A,B,B
-1 then 2 else 3 -> 1 then 2 else 3
-1 then 2 else (3;) -> 1,!then 2, else (3;)
-1 then 2 else (3;;) -> 1,,!!then 2,, else (3;;)
-1 then 2; else 3 -> 1,!then 2; else (3,)
-1 then 2; else (3;) -> 1 then 2; else (3;)
-1 then 2; else (3;;) -> 1,!then 2;, else (3;;)
-1 then 2;; else 3 -> 1,,!!then 2;; else (3,,)
-1 then 2;; else (3;) -> 1,!then 2;; else (3;,)
-1 then 2;; else (3;;) -> 1 then 2;; else (3;;)
-
-1; then 2 else 3 -> 1; then 2 else 3
-1; then 2 else (3;) -> 1;!then 2, else (3;)
-1; then 2 else (3;;) -> 1;,!!then 2,, else (3;;)
-1; then 2; else 3 -> 1;!then 2; else (3,)
-1; then 2; else (3;) -> 1; then 2; else (3;)
-1; then 2; else (3;;) -> 1;!then 2;, else (3;;)
-1; then 2;; else 3 -> 1;,!!then 2;; else (3,,)
-1; then 2;; else (3;) -> 1;!then 2;; else (3;,)
-1; then 2;; else (3;;) -> 1; then 2;; else (3;;)
-
-1;; then 2 else 3 -> 1;; then 2 else 3
-1;; then 2 else (3;) -> 1;;!then 2, else (3;)
-1;; then 2 else (3;;) -> 1;;!!then 2,, else (3;;)
-1;; then 2; else 3 -> 1;;!then 2; else (3,)
-1;; then 2; else (3;) -> 1;; then 2; else (3;)
-1;; then 2; else (3;;) -> 1;;!then 2;, else (3;;)
-1;; then 2;; else 3 -> 1;;!!then 2;; else (3,,)
-1;; then 2;; else (3;) -> 1;;!then 2;; else (3;,)
-1;; then 2;; else (3;;) -> 1;; then 2;; else (3;;)
-
-1 !then 2 else 3 -> AtlasTypeError
-1; !then 2 else (3;) -> AtlasTypeError
+// todo test A,[B] and A,B more?
 
 /// Nil tests ////////
 
@@ -165,12 +136,12 @@ $;;=(1;;) -> $;;!=(1;;,)
 
 
 // [A],A (pad)
-$|1 -> $|1
-$|(1;) -> $|(1;)
-$;|1 -> $;!|(1,)
+$ pad 1 -> $ pad 1
+$ pad (1;) -> $ pad (1;)
+$; pad 1 -> $;! pad (1,)
 // todo this is zipping into nil, should be error?
-1|$ -> 1;,!|$
-1;;|$ -> 1;;|$
+1 pad $ -> 1;,! pad $
+1;; pad $ -> 1;; pad $
 
 // [A],[A] (append)
 1 $ -> 1;‿$
@@ -193,27 +164,12 @@ $;;[(1;) -> $;;![(1;)
 1;;[$ -> AtlasTypeError
 $[$ -> AtlasTypeError
 
-// 3 arg //////////
-// A,B,B
-$ then 2 else 3 -> $ then 2 else 3
-$ then 2 else (3;) -> $!then 2, else (3;)
-$; then 2 else 3 -> $; then 2 else 3
-$ then 2; else (3;) -> $ then 2; else (3;)
-1 then $ else 3 -> 1,!then $ else (3,)
-1 then $ else (3;) -> 1 then $ else (3;)
-1 then $; else 3 -> 1,,!!then $; else (3,,)
-1 then $; else (3;) -> 1,!then $; else (3;,)
-1 then $ else $ -> 1 then $ else $
-1 then $ else ($;) -> 1 then $ else ($;)
-1 then !$ else ($;) -> 1 then !$ else ($;)
-
 /// Excessive zip tests
 // not excessive
 // this actually could be useful
 !$ -> !$
 "1"!` -> "1"!`
 1;!=(1;) -> 1;!=(1;)
-1; then 2; else (3;) -> 1; then 2; else (3;)
 
 EOF
 

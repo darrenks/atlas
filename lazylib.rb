@@ -284,3 +284,13 @@ end
 def to_lazy_list(l, rhs=Null, ind=0)
   ind >= l.size ? rhs.value : [Promise.new{l[ind]}, Promise.new{to_lazy_list(l, rhs, ind+1)}]
 end
+
+def truthy(type, value)
+  if type == Int
+    value > 0
+  elsif type == Char
+    !!value.chr[/\S/]
+  else # List
+    !value.empty?
+  end
+end

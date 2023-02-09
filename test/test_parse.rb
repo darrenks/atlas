@@ -54,20 +54,6 @@ tests = <<'EOF'
 1+2)+3 -> ParseError
 1+(2*3 -> 1+(2*3)
 
-// test trinary operator
-1?2)3 -> 1 then 2 else 3
-1+(1?2)3) -> 1+(1 then 2 else 3)
-1+2?3+4)5+6 -> 1+2 then 3+4 else 5+6
-1+2?3+4)(5+6) -> 1+2 then 3+4 else (5+6)
-1 then 2 else 3 -> 1 then 2 else 3
-1 2?3 4 )5 6 -> 1‿2 then 3‿4 else 5‿6
-1 2 then 3 4 else 5 6 -> 1‿2 then 3‿4 else 5‿6
-1 ? 2 else 3 -> ParseError
-1 ? 2 ) -> 1 then 2 else $
-1 ? 2 -> ParseError
-1 ? -> ParseError
-1 then 2 -> ParseError
-
 // !3 -> ParseError todo
 // !"" -> ParseError # todo better error
 ! -> ParseError

@@ -352,10 +352,10 @@ Now we can write:
     a = [1,2,3,4]
     b = zipWith (+) a (tail (pad b 0))
 
-And it works! Atlas has a builtin for pad, it is `|` so we could just write:
+And it works! Atlas has a builtin for pad, it is `pad` so we could just write:
 
     a := 1 2 3 4
-    b := b|0 tail + a
+    b := b pad 0 tail + a
     ──────────────────────────────────
     10 9 7 4
 
@@ -365,21 +365,21 @@ Folds are extremely powerful (see [expressiveness of fold](https://www.cs.nott.a
 
 Since we have seen how to foldr, we can use it to get the nth state or last state. Just foldr, taking the first element where index=n. We do need an `if` statement to do that, which Atlas has, but `if` could have been done as follows. Let's call our condition `c` which is a True if non empty and False if empty. And we want `a` if True and `b` if False. We can then write:
 
-    head ((a ()) const c) | b
+    head ((a ()) const c)  pad  b
 
 It works by replacing `c` with `a` if non empty, appending `b` and then taking the first. If `c` was empty then the result is `b` otherwise it is `a`.
 
 Example:
 
-    "true"; const "" | "false" head
-    "true"; const "asdf" | "false" head
+    "true"; const ""  pad  "false" head
+    "true"; const "asdf"  pad  "false" head
     ──────────────────────────────────
     false
     true
 
 `&` isn't necessary either, it can be done by just appending something and taking the head, care will be needed to convert to a matching type since lists must be homogeneous in Atlas.
 
-Now it may seem a little silly that we were trying to define a built in for `last` and `if` and we ended up using a new builtin, pad (`|`), which is kinda similar to cons. But it is actually possible to do this without pad if Atlas was a little bit smarter about calculating greatest fixed points - which I have a plan to do soon and elaborate on. Then the whole language could be built from just a few builtins, something to append (as opposed to cons), something to put things inside a list (e.g. `1 -> [1]`), and head/tail.
+Now it may seem a little silly that we were trying to define a built in for `last` and `if` and we ended up using a new builtin, pad (` pad `), which is kinda similar to cons. But it is actually possible to do this without pad if Atlas was a little bit smarter about calculating greatest fixed points - which I have a plan to do soon and elaborate on. Then the whole language could be built from just a few builtins, something to append (as opposed to cons), something to put things inside a list (e.g. `1 -> [1]`), and head/tail.
 
 That's four ops. It is possible to reduce this by combining append and single into 1 function. E.g. `"as" X "df"` appends and puts in a list, giving `["asdf"]`. If you wanted to just put one thing in a list, just append an empty list. If you wanted to just append, then just take the head. Empty list can be created by tailing a list of size 1, which is what our `X` function creates. No atoms need to be defined in the language, we could pass `X` a circular definition so long as we don't access the value. `tail a X a=a` would then be the empty list. The way Atlas' type system works this would have type Nil which can become any type.
 
@@ -468,8 +468,8 @@ In Atlas the solution is simple:
 
     nats:=1 (nats+1)
     prisoners:=nats take 40
-    gunHolders := prisoners (nats % 3 !then gunHolders!; else $ concat)
-    gunHolders tail != gunHolders !then gunHolders!; else $ concat head
+    gunHolders := prisoners (nats % 3 !and gunHolders concat)
+    gunHolders tail != gunHolders !and gunHolders concat head
     ──────────────────────────────────
     28
 
@@ -477,7 +477,7 @@ The `!then gunHolders!; else $ concat` which is used twice may look scary but th
 
 I guess it is no surprise that a problem involving a circle has a nice circular programming solution. But calculating primes using the Sieve of Eratosthenesis is our next example. Typically the sieve is done on a fixed size, but if you use circular programming you can stream it.
 
-    (1+(1 (v2*v1):v1))%(2 (1+v2):v2) !then $, else (v2!;) _
+    (1+(1 (v2*v1):v1))%(2 (1+v2):v2)~+1 !& v2 _
     ──────────────────────────────────
     2 3 5 7 11 13 17...
 

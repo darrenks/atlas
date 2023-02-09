@@ -3,7 +3,8 @@ require_relative "./spec.rb"
 
 NO_PROMOTE = :a_no         #
 ALLOW_PROMOTE = :b_allow   # promote if only way to satisfy type spec
-PREFER_PROMOTE = :c_prefer # promote instead of replicate
+SECOND_PROMOTE = :c_second # promote second only instead of replicate
+PREFER_PROMOTE = :d_prefer # promote instead of replicate
 
 MacroImpl = -> *args { raise "macro impl called" }
 
@@ -176,34 +177,30 @@ OpsList = [
     impl: -> { [] }
   ), create_op(
     name: "pad",
-    # Example: "abc"|'_ -> "abc_____...
-    sym: "|",
+    # Example: "abc" pad '_ -> "abc_____...
     type: { [[A],A] => [A] },
     impl: -> a,b { pad(a,b) }
   ), create_op(
     name: "const",
-    sym: "&",
-    # Example: "abcd"&"123" -> "abc"
+    # Example: "abcd" const "123" -> "abc"
     type: { [A,B] => A },
     min_zip_level: 1,
     impl: -> a,b { a.value }
   ), create_op(
-    name: "then",
-    sym: "?",
-    # Example: 1 then "yes" else "no" -> "yes"
-    type: { [A,B,B] => B },
-    poly_impl: -> ta,tb,tc {
-      if ta == Int
-        # Test: 1~; 2 !then 1 else 0 -> [0,1]
-        lambda{|a,b,c| a.value > 0 ? b.value : c.value }
-      elsif ta == Char
-        # Test: " d" !then 1 else 0 -> [0,1]
-        lambda{|a,b,c| a.value.chr[/\S/] ? b.value : c.value }
-      else # List
-        # Test: ""; "a" !then 1 else 0 -> [0,1]
-        lambda{|a,b,c| a.value != [] ? b.value : c.value }
-      end
-    }
+    name: "and",
+    sym: "&",
+    # Example: 1&2 -> [2]
+    # Test: 0&2 -> []
+    type: { [A,B] => [B] },
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a.value) ? [b,Null] : [] }}
+  ), create_op(
+    name: "or",
+    sym: "|",
+    # Example: 1|2 -> 1
+    # Test: 0|2 -> 2
+    type: { [A,A] => A },
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a.value) ? a.value : b.value }},
+    promote: SECOND_PROMOTE
   ), create_op(
     # Hidden
     name: "input",
@@ -304,7 +301,7 @@ OpsList = [
   ), create_op(
     name: "seeVersion",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 2, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 8, 2023)") },
   ), create_op(
     name: "seeOpInfoTodo",
     # TodoExample: seeInfo + -> "add + Int Int->Int
