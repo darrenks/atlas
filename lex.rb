@@ -13,9 +13,9 @@ StrRx = /"(\\.|[^"])*"?/
 AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-z][a-zA-Z0-9_]*|[A-Z]/
-SymRx = /#{' `~@#$%^&*-_=+[]\\|;<,>./?'.chars.map{|c|Regexp.escape c}*'|'}/
+SymRx = /#{' `~@#$%^&*-_=+[]\\|;<,>.{}/?'.chars.map{|c|Regexp.escape c}*'|'}/
 OpRx = /(!*@?(#{IdRx}|#{SymRx}))|!+@?|@/
-OtherRx = /\:=|[(){}'":]/
+OtherRx = /\:=|[()'":]/
 CommentRx = /\/\/.*/
 
 def assertVar(token)

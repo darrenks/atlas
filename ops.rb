@@ -330,6 +330,18 @@ OpsList = [
     sym: ".", # todo change it to ! before a delimiter
     type: { [A] => [A] },
     impl: MacroImpl,
+  ), create_op(
+    name: "push",
+    # Example: 5{*2+} -> 15
+    sym: "{",
+    type: { A => A },
+    impl: MacroImpl,
+  ), create_op(
+    name: "pop",
+    # Example: 5{*2+} -> 15
+    sym: "}",
+    type: Int, # todo..
+    impl: MacroImpl,
   )
 
 ]

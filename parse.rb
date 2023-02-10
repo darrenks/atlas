@@ -10,7 +10,7 @@ def parse_line(tokens)
 end
 
 DelimiterPriority = {:EOL => 0, ')' => 1, '}' => 2}
-LBrackets = {"(" => ")", "{" => "}"}
+LBrackets = {"(" => ")"}
 
 def get_expr(tokens,delimiter,priority)
   last = lastop = implicit_var = nil
@@ -130,9 +130,4 @@ end
 
 def is_alpha(t)
   t.name =~ /^#{IdRx}$/
-end
-
-$new_vars = 0
-def new_var
-  AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
 end

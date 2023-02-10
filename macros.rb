@@ -1,9 +1,29 @@
 def apply_macros(ast)
   save_orig(ast)
+  ast=handle_push_pops(ast)
   apply_flips(ast)
   ast = apply_maps(ast)
   check_any_map_vars_left_over(ast)
   ast
+end
+
+def handle_push_pops(ast, stack = [])
+  ast.args[0] = handle_push_pops(ast.args[0], stack) if ast.args.size > 0
+  if ast.op.name == "push"
+    ast = AST.new(Ops2["let"], [ast.args[0], new_var], ast.token)
+    stack.push ast
+  elsif ast.op.name == "pop"
+    raise ParseError.new("pop on empty stack", ast) if stack.empty?
+    ast = stack.pop
+  end
+  ast.args[1] = handle_push_pops(ast.args[1], stack) if ast.args.size > 1
+
+  ast
+end
+
+$new_vars = 0
+def new_var
+  AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
 end
 
 def save_orig(ast)
