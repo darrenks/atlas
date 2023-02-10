@@ -2,3 +2,5 @@
 1 2 seeI		// Two tabs to complete seeInference
 
 5
+a z:a
+a

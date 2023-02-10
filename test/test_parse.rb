@@ -70,7 +70,7 @@ EOF
 require "./test/run_lines.rb"
 
 run_tests(tests) { |source|
-  tokens = lex(source)
-  root = parse_line(tokens)
+  tokens,lines = lex(source)
+  root = parse_line(tokens[0])
   root.to_infix
 }

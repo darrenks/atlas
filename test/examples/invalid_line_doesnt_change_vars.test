@@ -1,6 +1,0 @@
-[prog]
-a z:a
-a
-[stderr]
-1:3 (z) unset identifier "z" (ParseError)
-2:1 (a) unset identifier "a" (ParseError)

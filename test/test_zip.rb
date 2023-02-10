@@ -180,8 +180,8 @@ require "./test/run_lines.rb"
 Ops1[']'].promote=ALLOW_PROMOTE
 
 run_tests(tests) { |source|
-  tokens = lex(source)
-  root = parse_line(tokens)
+  tokens,lines = lex(source)
+  root = parse_line(tokens[0])
   ir = to_ir(root, {})
   infer(ir)
   ir.to_infix

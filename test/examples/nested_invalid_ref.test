@@ -1,7 +1,5 @@
 [prog]
 a=b
 a
-a
 [stderr]
-1:3 (b) unset identifier "b" (ParseError)
 1:3 (b) unset identifier "b" (ParseError)
