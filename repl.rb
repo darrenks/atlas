@@ -53,7 +53,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       tokens = lex(line.chomp, line_no)
       next if tokens[0].str == :EOL
 
-      if tokens.size > 2 && tokens[1].str==":="
+      if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_alpha
         assignment = true
         assertVar(tokens[0])
         ast = parse_line(tokens[2..-1])

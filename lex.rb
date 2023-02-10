@@ -2,6 +2,9 @@ class Token<Struct.new(:str,:char_no,:line_no,:space_before,:space_after)
   def name
     str[/!*@?(.*)/m,1]
   end
+  def is_alpha
+    name =~ /^#{IdRx}$/
+  end
 end
 
 
@@ -15,7 +18,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 IdRx = /[a-z][a-zA-Z0-9_]*|[A-Z]/
 SymRx = /#{' `~@#$%^&*-_=+[]\\|;<,>.{}/?'.chars.map{|c|Regexp.escape c}*'|'}/
 OpRx = /(!*@?(#{IdRx}|#{SymRx}))|!+@?|@/
-OtherRx = /\:=|[()'":]/
+OtherRx = /[()'":]/  # these cannot be zipped/flipped
 CommentRx = /\/\/.*/
 
 def assertVar(token)

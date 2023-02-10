@@ -28,7 +28,7 @@ Let's look at the first example I ever saw of circular programming. It was the H
 
 Which generates the infinite list of fibonacci numbers. In Atlas this would be:
 
-    a:=1 1 (a tail+a)
+    a=1 1 (a tail+a)
     ──────────────────────────────────
     1 1 2 3 5 8 13 ...
 
@@ -38,7 +38,7 @@ The first time I saw this, I just dismissed it as some weird special case trick 
 
 If we do not want an infinite list, we could just take the first n elements of the list and we can do so without an infinite loop, since we never ask for an infinite number of elements.
 
-    a:=1 1 (a tail+a)
+    a=1 1 (a tail+a)
     a take 10
     ──────────────────────────────────
     1 1 2 3 5 8 13 21 34 55
@@ -72,8 +72,8 @@ We can use it to calculate the scanl of a list and any operation! Suppose we had
 
 We can do that like this:
 
-    a:=1 2 3 4
-    b:=0 b+a
+    a=1 2 3 4
+    b=0 b+a
     ──────────────────────────────────
     1 3 6 10
 
@@ -86,27 +86,27 @@ It works much the same way as the fibonacci sequence. The first element is the f
 
 And we can do a foldl simply be getting the last element of the scanl:
 
-    a:=1 2 3 4
-    b:=0 b+a
+    a=1 2 3 4
+    b=0 b+a
     b last
     ──────────────────────────────────
     10
 
 BTW we can easily generate the list of natural numbers using this technique if we first define an infinite list of 1's and compute the prefix sums on them. The repeating list can be done via:
 
-    ones:=1 ones
+    ones=1 ones
     ──────────────────────────────────
     1 1 1 1 ...
 
 There's also an op to make this more concise:
 
-    ones:=1,
+    ones=1,
     ──────────────────────────────────
     1 1 1 1 ...
 
 So we could define the natural numbers as:
 
-    nats:=1 (1, + nats)
+    nats=1 (1, + nats)
     ──────────────────────────────────
     1 2 3 4 5 ...
 
@@ -115,14 +115,14 @@ So we could define the natural numbers as:
 
 How can we transpose a list defined as so?
 
-    a:=(1 2 3 4); (5 6 7 8)
+    a=(1 2 3 4); (5 6 7 8)
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
 
 The first row will be the heads of each row of `a`, which can be gotten with `!head`
 
-    a:=(1 2 3 4); (5 6 7 8)
+    a=(1 2 3 4); (5 6 7 8)
     a !head
     ──────────────────────────────────
     1 5
@@ -131,15 +131,15 @@ Note the `!` which means apply this function one level down. Just `head` would h
 
 The next row should be the heads of the tails:
 
-    a:=(1 2 3 4); (5 6 7 8)
+    a=(1 2 3 4); (5 6 7 8)
     a !tail !head
     ──────────────────────────────────
     2 6
 
 And the next row would be the head of the tail of the tails. So essentially to transpose we want the heads of the repeated tailings of a 2D list, which we can do with circular programming of course.
 
-    a:=(1 2 3 4); (5 6 7 8)
-    tails:= a (tails !!tail)
+    a=(1 2 3 4); (5 6 7 8)
+    tails= a (tails !!tail)
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
@@ -156,7 +156,7 @@ And the next row would be the head of the tail of the tails. So essentially to t
 
 
 
-    2:18 (!!tail) tail on empty list (DynamicError)
+    2:17 (!!tail) tail on empty list (DynamicError)
 
 It is worth mentioning that this output is a 3D list, which is really just a list of list of a list, there is nothing special about nested lists, they are just lists. The separators for output are different however which makes them display nicely. You can also use the `show` op to display things like Haskell's show function.
 
@@ -166,8 +166,8 @@ Also note the error. It would occur for the same program in Haskell too:
 
 Anytime we see something of the form `var = something : var` it is defining an infinite list. This list clearly can't be infinite though, hence the error. It can be avoided by taking elements of length equal to the first row.
 
-    a:=(1 2 3 4); (5 6 7 8)
-    tails:= a (tails !!tail)
+    a=(1 2 3 4); (5 6 7 8)
+    tails= a (tails !!tail)
     tails const (a head)
     ──────────────────────────────────
     1 2 3 4
@@ -188,8 +188,8 @@ I have some ideas about creating an op to catch errors and truncate lists, but f
 
 To get the transpose now we just need to take the heads of each list:
 
-    a:=(1 2 3 4); (5 6 7 8)
-    tails:= a (tails !!tail)
+    a=(1 2 3 4); (5 6 7 8)
+    tails= a (tails !!tail)
     tails const (a head) !!head
     ──────────────────────────────────
     1 5
@@ -201,8 +201,8 @@ To get the transpose now we just need to take the heads of each list:
 
 We've seen how to do scanl on a list, but how does it work on 2D lists?
 
-    a:=(1 2 3 4); (5 6 7 8)
-    b:=0, (a+b)
+    a=(1 2 3 4); (5 6 7 8)
+    b=0, (a+b)
     b !take 10
     ──────────────────────────────────
     0 0 0 0 0 0 0 0 0 0
@@ -215,8 +215,8 @@ That was easy, but what if we wanted to do it on rows instead of columns without
 
 We can do a zipped append:
 
-    a:=(1 2 3 4); (5 6 7 8)
-    b:=0,! (a+b)
+    a=(1 2 3 4); (5 6 7 8)
+    b=0,! (a+b)
     ──────────────────────────────────
     0 1 3 6 10
     0 5 11 18 26
@@ -240,7 +240,7 @@ For example:
 
 In Atlas is:
 
-    a := 1 2 3
+    a = 1 2 3
     a+2*3
     ──────────────────────────────────
     9 12 15
@@ -252,7 +252,7 @@ If you need to use the map arg multiple times, that is fine.
 
 In Atlas is:
 
-    a := 1 2 3
+    a = 1 2 3
     a*(a-1)/2
     ──────────────────────────────────
     0 1 3
@@ -354,8 +354,8 @@ Now we can write:
 
 And it works! Atlas has a builtin for pad, it is `pad` so we could just write:
 
-    a := 1 2 3 4
-    b := b pad 0 tail + a
+    a = 1 2 3 4
+    b = b pad 0 tail + a
     ──────────────────────────────────
     10 9 7 4
 
@@ -401,7 +401,7 @@ For example consider our original Fibonacci numbers program, with iterate that w
 
 Compared to Atlas
 
-    a:=1 1 (a tail+a)
+    a=1 1 (a tail+a)
     ──────────────────────────────────
     1 1 2 3 5 8 13 ...
 
@@ -414,27 +414,27 @@ Just in case there was any doubt that the language is Turing Complete, I'll use 
 '\0+("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.":v2](0‿(0,‿(v5[(0‿(v1=='> then v6+1 else (v1=='< then v6-1 else v6)):v6)!@(v1=='+ then v4+1 else (v1=='- then v4-1 else v4)!;!@(v5](v6+1)))):v5]v6![:v4 then 0 else 1*(v1=='[!#) then v3+(1+(0‿(v2=='[ then v8+1 else (v2=='] then v8-1 else v8)):v8]v3![:v7!,!!==(v8](v3+1)) then 0‿(v9+(1,)):v9!;, else ($,,)!_![)) else (v4!&(v1==']) then v7-1!,!!==(v8[v3) then v9!;, else ($,,)!_!] else (v3+1))):v3)![:v1=='. then v4!; else ($,)_)
 
 
-    source:="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
-    bracket_depth := 0 !if source == '[ then bracket_depth+1 else !if source == '] then bracket_depth-1 else bracket_depth
-    not_truthy := !if value then 0 else 1
-    wholes:=0 wholes+,1
-    code_pointer := 0 !if not_truthy * !len instruction == '[ then find_rbracket else !if value !& instruction == '] then find_lbracket else code_pointer+1
-    instruction := !head code_pointer drop source
-    pointer := 0 !if instruction == '> then pointer+1 else !if instruction == '< then pointer-1 else pointer
-    state := (,0) (pointer take state) !@ (!;new_value) !@ (pointer+1) drop state
+    source="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+    bracket_depth = 0 !if source == '[ then bracket_depth+1 else !if source == '] then bracket_depth-1 else bracket_depth
+    not_truthy = !if value then 0 else 1
+    wholes=0 wholes+,1
+    code_pointer = 0 !if not_truthy * !len instruction == '[ then find_rbracket else !if value !& instruction == '] then find_lbracket else code_pointer+1
+    instruction = !head code_pointer drop source
+    pointer = 0 !if instruction == '> then pointer+1 else !if instruction == '< then pointer-1 else pointer
+    state = (,0) (pointer take state) !@ (!;new_value) !@ (pointer+1) drop state
 
-    value := !head pointer drop state
-    new_value := !if instruction == '+ then value+1 else !if instruction == '- then value-1 else value
+    value = !head pointer drop state
+    new_value = !if instruction == '+ then value+1 else !if instruction == '- then value-1 else value
 
-    current_bracket_depth := !head code_pointer drop bracket_depth
+    current_bracket_depth = !head code_pointer drop bracket_depth
 
     // first point where bracket_depth = bracket_depth again
-    find_rbracket := code_pointer + 1 + !head !concat !!if (!,current_bracket_depth) !!== (code_pointer+1) drop bracket_depth then ,!;wholes else ,,$
+    find_rbracket = code_pointer + 1 + !head !concat !!if (!,current_bracket_depth) !!== (code_pointer+1) drop bracket_depth then ,!;wholes else ,,$
 
     // last point where bracket_depth = bracket_depth again
-    find_lbracket := !last !concat !!if (!,current_bracket_depth-1) !!== code_pointer take bracket_depth then ,!;wholes else ,,$
+    find_lbracket = !last !concat !!if (!,current_bracket_depth-1) !!== code_pointer take bracket_depth then ,!;wholes else ,,$
 
-    output := !if instruction == '. then !;value else ,$
+    output = !if instruction == '. then !;value else ,$
 
     // todo terminate when code_pointer > source size
     '\0+concat output
@@ -466,9 +466,9 @@ Let's end with two examples where circular programming is an elegant solution. T
 
 In Atlas the solution is simple:
 
-    nats:=1 (nats+1)
-    prisoners:=nats take 40
-    gunHolders := prisoners (nats % 3 !and gunHolders concat)
+    nats=1 (nats+1)
+    prisoners=nats take 40
+    gunHolders = prisoners (nats % 3 !and gunHolders concat)
     gunHolders tail != gunHolders !and gunHolders concat head
     ──────────────────────────────────
     28

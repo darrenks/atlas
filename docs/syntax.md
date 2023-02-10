@@ -32,16 +32,16 @@ If you want it to evaluate the right side first, use parenthesis.
 
 You can also name expressions:
 
-    a := 4
+    a = 4
     a + a
     ──────────────────────────────────
     8
 
-`:=` is the only thing that will suppress the automatic printing of values, but if an assignment is the last thing in your program it too will be printed.
+`=` is the only thing that will suppress the automatic printing of values, but if an assignment is the last thing in your program it too will be printed.
 
-    a:=2
+    a=2
     3
-    b:=4
+    b=4
     ──────────────────────────────────
     3
     4

@@ -1,5 +1,5 @@
 [prog]
-a:=0 (a+1)
+a=0 (a+1)
 a take 10
 a take 10
 a take 10

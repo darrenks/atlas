@@ -1,13 +1,13 @@
 [prog]
 1 2 seeParse
 1 2 seeInference
-a:=1 a
+a=1 a
 a seeParse
 a seeInference
 1 b:b seeParse
 1 b:b seeInference
-c:=1
-d:=5
+c=1
+d=5
 d\seeInference
 [stdout]
 1‿2
