@@ -13,8 +13,7 @@ DelimiterPriority = {:EOL => 0, ')' => 1, '}' => 2}
 LBrackets = {"(" => ")", "{" => "}"}
 
 def get_expr(tokens,delimiter,priority)
-  last = nil
-  lastop = nil
+  last = lastop = implicit_var = nil
   loop {
     atom,t = get_atom(tokens)
     if atom
@@ -24,8 +23,8 @@ def get_expr(tokens,delimiter,priority)
         lastop = nil
       end
 
-      if lastop
-        implicit_value_check(lastop, last)
+      if lastop #binary op
+        last = implicit_var = new_var if !last
         last = make_op2(lastop, last, atom)
       elsif !last #first atom
         last = atom
@@ -35,21 +34,18 @@ def get_expr(tokens,delimiter,priority)
       lastop = nil
     else # not an atom
       if lastop
-        implicit_value_check(lastop, last)
+        last = implicit_var = new_var if !last
         last = make_op1(lastop, last)
       end
 
-      check_for_delimiter(t, delimiter, priority, tokens, last){|ret| return ret}
+      check_for_delimiter(t, delimiter, priority, tokens, last, implicit_var){|ret| return ret}
       lastop = t
     end
   }
 end
 
-def implicit_value_check(lastop, last)
-  raise ParseError.new "value missing and implicit value isn't implemented yet",lastop if !last
-end
 
-def check_for_delimiter(t, delimiter, priority, tokens, last)
+def check_for_delimiter(t, delimiter, priority, tokens, last, implicit_var)
   if DelimiterPriority[t.str]
     if t.str != delimiter
       if DelimiterPriority[t.str] >= priority
@@ -59,7 +55,12 @@ def check_for_delimiter(t, delimiter, priority, tokens, last)
         tokens.unshift t
       end
     end
-    yield last || AST.new(NilOp,[],t)
+    raise ParseError.new("op applied to nothing",t) if implicit_var && !last
+    last ||= AST.new(NilOp,[],t)
+    if implicit_var
+      last = AST.new(Ops2['let'], [last, implicit_var], t)
+    end
+    yield last
   end
 end
 
@@ -129,4 +130,9 @@ end
 
 def is_alpha(t)
   t.name =~ /^#{IdRx}$/
+end
+
+$new_vars = 0
+def new_var
+  AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
 end
