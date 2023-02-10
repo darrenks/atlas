@@ -1,0 +1,13 @@
+[prog]
+1+
+//asdf
+
+   2
+"ab
+cd"`
+1/0
+[stdout]
+3
+"ab\ncd"
+[stderr]
+7:2 (/) div 0 (DynamicError)

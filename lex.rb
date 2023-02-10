@@ -29,15 +29,15 @@ def lex(code,line_no=1) # returns a list of lines which are a list of tokens
   last_was_space = false
 	tokens = [[]]
   char_no = 1
-  code.scan(/#{AtomRx}|#{CommentRx}|#{OpRx}|#{OtherRx}|./m) {|matches|
+  code.scan(/#{AtomRx}|#{CommentRx}|#{OpRx}|#{OtherRx}|(\n+[ \t]*#{CommentRx}?)|./m) {|matches|
     $from=token=Token.new($&,char_no,line_no,last_was_space,nil)
     line_no += $&.count("\n")
     if $&["\n"]
-      char_no = $&.rindex("\n")+1
+      char_no = $&.size-$&.rindex("\n")
     else
       char_no += $&.size
     end
-    if token.str =~ /^#{CommentRx}$/
+    if token.str =~ /\n*^#{CommentRx}$/ || token.str =~ /\n+[ \t]+/
     elsif token.str == " "
       tokens[-1][-1].space_after = token unless tokens[-1].empty?
       last_was_space = true
