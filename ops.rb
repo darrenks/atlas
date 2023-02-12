@@ -132,29 +132,19 @@ OpsList = [
     name: "neg",
     sym: "~",
     type: { Int => Int,
-            Str => Int },
+            Str => [Int] },
     poly_impl: -> t {
       case t
       when Int
         # Example: 2~ -> -2
         -> a { -a.value }
       when Str
-        # Example: "12"~ -> 12
-        # Test: "a12b"~ -> 12
-        # Test: "12 34"~ -> 12
-        # Test: "-12"~ -> -12
-        # Test: "--12"~ -> 12
-        -> a { read_int(a)[0] }
+        # Example: "1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]
+        -> a { split_non_digits(a) }
       else
         raise
       end
     }
-  ), create_op(
-    name: "readz",
-    # Example: "1 2 -3 4a5 - -6 --7" readz -> [1,2,-3,4,5,-6,7]
-    sym: "tbd",
-    type: { Str => [Int] },
-    impl: -> a { split_non_digits(a) }
   ), create_op(
     name: "rep",
     sym: ",",
@@ -207,15 +197,8 @@ OpsList = [
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? a.value : b.value }},
     promote: SECOND_PROMOTE
   ), create_op(
-    # Hidden
     name: "input",
-    sym: "I",
-    type: Str,
-    impl: -> { ReadStdin.value }
-  ), create_op(
-    # Hidden
-    name: "input2",
-    sym: "zI",
+    sym: "$",
     type: [Str],
     impl: -> { lines(ReadStdin) }
   ), create_op(

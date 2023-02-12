@@ -2,7 +2,7 @@
 hi
 
 [prog]
-1+I
+1+$
 "line2"
 1/0
 "line3"
