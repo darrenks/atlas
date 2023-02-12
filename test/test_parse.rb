@@ -65,6 +65,9 @@ AA -> A‿A
 aA -> aA
 a_a -> a_a
 A_ A -> A_‿A
+
+1; head 2 -> 1;[‿2
+
 EOF
 
 require "./test/run_lines.rb"

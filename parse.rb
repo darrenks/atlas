@@ -18,7 +18,7 @@ def get_expr(tokens,delimiter,priority)
     atom,t = get_atom(tokens)
     if atom
       # spaces indicate it was to actually be a unary op
-      if lastop && last && lastop.space_after && !lastop.space_before && !is_op(t) && !lastop.is_alpha
+      if lastop && last && Ops1[lastop.name] && (lastop.space_after && !lastop.space_before && !is_op(t) && !lastop.is_alpha || !Ops2[lastop.name])
         last = make_op1(lastop, last)
         lastop = nil
       end
