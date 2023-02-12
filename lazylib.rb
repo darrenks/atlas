@@ -5,7 +5,7 @@ $reductions = 0
 def run(root,out=STDOUT,output_limit=10000,step_limit=Float::INFINITY)
   $step_limit = step_limit
   $reductions = 0
-  print_string(make_promises(root).value, out, output_limit)
+  print_string(make_promises(root), out, output_limit)
 end
 
 def make_promises(node)
@@ -23,6 +23,9 @@ class Promise
   attr_accessor :expect_non_empty
   def initialize(&block)
     @impl=block
+  end
+  def empty
+    value==[]
   end
   def value
     $reductions+=1
@@ -46,12 +49,12 @@ class Promise
 end
 
 def take(n, a)
-  return [] if n <= 0 || a.value == []
+  return [] if n <= 0 || a.empty
   [a.value[0], Promise.new{ take(n-1, a.value[1]) }]
 end
 
 def drop(n, a)
-  while n>0 && a.value != []
+  while n>0 && !a.empty
     n-=1
     a=a.value[1]
   end
@@ -59,40 +62,40 @@ def drop(n, a)
 end
 
 def init(a)
-  raise DynamicError.new "init on empty list",nil if a==[]
-  return [] if a[1].value == []
-  [a[0], Promise.new{ init(a[1].value) }]
+  raise DynamicError.new "init on empty list",nil if a.empty
+  return [] if a.value[1].empty
+  [a.value[0], Promise.new{ init(a.value[1]) }]
 end
 
 # value -> (value -> Promise) -> value
 def map(a,&b)
-  a==[] ? [] : [b[a[0].value], Promise.new{map(a[1].value,&b)}]
+  a.empty ? [] : [b[a.value[0].value], Promise.new{map(a.value[1],&b)}]
 end
 
 # value -> value
 # truncate as soon as encounter empty list
 def trunc(a)
-  a == [] || a[0].value == [] ? [] : [a[0], Promise.new{trunc(a[1].value)}]
+  a.empty || a.value[0].empty ? [] : [a.value[0], Promise.new{trunc(a.value[1])}]
 end
 
 def transpose(a)
-  return [] if a==[]
-  return transpose(a[1].value) if a[0].value == []
-  broken = trunc(a[1].value)
+  return [] if a.empty
+  return transpose(a.value[1]) if a.value[0].empty
+  broken = Promise.new{ trunc(a.value[1]) }
   hds = Promise.new{ map(broken){|v|v[0]} }
   tls = Promise.new{ map(broken){|v|v[1]} }
-  [Promise.new{[a[0].value[0],hds]},
-   Promise.new{transpose [a[0].value[1],tls]}]
+  [Promise.new{[a.value[0].value[0],hds]},
+   Promise.new{transpose Promise.new{[a.value[0].value[1],tls]}}]
 end
 
 def last(a)
   prev=nil
-  until a.empty?
+  until a.empty
     prev = a
-    a = a[1].value
+    a = a.value[1]
   end
   raise DynamicError.new("empty last", nil) if prev == nil
-  prev[0].value
+  prev.value[0].value
 end
 
 # n = int number of dims to zip
@@ -104,7 +107,7 @@ def zipn(n,a,f)
   faith = []
   return [] if a.any?{|i|
     begin
-      i.value==[]
+      i.empty
     rescue InfiniteLoopError => e
       raise e unless e.source == i
       # gotta have faith
@@ -126,39 +129,38 @@ end
 
 def pad(a,b)
   [
-    Promise.new{ a.value == [] ? b.value : a.value[0].value },
-    Promise.new{ pad( Promise.new{ a.value == [] ? [] : a.value[1].value }, b) }
+    Promise.new{ a.empty ? b.value : a.value[0].value },
+    Promise.new{ pad( Promise.new{ a.empty ? [] : a.value[1].value }, b) }
   ]
 end
 
 # value -> value -> value
 def equal(a,b,t)
   if t.dim>0
-    return true if a==[] && b==[]
-    return false if a==[] || b==[]
-    return equal(a[0].value,b[0].value,t-1) && equal(a[1].value,b[1].value,t)
+    return true if a.empty && b.empty
+    return false if a.empty || b.empty
+    return equal(a.value[0],b.value[0],t-1) && equal(a.value[1],b.value[1],t)
   else
-    a==b
+    a.value==b.value
   end
 end
 
 def len(a)
-  return 0 if a==[]
-  return 1+len(a[1].value)
+  return 0 if a.empty
+  return 1+len(a.value[1])
 end
 
 # value -> Promise -> value
 def append(v,r)
-  v==[] ? r.value : [v[0],Promise.new{append(v[1].value, r)}]
-  #concat_map(v,r){|v2,r2|[Promise.new{v2},r2]}
+  v.empty ? r.value : [v.value[0],Promise.new{append(v.value[1], r)}]
 end
 
-# value -> value -> bool -> (value -> promise -> ... -> value) -> value
+# promise -> promise -> bool -> (value -> promise -> ... -> value) -> value
 def concat_map(v,rhs,first=true,&b)
-  if v==[]
-    rhs
+  if v.empty
+    rhs.value
   else
-    b[v[0].value,Promise.new{concat_map(v[1].value,rhs,false,&b)},first]
+    b[v.value[0],Promise.new{concat_map(v.value[1],rhs,false,&b)},first]
   end
 end
 
@@ -171,17 +173,17 @@ def inspect_value_h(t,value,rhs)
     str_to_lazy_list("[]",rhs)
   elsif t==Str
     [Promise.new{'"'.ord}, Promise.new{
-      concat_map(value,str_to_lazy_list('"',rhs)){|v,r,first|
-       str_to_lazy_list(escape_str_char(v),r)
+      concat_map(value,Promise.new{str_to_lazy_list('"',rhs)}){|v,r,first|
+       str_to_lazy_list(escape_str_char(v.value),r)
       }
     }]
   elsif t==Int
-    str_to_lazy_list(value.to_s,rhs)
+    str_to_lazy_list(value.value.to_s,rhs)
   elsif t==Char
-    str_to_lazy_list(inspect_char(value),rhs)
+    str_to_lazy_list(inspect_char(value.value),rhs)
   else #List
     [Promise.new{"[".ord}, Promise.new{
-      concat_map(value,str_to_lazy_list("]",rhs)){|v,r,first|
+      concat_map(value,Promise.new{str_to_lazy_list("]",rhs)}){|v,r,first|
         first ?
           inspect_value_h(t-1,v,r) :
           [Promise.new{','.ord},Promise.new{inspect_value_h(t-1,v,r)}]
@@ -191,20 +193,20 @@ def inspect_value_h(t,value,rhs)
 end
 
 def to_string(t, value)
-  to_string_h(t,value,t.string_dim,Null)
+  to_string_h(t,value,t.string_dim, Null)
 end
 
 def to_string_h(t, value, orig_dim, rhs)
   if t == Int
     inspect_value_h(t, value, rhs)
   elsif t == Char
-    [Promise.new{value}, rhs]
+    [Promise.new{value.value}, rhs]
   else # List
     dim = t.string_dim
     separator = [""," ","\n"][dim] || "\n\n"
     # this would make the lang a bit better on golf.shinh.org but not intuitive
     #separator = "\n" if orig_dim == 1 && dim == 1
-    concat_map(value,rhs.value){|v,r,first|
+    concat_map(value,rhs){|v,r,first|
       svalue = Promise.new{ to_string_h(t-1, v, orig_dim, r) }
       first ? svalue.value : str_to_lazy_list(separator, svalue)
     }
@@ -212,54 +214,53 @@ def to_string_h(t, value, orig_dim, rhs)
 end
 
 def print_string(value, out, limit)
-  while value != [] && limit > 0
-    out.print "%c" % value[0].value
-    value = value[1].value
+  while !value.empty && limit > 0
+    out.print "%c" % value.value[0].value
+    value = value.value[1]
     limit -= 1
   end
 end
 
-# string value -> int value
 def read_int(s)
   multiplier=1
-  until s==[] || s[0].value.chr =~ /[0-9]/
-    if s[0].value == ?-.ord
+  until s.empty || s.value[0].value.chr =~ /[0-9]/
+    if s.value[0].value == ?-.ord
       multiplier *= -1
     else
       multiplier = 1
     end
-    s = s[1].value
+    s = s.value[1]
   end
   v = 0
   found_int = false
-  until s==[] || !(s[0].value.chr =~ /[0-9]/)
+  until s.empty || !(s.value[0].value.chr =~ /[0-9]/)
     found_int = true
-    v = v*10+s[0].value-48
-    s = s[1].value
+    v = v*10+s.value[0].value-48
+    s = s.value[1]
   end
   [multiplier * v, found_int, s]
 end
 
 # string value -> [string] value
 def lines(s)
-  return [] if s==[]
+  return [] if s.empty
 
-  after = Promise.new{lines(s[1].value)}
-  if s[0].value == 10
+  after = Promise.new{lines(s.value[1])}
+  if s.value[0].value == 10
     [Null, after]
   else
     [Promise.new{
-      after.value == [] ? [s[0], Null] : [s[0], after.value[0]]
+      after.empty ? [s.value[0], Null] : [s.value[0], after.value[0]]
      },
      Promise.new{
-      after.value == [] ? [] : after.value[1].value
+      after.empty ? [] : after.value[1].value
      }]
    end
 end
 
-# string value -> [int] value
+# string promise -> [int] value
 def split_non_digits(s)
-  return [] if s==[]
+  return [] if s.empty
   v,found,s2=read_int(s)
   return [] if !found
   [Promise.new{v},Promise.new{split_non_digits(s2)}]
@@ -287,10 +288,10 @@ end
 
 def truthy(type, value)
   if type == Int
-    value > 0
+    value.value > 0
   elsif type == Char
-    !!value.chr[/\S/]
+    !!value.value.chr[/\S/]
   else # List
-    !value.empty?
+    !value.empty
   end
 end

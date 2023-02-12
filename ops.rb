@@ -49,7 +49,7 @@ OpsList = [
     # Example: "abc"[ -> 'a
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
-      raise DynamicError.new "head on empty list",from if a.value==[]
+      raise DynamicError.new "head on empty list",from if a.empty
       a.value[0].value
     }},
     promote: NO_PROMOTE,
@@ -60,8 +60,8 @@ OpsList = [
     # Example: "abc"] -> 'c
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
-      raise DynamicError.new "last on empty list",from if a.value==[]
-      last(a.value)
+      raise DynamicError.new "last on empty list",from if a.empty
+      last(a)
     }}
   ), create_op(
     name: "tail",
@@ -70,7 +70,7 @@ OpsList = [
     promote: NO_PROMOTE,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
-      raise DynamicError.new "tail on empty list",from if a.value==[]
+      raise DynamicError.new "tail on empty list",from if a.empty
       a.value[1].value}}
   ), create_op(
     name: "init",
@@ -79,8 +79,8 @@ OpsList = [
     promote: NO_PROMOTE,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
-      raise DynamicError.new "init on empty list",from if a.value==[]
-      init(a.value)
+      raise DynamicError.new "init on empty list",from if a.empty
+      init(a)
     }}
   ), create_op(
     name: "add",
@@ -144,11 +144,17 @@ OpsList = [
         # Test: "12 34"~ -> 12
         # Test: "-12"~ -> -12
         # Test: "--12"~ -> 12
-        -> a { read_int(a.value)[0] }
+        -> a { read_int(a)[0] }
       else
         raise
       end
     }
+  ), create_op(
+    name: "readz",
+    # Example: "1 2 -3 4a5 - -6 --7" readz -> [1,2,-3,4,5,-6,7]
+    sym: "tbd",
+    type: { Str => [Int] },
+    impl: -> a { split_non_digits(a) }
   ), create_op(
     name: "rep",
     sym: ",",
@@ -161,14 +167,14 @@ OpsList = [
     # Test: 3=2 -> []
     sym: "=",
     type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { equal(a.value,b.value,ta) ? [a,Null] : [] } }
+    poly_impl: -> ta,tb {-> a,b { equal(a,b,ta) ? [a,Null] : [] } }
   ), create_op(
     name: "len",
     # Example: "asdf"# -> 4
     sym: "#",
     promote: NO_PROMOTE,
     type: { [A] => Int },
-    impl: -> a { len(a.value) }
+    impl: -> a { len(a) }
   ), create_op(
     name: "nil",
     # Example: $ -> []
@@ -192,14 +198,14 @@ OpsList = [
     # Example: 1&2 -> [2]
     # Test: 0&2 -> []
     type: { [A,B] => [B] },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a.value) ? [b,Null] : [] }}
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? [b,Null] : [] }}
   ), create_op(
     name: "or",
     sym: "|",
     # Example: 1|2 -> 1
     # Test: 0|2 -> 2
     type: { [A,A] => A },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a.value) ? a.value : b.value }},
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? a.value : b.value }},
     promote: SECOND_PROMOTE
   ), create_op(
     # Hidden
@@ -212,7 +218,7 @@ OpsList = [
     name: "input2",
     sym: "zI",
     type: [Str],
-    impl: -> { lines(ReadStdin.value) }
+    impl: -> { lines(ReadStdin) }
   ), create_op(
     # Hidden
     name: "tostring",
@@ -222,7 +228,7 @@ OpsList = [
     # Test: 'a tostring -> "a"
     # Test: 2; 1 tostring -> "2 1"
     # Test: 2; 1; (3; 4) tostring -> "2 1\n3 4"
-    poly_impl: -> t { -> a { to_string(t,a.value) } }
+    poly_impl: -> t { -> a { to_string(t,a) } }
   ), create_op(
     name: "show",
     sym: "`",
@@ -231,7 +237,7 @@ OpsList = [
     # Test: "a"` -> "\"a\""
     # Test: 'a` -> "'a"
     # Test: 1;` -> "[1]"
-    poly_impl: -> t { -> a { inspect_value(t,a.value) } }
+    poly_impl: -> t { -> a { inspect_value(t,a) } }
   ), create_op(
     name: "single",
     sym: ";",
@@ -259,13 +265,13 @@ OpsList = [
     sym: "_",
     # Example: "abc"; "123"_ -> "abc123"
     type: { [[A]] => [A] },
-    impl: -> a { concat_map(a.value,[]){|i,r,first|append(i,r)} },
+    impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
   ), create_op(
     name: "append",
     sym: " ",
     # Example: "abc" "123" -> "abc123"
     type: { [[A],[A]] => [A] },
-    impl: -> a,b { append(a.value,b) },
+    impl: -> a,b { append(a,b) },
     promote: PREFER_PROMOTE,
   ), create_op(
     name: "transpose",
@@ -273,7 +279,7 @@ OpsList = [
     # Example: "abc"; "123"\ -> ["a1","b2","c3"]
     # Test: "abc"; "1234"\ -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
-    impl: -> a { transpose(a.value) },
+    impl: -> a { transpose(a) },
 
   # Repl/Debug ops
   ), create_op(

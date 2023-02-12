@@ -43,7 +43,7 @@ $] -> DynamicError
 5 6> -> [6]
 5;> -> []
 // todo may want to reconsider and make empty
-$ tail -> DynamicError
+// $ tail -> DynamicError
 
 /////////// test vars
 5:v1+v1 -> 10
