@@ -6,18 +6,18 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
   line_no = 1
 
-  if !ARGV.empty?
-    input_fn = lambda { gets(nil) }
-  elsif input
+  if input
     input_fn = lambda { input.gets(nil) }
+  elsif !ARGV.empty?
+    input_fn = lambda { gets(nil) }
   else
     if File.exists? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
     input_fn = lambda {
-      input = Readline.readline("\e[33m ᐳ \e[0m", true)
-      File.open(HistFile,'a'){|f|f.puts input} unless !input || input.empty?
-      input
+      line = Readline.readline("\e[33m ᐳ \e[0m", true)
+      File.open(HistFile,'a'){|f|f.puts line} unless !line || line.empty?
+      line
     }
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
@@ -34,9 +34,9 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   stop = false
   until stop
     prev_context = context.dup
-    input=input_fn.call
+    line=input_fn.call
     begin
-      if input==nil # eof
+      if line==nil # eof
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
           ir = to_ir(ast,context)
@@ -44,7 +44,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
         end
         break
       end
-      token_lines,line_no=lex(input, line_no)
+      token_lines,line_no=lex(line, line_no)
       token_lines.each{|tokens| # each line
         next if tokens[0].str == :EOL
 
@@ -52,10 +52,12 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
           assignment = true
           assertVar(tokens[0])
           ast = parse_line(tokens[2..-1])
-          ir = set(tokens[0], ast, context)
+          ast = apply_macros(ast)
+          set(tokens[0], ast, context)
         else
           assignment = false
           ast = parse_line(tokens)
+          ast = apply_macros(ast)
           ir = to_ir(ast,context)
           printit(ir, output, step_limit)
         end

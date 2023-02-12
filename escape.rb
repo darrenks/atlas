@@ -4,15 +4,18 @@ def inspect_char(char)
 end
 
 def escape_str_char(char)
-  raise DynamicError.new "invalid char (negative) %d" % char, nil if char < 0
   return "\\0" if char == "\0".ord
   return "\\n" if char == "\n".ord
   return "\\\\" if char == "\\".ord
   return "\\\"" if char == "\"".ord
   return "%c" % char if char >= " ".ord && char <= "~".ord # all ascii printables
-  return "\\x0%s" % char.to_s(16) if char < 16
-  return "\\x%s" % char.to_s(16) if char < 256
-  return "%c" % char # most unicodes are printable, just print em
+  return "\\x0%s" % char.to_s(16) if char < 16 && char >= 0
+  return "\\x%s" % char.to_s(16) if char < 256 && char >= 0
+  begin
+    return "%c" % char # most unicodes are printable, just print em
+  rescue ArgumentError
+    return "invalid char: %d" % char
+  end
 end
 
 def parse_char(s)

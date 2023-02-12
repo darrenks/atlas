@@ -6,6 +6,9 @@
 "ab
 cd"`
 1/0
+
+
+5
 [stdout]
 3
 "ab\ncd"

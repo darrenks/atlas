@@ -1,0 +1,4 @@
+[prog]
+1+
+[stderr]
+1:2 (+) op not defined for unary operations (ParseError)

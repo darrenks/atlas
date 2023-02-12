@@ -1,10 +1,10 @@
 require 'stringio'
 require "./repl.rb"
 
-#symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
+symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
 
 
-symbols = "~!!@@$()-=[]';?:"
+#symbols = "~!!@@$()-=[]';?:"
 numbers = "012"
 letters = "abCFS"
 spaces = "  \n\n" # twice as likely
@@ -12,7 +12,7 @@ spaces = "  \n\n" # twice as likely
 # Just the interesting characters to focus on testing parse
 # all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
 
-all = (symbols+numbers+letters+spaces).chars.to_a
+all = (symbols+numbers+letters+spaces).chars-['$'].to_a # remove things that get input since they stall for now
 
 # todo take all tests and make larger programs that are almost correct
 
@@ -27,7 +27,7 @@ step_limit = 1000
     begin
       repl(program_io,output_io,step_limit)
     rescue AtlasError => e
-    rescue SystemStackError => e # todo some of these are bad though (e.g. if in infer)
+
     rescue => e
       STDERR.puts "failed, program was"
       STDERR.puts program

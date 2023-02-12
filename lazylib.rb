@@ -214,10 +214,14 @@ def to_string_h(t, value, orig_dim, rhs)
 end
 
 def print_string(value, out, limit)
-  while !value.empty && limit > 0
-    out.print "%c" % value.value[0].value
-    value = value.value[1]
-    limit -= 1
+  begin
+    while !value.empty && limit > 0
+      out.print "%c" % value.value[0].value
+      value = value.value[1]
+      limit -= 1
+    end
+  rescue ArgumentError
+    raise DynamicError.new "invalid character for printing ordinal value: %d" % value.value[0].value, nil
   end
 end
 

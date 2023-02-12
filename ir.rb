@@ -10,6 +10,7 @@ class IR < Struct.new(
     :used_by,
     :replicated_args,
     :last_error,
+    :type_updates, # for detecting inf type
     :from_var)
   def initialize(*args)
     super(*args)
@@ -22,7 +23,6 @@ end
 
 # creates an IR from an AST, replacing vars
 def to_ir(ast,context)
-  ast = apply_macros(ast)
 #   puts ast.to_infix
   ir = create_ir(ast,context)
   check_missing(ir,context,{})
@@ -35,7 +35,6 @@ def set(t,ast,context)
   ir.from_var = t.str
   ir
 end
-
 
 def create_ir(node,context) # and register_vars
   if node.op.name == "let"
@@ -62,7 +61,7 @@ end
 
 def lookup_vars(node,context,been)
   return node if been[node.id]
-  been[node.id]=true
+  been[node.id]=true if node.op.name != "var"
   node.orig_args.map!{|arg| lookup_vars(arg, context,been) }
   if node.op.name == "var"
     lookup_vars(context[node.from.token.str],context,been)

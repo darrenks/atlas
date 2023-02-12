@@ -31,6 +31,8 @@ def update_type(node)
   node.type = possible_types(node)
 
   if node.type != prev_type
+    node.type_updates = (node.type_updates || 0) + 1
+    raise AtlasTypeError.new "cannot construct the infinite type",node if node.type_updates > 100
     node.used_by.each{|dep| update_type(dep) }
   end
 end

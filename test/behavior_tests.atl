@@ -259,3 +259,12 @@
 
 
 // todo see parse, it gets messed up
+
+
+// This tests a pathological case in var lookups, would throw before runtime
+a:F F:a -> []
+
+// infinite type
+a;:a -> AtlasTypeError
+
+'a-1000 -> 'invalid char: -903

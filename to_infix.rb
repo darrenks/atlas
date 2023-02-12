@@ -5,7 +5,7 @@ module ToInfix
 
     op_name = (op.sym||((zip_level>0 ? "" : " ")+op.name+" ")).to_s
     op_name = "‿" if op.sym == " " # todo and type inferred/promoted already
-    op_str = "!" * zip_level + op_name
+    op_str = "!" * zip_level + (is_flipped ? "@" : "") + op_name
 
     a = infix_args
     expr = case a.size
@@ -32,6 +32,9 @@ class IR
     replicated_args.map.with_index{|arg,i|
       arg.from_var ? arg.from_var : arg
     }
+  end
+  def is_flipped
+    false
   end
   include ToInfix
 end

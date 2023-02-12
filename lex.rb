@@ -41,7 +41,7 @@ def lex(code,line_no=1) # returns a list of lines which are a list of tokens
     elsif token.str == " "
       tokens[-1][-1].space_after = token unless tokens[-1].empty?
       last_was_space = true
-    elsif token.str == "\n"
+    elsif token.str =~ /^\n+$/m
       tokens[-1] << Token.new(:EOL,char_no,line_no)
       tokens << []
     else
