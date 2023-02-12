@@ -4,6 +4,8 @@ HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
+  stack=[AST.new(Ops0["col4"],[]),AST.new(Ops0["col3"],[]),AST.new(Ops0["col2"],[]),AST.new(Ops0["col1"],[])]
+
   line_no = 1
 
   if input
@@ -52,12 +54,12 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
           assignment = true
           assertVar(tokens[0])
           ast = parse_line(tokens[2..-1])
-          ast = apply_macros(ast)
+          ast = apply_macros(ast, stack)
           set(tokens[0], ast, context)
         else
           assignment = false
           ast = parse_line(tokens)
-          ast = apply_macros(ast)
+          ast = apply_macros(ast, stack)
           ir = to_ir(ast,context)
           printit(ir, output, step_limit)
         end

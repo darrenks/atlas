@@ -42,6 +42,14 @@ def create_op(
   Op.new(name,sym,type,min_zip_level,promote,built_impl)
 end
 
+def int_col(n)
+  -> {
+    map(Promise.new{lines(ReadStdin)}){|v|
+      Promise.new{take(1,Promise.new{drop(n,Promise.new{split_non_digits(v)})})}
+    }
+  }
+end
+
 OpsList = [
   create_op(
     name: "head",
@@ -334,8 +342,25 @@ OpsList = [
     sym: "}",
     type: Int, # todo..
     impl: MacroImpl,
-  )
+  ),
 
+  create_op(
+    name: "col1",
+    type: [[Int]],
+    impl: int_col(0)
+  ), create_op(
+    name: "col2",
+    type: [[Int]],
+    impl: int_col(1)
+  ), create_op(
+    name: "col3",
+    type: [[Int]],
+    impl: int_col(2)
+  ), create_op(
+    name: "col4",
+    type: [[Int]],
+    impl: int_col(3)
+  )
 ]
 
 Ops0 = {}

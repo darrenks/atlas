@@ -1,13 +1,13 @@
-def apply_macros(ast)
+def apply_macros(ast, stack)
   save_orig(ast)
-  ast=handle_push_pops(ast)
+  ast=handle_push_pops(ast, stack)
   apply_flips(ast)
   ast = apply_maps(ast)
   check_any_map_vars_left_over(ast)
   ast
 end
 
-def handle_push_pops(ast, stack = [])
+def handle_push_pops(ast, stack)
   ast.args[0] = handle_push_pops(ast.args[0], stack) if ast.args.size > 0
   if ast.op.name == "push"
     ast = AST.new(Ops2["let"], [ast.args[0], new_var], ast.token)

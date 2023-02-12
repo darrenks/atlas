@@ -68,7 +68,7 @@ end
 
 # value -> (value -> Promise) -> value
 def map(a,&b)
-  a.empty ? [] : [b[a.value[0].value], Promise.new{map(a.value[1],&b)}]
+  a.empty ? [] : [b[a.value[0]], Promise.new{map(a.value[1],&b)}]
 end
 
 # value -> value
@@ -81,8 +81,8 @@ def transpose(a)
   return [] if a.empty
   return transpose(a.value[1]) if a.value[0].empty
   broken = Promise.new{ trunc(a.value[1]) }
-  hds = Promise.new{ map(broken){|v|v[0]} }
-  tls = Promise.new{ map(broken){|v|v[1]} }
+  hds = Promise.new{ map(broken){|v|v.value[0]} }
+  tls = Promise.new{ map(broken){|v|v.value[1]} }
   [Promise.new{[a.value[0].value[0],hds]},
    Promise.new{transpose Promise.new{[a.value[0].value[1],tls]}}]
 end
