@@ -44,8 +44,8 @@ end
 
 def int_col(n)
   -> {
-    map(Promise.new{lines(ReadStdin)}){|v|
-      Promise.new{take(1,Promise.new{drop(n,Promise.new{split_non_digits(v)})})}
+    map(lines(ReadStdin).const){|v|
+      take(1,Promise.new{drop(n,Promise.new{split_non_digits(v)})})
     }
   }
 end

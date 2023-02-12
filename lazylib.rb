@@ -47,6 +47,18 @@ class Promise
   end
 end
 
+# Use this to avoid creating promises that are pointless because the value is constant or it will immediately be computed after construction.
+class Const < Struct.new(:value)
+  def empty
+    value==[]
+  end
+end
+class Object
+  def const
+    Const.new(self)
+  end
+end
+
 def take(n, a)
   return [] if n <= 0 || a.empty
   [a.value[0], Promise.new{ take(n-1, a.value[1]) }]
@@ -68,7 +80,7 @@ end
 
 # value -> (value -> Promise) -> value
 def map(a,&b)
-  a.empty ? [] : [b[a.value[0]], Promise.new{map(a.value[1],&b)}]
+  a.empty ? [] : [Promise.new{b[a.value[0]]}, Promise.new{map(a.value[1],&b)}]
 end
 
 # value -> value
@@ -80,11 +92,11 @@ end
 def transpose(a)
   return [] if a.empty
   return transpose(a.value[1]) if a.value[0].empty
-  broken = Promise.new{ trunc(a.value[1]) }
-  hds = Promise.new{ map(broken){|v|v.value[0]} }
-  tls = Promise.new{ map(broken){|v|v.value[1]} }
+  broken = trunc(a.value[1]).const
+  hds = Promise.new{ map(broken){|v|v.value[0].value} }
+  tls = Promise.new{ map(broken){|v|v.value[1].value} }
   [Promise.new{[a.value[0].value[0],hds]},
-   Promise.new{transpose Promise.new{[a.value[0].value[1],tls]}}]
+   Promise.new{transpose [a.value[0].value[1],tls].const}]
 end
 
 def last(a)
@@ -171,7 +183,7 @@ def inspect_value_h(t,value,rhs)
   if t == Nil
     str_to_lazy_list("[]",rhs)
   elsif t==Str
-    [Promise.new{'"'.ord}, Promise.new{
+    ['"'.ord.const, Promise.new{
       concat_map(value,Promise.new{str_to_lazy_list('"',rhs)}){|v,r,first|
        str_to_lazy_list(escape_str_char(v.value),r)
       }
@@ -181,11 +193,11 @@ def inspect_value_h(t,value,rhs)
   elsif t==Char
     str_to_lazy_list(inspect_char(value.value),rhs)
   else #List
-    [Promise.new{"[".ord}, Promise.new{
+    ["[".ord.const, Promise.new{
       concat_map(value,Promise.new{str_to_lazy_list("]",rhs)}){|v,r,first|
         first ?
           inspect_value_h(t-1,v,r) :
-          [Promise.new{','.ord},Promise.new{inspect_value_h(t-1,v,r)}]
+          [','.ord.const,Promise.new{inspect_value_h(t-1,v,r)}]
       }
     }]
   end
@@ -199,7 +211,7 @@ def to_string_h(t, value, orig_dim, rhs)
   if t == Int
     inspect_value_h(t, value, rhs)
   elsif t == Char
-    [Promise.new{value.value}, rhs]
+    [value, rhs]
   else # List
     dim = t.string_dim
     # print newline separators after every element for better interactive io
@@ -271,7 +283,7 @@ def split_non_digits(s)
   return [] if s.empty
   v,found,s2=read_int(s)
   return [] if !found
-  [Promise.new{v},Promise.new{split_non_digits(s2)}]
+  [v.const,Promise.new{split_non_digits(s2)}]
 end
 
 ReadStdin = Promise.new{ read_stdin }
@@ -280,18 +292,18 @@ def read_stdin
   if c.nil?
     []
   else
-    [Promise.new{ c.ord }, Promise.new{ read_stdin }]
+    [c.ord.const, Promise.new{ read_stdin }]
   end
 end
 
-Null = Promise.new{ [] }
+Null = [].const
 
 def str_to_lazy_list(s,rhs=Null)
   to_lazy_list(s.chars.map(&:ord), rhs)
 end
 
 def to_lazy_list(l, rhs=Null, ind=0)
-  ind >= l.size ? rhs.value : [Promise.new{l[ind]}, Promise.new{to_lazy_list(l, rhs, ind+1)}]
+  ind >= l.size ? rhs.value : [l[ind].const, Promise.new{to_lazy_list(l, rhs, ind+1)}]
 end
 
 def truthy(type, value)

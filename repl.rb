@@ -25,7 +25,10 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
       all = context.keys + AllOps.values.filter(&:name).map(&:name)
-      all -= all.grep(/^see/) if !s[/^see/] # hide debug commands
+      if !s[/^se/] # hide debug commands
+        all -= all.grep(/^see/)
+        all << "see*"
+      end
       all.grep(/^#{Regexp.escape(s)}/)
     }
   end

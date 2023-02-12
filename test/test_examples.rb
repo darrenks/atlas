@@ -44,10 +44,11 @@ tests.each{|test_filename|
   stderr=stderr.split("\e[31m").join
   stderr=stderr.split("\e[0m").join
 
-  if stdout != expected_stdout
-    failit(test_filename,test,"stdout was\n"+stdout)
-  elsif !expected_stderr.empty? && !stderr[expected_stderr] || expected_stderr.empty? && !stderr.empty?
+  if !expected_stderr.empty? && !stderr[expected_stderr] || expected_stderr.empty? && !stderr.empty?
     failit(test_filename,test,"stderr was\n"+stderr)
+  elsif stdout != expected_stdout
+    failit(test_filename,test,"stdout was\n"+stdout)
+  els
   else
     runs += 1
   end
