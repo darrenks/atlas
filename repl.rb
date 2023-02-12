@@ -78,5 +78,5 @@ def printit(ir,output,step_limit)
 #     puts to_infix(str_ast)
     infer(ir)
     run(ir,output,10000,step_limit)
-    output.puts
+    output.puts if ir.replicated_args[0].type.string_dim < 2 # these already printed newline
 end

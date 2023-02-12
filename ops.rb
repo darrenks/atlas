@@ -209,7 +209,7 @@ OpsList = [
     # Test: "a" tostring -> "a"
     # Test: 'a tostring -> "a"
     # Test: 2; 1 tostring -> "2 1"
-    # Test: 2; 1; (3; 4) tostring -> "2 1\n3 4"
+    # Test: 2; 1; (3; 4) tostring -> "2 1\n3 4\n"
     poly_impl: -> t { -> a { to_string(t,a) } }
   ), create_op(
     name: "show",
