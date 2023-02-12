@@ -1,23 +1,23 @@
 # define infix_args, from, op, zip_level to make this work
 module ToInfix
   def to_infix(is_rhs=false)
-    return "$" if from && from.token && from.token.str == :EOL
+    return "()" if from && from.token && from.token.str == :EOL
 
     op_name = (op.sym||((zip_level>0 ? "" : " ")+op.name+" ")).to_s
     op_name = "‿" if op.sym == " " # todo and type inferred/promoted already
-    op = "!" * zip_level + op_name
+    op_str = "!" * zip_level + op_name
 
     a = infix_args
     expr = case a.size
     when 0
-      from.token.str
+      op.name == "var" ? from.token.str : op_str
     when 1
-      a[0].to_infix + op
+      a[0].to_infix + op_str
     when 2
-      a[0].to_infix + op + a[1].to_infix(true)
+      a[0].to_infix + op_str + a[1].to_infix(true)
     else error
     end
-    maybe_paren(expr, a.size > 0 && is_rhs)
+    maybe_paren(expr, a.size > 0 && is_rhs).strip
   end
 
 end

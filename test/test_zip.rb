@@ -104,70 +104,70 @@ tests = <<'EOF'
 /// Nil tests ////////
 
 // A (inspect)
-$` -> $`
-$;` -> $;`
+()` -> nil`
+();` -> nil;`
 
 // scalar (negate)
-$~ -> AtlasTypeError
-$;~ -> AtlasTypeError
+()~ -> AtlasTypeError
+();~ -> AtlasTypeError
 
 // [scalar] none
 
 // [A] (head)
-$[ -> $[
-$;[ -> $;[
+()[ -> nil[
+();[ -> nil;[
 
 // [[A]] (concat)
-$_ -> $_
-$;_ -> $;_
-$;;_ -> $;;_
+()_ -> nil_
+();_ -> nil;_
+();;_ -> nil;;_
 
 // 2 arg /////////
 // A,A (eq)
-$=1 -> $!=(1,)
-$=(1;) -> $=(1;)
-$=(1;;) -> $=(1;;)
-$;=1 -> $;!!=(1,,)
-$;=(1;) -> $;!=(1;,)
-$;=(1;;) -> $;=(1;;)
-$;;=1 -> $;;!!!=(1,,,)
-$;;=(1;) -> $;;!!=(1;,,)
-$;;=(1;;) -> $;;!=(1;;,)
+()=1 -> nil!=(1,)
+()=(1;) -> nil=(1;)
+()=(1;;) -> nil=(1;;)
+();=1 -> nil;!!=(1,,)
+();=(1;) -> nil;!=(1;,)
+();=(1;;) -> nil;=(1;;)
+();;=1 -> nil;;!!!=(1,,,)
+();;=(1;) -> nil;;!!=(1;,,)
+();;=(1;;) -> nil;;!=(1;;,)
 
 
 // [A],A (pad)
-$ pad 1 -> $ pad 1
-$ pad (1;) -> $ pad (1;)
-$; pad 1 -> $;!pad (1,)
+() pad 1 -> nil pad 1
+() pad (1;) -> nil pad (1;)
+(); pad 1 -> nil;!pad (1,)
 // todo this is zipping into nil, should be error?
-1 pad $ -> 1;,!pad $
-1;; pad $ -> 1;; pad $
+1 pad () -> 1;,!pad nil
+1;; pad () -> 1;; pad nil
 
 // [A],[A] (append)
-1 $ -> 1;‿$
+1 () -> 1;‿nil
 
 // scalar scalar (add)
-$+1 -> AtlasTypeError
-$;+1 -> AtlasTypeError
-$+(1;) -> AtlasTypeError
+()+1 -> AtlasTypeError
+();+1 -> AtlasTypeError
+()+(1;) -> AtlasTypeError
 
 // Int,[A] (take)
 // todo, some should probably be no nil error
-$[1 -> $[1
-$;[1 -> $;[1
-$;;[1 -> $;;[1
-$[(1;) -> $,![(1;)
-$;[(1;) -> $;![(1;)
-$;;[(1;) -> $;;![(1;)
+()[1 -> nil[1
+();[1 -> nil;[1
+();;[1 -> nil;;[1
+()[(1;) -> nil,![(1;)
+();[(1;) -> nil;![(1;)
+();;[(1;) -> nil;;![(1;)
 
-1;[$ -> AtlasTypeError
-1;;[$ -> AtlasTypeError
-$[$ -> AtlasTypeError
+1;[() -> AtlasTypeError
+1;;[() -> AtlasTypeError
+()[() -> AtlasTypeError
 
 /// Excessive zip tests
 // not excessive
 // this actually could be useful
-!$ -> !$
+!nil -> !nil
 "1"!` -> "1"!`
 1;!=(1;) -> 1;!=(1;)
 

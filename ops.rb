@@ -177,8 +177,7 @@ OpsList = [
     impl: -> a { len(a) }
   ), create_op(
     name: "nil",
-    # Example: $ -> []
-    sym: "$",
+    # Example: nil -> []
     type: Nil,
     impl: -> { [] }
   ), create_op(
@@ -286,7 +285,7 @@ OpsList = [
     name: "seeType",
     # Example: 1 seeType -> "Int"
     # Test: "hi" seeType -> "[Char]"
-    # Test: $ seeType -> "Nil"
+    # Test: () seeType -> "Nil"
     type: { A => Str },
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
   ), create_op(

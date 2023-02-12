@@ -31,19 +31,19 @@
 5~~ -> 5
 1+2 -> 3
 "a"[+1 -> 'b
-1+$ -> AtlasTypeError
-$%2 -> AtlasTypeError
+1+() -> AtlasTypeError
+()%2 -> AtlasTypeError
 // leading 0 is separate number
 0-12 -> -12
 0/12 -> 0
-$ -> [] : Nil
+() -> [] : Nil
 
-$[ -> DynamicError
-$] -> DynamicError
+()[ -> DynamicError
+()] -> DynamicError
 5 6> -> [6]
 5;> -> []
 // todo may want to reconsider and make empty
-// $ tail -> DynamicError
+// () tail -> DynamicError
 
 /////////// test vars
 5:v1+v1 -> 10
@@ -112,7 +112,7 @@ $] -> DynamicError
 
 0 & 2 | 3 [ -> 3
 1 & 2 | 3 [ -> 2
-$ & 2 | 3 [ -> 3
+() & 2 | 3 [ -> 3
 0; & 2 | 3 [ -> 2
 " "[ & 2 | 3 [ -> 3
 "a"[ & 2 | 3 [ -> 2
@@ -179,7 +179,7 @@ $ & 2 | 3 [ -> 3
 
 5; pad 6 -> [5,6,6,6,6...
 // should not evaluate / 1 0 because outer ? should be known to be true
-1/0 & $ | $[ pad 5 & "T" | "F"[ -> "T"
+1/0 & () | ()[ pad 5 & "T" | "F"[ -> "T"
 
 // circular programming foldr
 4 5 6+(v1> pad 0):v1[ -> 15
@@ -214,25 +214,25 @@ $ & 2 | 3 [ -> 3
 // !~ "" -> []
 // !~ "45 50" -> [45,50]
 // !~ "a45 50 a" -> [45,50]
-// !~ :"1 2" :"3 4" $ -> [[1,2],[3,4]]
+// !~ :"1 2" :"3 4" () -> [[1,2],[3,4]]
 
 // complicated test (primes)
-(1+(1 (v2*v1):v1))%(2 (1+v2):v2) !& ($,) !| (v2!;) _ _ -> [2,3,5,7,11...
+(1+(1 (v2*v1):v1))%(2 (1+v2):v2) !& ((),) !| (v2!;) _ _ -> [2,3,5,7,11...
 
 // aliases of special zip
 //!read "4 5 6" -> [4,5,6]
 
 0,! (v1+(1 2 3; (4 5 6))):v1!] -> [6,15]
 
-$; -> [[]]
-$;[ -> []
+(); -> [[]]
+();[ -> []
 
 // check incorrect faith attempt
 // this would attempt to access invalid elements if said check was not in place
 0;! (v1+(3;;):v2) & (4;;[0) | (5;;[0)[:v1` (v2`) -> InfiniteLoopError
 
 // Test auto replicating of nil (todo is there another way to test this?)
-// "______MA_"='_ !then "CHISTMAS"!; else $_ -> "CHISTM"
+// "______MA_"='_ !then "CHISTMAS"!; else ()_ -> "CHISTM"
 
 // Test implicit cons
 1(2+3;) -> [1,5]
