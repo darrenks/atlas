@@ -299,6 +299,10 @@ OpsList = [
     name: "seeTableTodo",
     type: Str,
     impl: -> { str_to_lazy_list("Todo") },
+  ), create_op(
+    name: "seeStepCount",
+    type: Int,
+    impl: -> { $reductions },
 
   # Macros, type only used to specify number of args
   ), create_op(

@@ -3,8 +3,7 @@ $step_limit=Float::INFINITY
 $reductions = 0
 
 def run(root,out=STDOUT,output_limit=10000,step_limit=Float::INFINITY)
-  $step_limit = step_limit
-  $reductions = 0
+  $step_limit = step_limit + $reductions
   print_string(make_promises(root), out, output_limit)
 end
 
