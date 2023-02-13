@@ -27,12 +27,12 @@ class Promise
     value==[]
   end
   def value
-    $reductions+=1
     raise DynamicError.new "step limit exceeded",nil if $reductions > $step_limit
+    $reductions+=1
     if Proc===@impl
-      raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
-      @calculating=true
       begin
+        raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
+      @calculating=true
         @impl=@impl[]
       ensure
         # not really needed since new promises are created rather than reused
@@ -41,9 +41,6 @@ class Promise
       raise InfiniteLoopError.new "infinite loop detected2",self,nil if expect_non_empty && @impl == []
     end
     @impl
-  end
-  def inspect
-    "promise"
   end
 end
 
@@ -120,29 +117,21 @@ def zipn(n,a,f)
     begin
       i.empty
     rescue InfiniteLoopError => e
-      raise e unless e.source == i
       # gotta have faith
       # solves this type of problem: a=!:,0 +a ::1;2;:3;4
       faith << i
-      false # not empty
+      false # not empty, for now...
     end
   }
   faith.each{|i| i.expect_non_empty = true }
-  [Promise.new{zipn(n-1,a.map{|i|i.value[0]},f) },
-   Promise.new{zipn(n,a.map{|i|i.value[1]},f) }]
+  [Promise.new{zipn(n-1,a.map{|i|Promise.new{i.value[0].value}},f) },
+   Promise.new{zipn(n,a.map{|i|Promise.new{i.value[1].value}},f) }]
 end
 
 def repeat(a)
   ret = [a]
   ret << Promise.new{ret}
   ret
-end
-
-def pad(a,b)
-  [
-    Promise.new{ a.empty ? b.value : a.value[0].value },
-    Promise.new{ pad( Promise.new{ a.empty ? [] : a.value[1].value }, b) }
-  ]
 end
 
 # value -> value -> value

@@ -65,13 +65,13 @@ tests = <<'EOF'
 "as " | 'b -> "as "|('b;)
 'a | "as" -> 'a,!|"as"
 
-// [A],a (pad)
-1 pad 1 -> 1; pad 1
-1; pad 1 -> 1; pad 1
-1;; pad 1 -> 1;;!pad (1,)
-1 pad (1;) -> 1;,!pad (1;)
-1; pad (1;) -> 1;,!pad (1;)
-1;; pad (1;) -> 1;; pad (1;)
+// [A],a (none for now, add test back when said op type exists again todo)
+// 1 pad 1 -> 1; pad 1
+// 1; pad 1 -> 1; pad 1
+// 1;; pad 1 -> 1;;!pad (1,)
+// 1 pad (1;) -> 1;,!pad (1;)
+// 1; pad (1;) -> 1;,!pad (1;)
+// 1;; pad (1;) -> 1;; pad (1;)
 
 // [A],[A] (append, promote preferred)
 1 1 -> 1;‿(1;)
@@ -135,13 +135,13 @@ tests = <<'EOF'
 ();;=(1;;) -> nil;;!=(1;;,)
 
 
-// [A],A (pad)
-() pad 1 -> nil pad 1
-() pad (1;) -> nil pad (1;)
-(); pad 1 -> nil;!pad (1,)
-// todo this is zipping into nil, should be error?
-1 pad () -> 1;,!pad nil
-1;; pad () -> 1;; pad nil
+// [A],A (pad) todo no such op
+// () pad 1 -> nil pad 1
+// () pad (1;) -> nil pad (1;)
+// (); pad 1 -> nil;!pad (1,)
+// // todo this is zipping into nil, should be error?
+// 1 pad () -> 1;,!pad nil
+// 1;; pad () -> 1;; pad nil
 
 // [A],[A] (append)
 1 () -> 1;‿nil

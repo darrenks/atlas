@@ -343,9 +343,13 @@ There is a solution though! We can define a function that adds an infinite list 
              then (v,[])
              else (head a,tail a)
 
+TODO update this with 1 arg version
+
 This function pads a list by adding an infinite list of a repeating element after it (e.g. `pad [1,2,3,4] 0` is `[1,2,3,4,0,0,0,...]`. But critically it starts by returning a list rather than first checking which case to return.
 
 Notice that it always returns `h : pad t v`, which is a non empty list, regardless of if `a` was empty or not, thus nothing needs to be computed when asked if the result is empty. It is only the contents of said list that depend on if `a` was empty. This is definitely not the most intuitive way to define this function, but it is the only way that is sufficiently lazy.
+
+TODO update this, pad no longer needed in Atlas, at least for most use cases. Currently only faith is used in zipn, but could be used anywhere empty check is used.
 
 Now we can write:
 
@@ -355,7 +359,7 @@ Now we can write:
 And it works! Atlas has a builtin for pad, it is `pad` so we could just write:
 
     a = 1 2 3 4
-    b = b pad 0 tail + a
+    b = b 0 tail + a
     ──────────────────────────────────
     10 9 7 4
 
@@ -365,7 +369,7 @@ Folds are extremely powerful (see [expressiveness of fold](https://www.cs.nott.a
 
 Since we have seen how to foldr, we can use it to get the nth state or last state. Just foldr, taking the first element where index=n. We do need an `if` statement to do that, which Atlas has, but `if` could have been done as follows. Let's call our condition `c` which is a True if non empty and False if empty. And we want `a` if True and `b` if False. We can then write:
 
-    head ((a ()) const c)  pad  b
+    head ((a ()) const c)  b
 
 It works by replacing `c` with `a` if non empty, appending `b` and then taking the first. If `c` was empty then the result is `b` otherwise it is `a`.
 
@@ -373,7 +377,7 @@ Example:
 
     "true"; const ""  pad  "false" head
     "true"; const "asdf"  pad  "false" head
-    ──────────────────────────────────
+    ----------- todo turn this into real code again ------
     false
     true
 

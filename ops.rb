@@ -179,11 +179,6 @@ OpsList = [
     type: Nil,
     impl: -> { [] }
   ), create_op(
-    name: "pad",
-    # Example: "abc" pad '_ -> "abc_____...
-    type: { [[A],A] => [A] },
-    impl: -> a,b { pad(a,b) }
-  ), create_op(
     name: "const",
     # Example: "abcd" const "123" -> "abc"
     type: { [A,B] => A },
