@@ -42,7 +42,7 @@ end
 class InfiniteLoopError < DynamicError
   attr_reader :source
   def initialize(message,source,token)
-    @source = source
+    @source = source # no longer needed, cleanup
     super(message,token)
   end
 end
