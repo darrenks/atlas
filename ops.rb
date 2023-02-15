@@ -165,7 +165,21 @@ OpsList = [
     # Test: 3=2 -> []
     sym: "=",
     type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { equal(a,b,ta) ? [a,Null] : [] } }
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } }
+  ), create_op(
+    name: "lessThan",
+    # Example: 4<5 -> [5]
+    # Test: 5<4 -> []
+    sym: "<",
+    type: { [A,A] => [A] },
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [b,Null] : [] } }
+  ), create_op(
+    name: "greaterThan",
+    # Example: 5>4 -> [4]
+    # Test: 4>5 -> []
+    sym: ">",
+    type: { [A,A] => [A] },
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [b,Null] : [] } }
   ), create_op(
     name: "len",
     # Example: "asdf"# -> 4
@@ -292,7 +306,7 @@ OpsList = [
   ), create_op(
     name: "seeVersion",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 13, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 14, 2023)") },
   ), create_op(
     name: "seeOpInfoTodo",
     # TodoExample: seeInfo + -> "add + Int Int->Int

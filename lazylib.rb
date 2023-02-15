@@ -135,13 +135,16 @@ def repeat(a)
 end
 
 # value -> value -> value
-def equal(a,b,t)
+def spaceship(a,b,t)
   if t.dim>0
-    return true if a.empty && b.empty
-    return false if a.empty || b.empty
-    return equal(a.value[0],b.value[0],t-1) && equal(a.value[1],b.value[1],t)
+    return 0 if a.empty && b.empty
+    return -1 if a.empty
+    return 1 if b.empty
+    s0 = spaceship(a.value[0],b.value[0],t-1)
+    return s0 if s0 != 0
+    return spaceship(a.value[1],b.value[1],t)
   else
-    a.value==b.value
+    a.value<=>b.value
   end
 end
 
