@@ -260,6 +260,12 @@ OpsList = [
     type: { [[A],Int] => [A] },
     impl: -> a,b { drop(b.value, a) }
   ), create_op(
+    name: "range",
+    # Example: 3 range 7 -> [3,4,5,6]
+    type: { [Int,Int] => [Int],
+            [Char,Char] => [Char] },
+    impl: -> a,b { range(a.value, b.value) }
+  ), create_op(
     name: "concat",
     sym: "_",
     # Example: "abc"; "123"_ -> "abc123"
@@ -306,7 +312,7 @@ OpsList = [
   ), create_op(
     name: "seeVersion",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 14, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 15, 2023)") },
   ), create_op(
     name: "seeOpInfoTodo",
     # TodoExample: seeInfo + -> "add + Int Int->Int

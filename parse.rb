@@ -1,18 +1,11 @@
-# old indentation idea:
-# higher indentation = higher parse depth
-# must go to orig parse depth for unindent
-
-# todo raw string indent idea
-# "asdf""1234" = ["asdf","1234"]
-
 def parse_line(tokens)
-  get_expr(tokens,:EOL,DelimiterPriority[:EOL])
+  get_expr(tokens,:EOL)
 end
 
-DelimiterPriority = {:EOL => 0, ')' => 1, '}' => 2}
+DelimiterPriority = {:EOL => 0, ')' => 1}
 LBrackets = {"(" => ")"}
 
-def get_expr(tokens,delimiter,priority)
+def get_expr(tokens,delimiter)
   last = lastop = implicit_var = nil
   loop {
     atom,t = get_atom(tokens)
@@ -38,17 +31,17 @@ def get_expr(tokens,delimiter,priority)
         last = make_op1(lastop, last)
       end
 
-      check_for_delimiter(t, delimiter, priority, tokens, last, implicit_var){|ret| return ret}
+      check_for_delimiter(t, delimiter, tokens, last, implicit_var){|ret| return ret}
       lastop = t
     end
   }
 end
 
 
-def check_for_delimiter(t, delimiter, priority, tokens, last, implicit_var)
+def check_for_delimiter(t, delimiter, tokens, last, implicit_var)
   if DelimiterPriority[t.str]
     if t.str != delimiter
-      if DelimiterPriority[t.str] >= priority
+      if DelimiterPriority[t.str] >= DelimiterPriority[delimiter]
         raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t
       else # e.g. token is eof, expecting )
         # return without consuming token
@@ -70,7 +63,7 @@ def get_atom(tokens)
   str = t.str
   [if LBrackets.include? t.str
     rb = LBrackets[t.str]
-    get_expr(tokens,rb,DelimiterPriority[rb])
+    get_expr(tokens,rb)
   elsif str[0] =~ /[0-9]/
     AST.new(create_int(str),[],t)
   elsif str[0] == '"'
