@@ -11,6 +11,8 @@ B = :b
 class FnType < Struct.new(:specs,:ret)
 end
 
+VecOf = Struct.new(:of)
+
 def create_specs(raw_spec)
   case raw_spec
   when Hash
@@ -27,7 +29,7 @@ def create_specs(raw_spec)
           end).map{|a_raw_arg| parse_raw_arg_spec(a_raw_arg) }
         FnType.new(specs,ret)
       }
-  when Type, Array
+  when Type, Array, VecOf
     [FnType.new([],raw_spec)]
   else
     raise "unknown fn type format"
@@ -41,6 +43,10 @@ def parse_raw_arg_spec(raw,list_nest_depth=0)
   when Array
     raise if raw.size != 1
     parse_raw_arg_spec(raw[0],list_nest_depth+1)
+  when VecOf
+    r=parse_raw_arg_spec(raw.of)
+    r.vec_of=true
+    r
   when Type
     ExactTypeSpec.new(raw.dim+list_nest_depth, raw)
   else
@@ -59,17 +65,19 @@ class ExactTypeSpec
   def check_base_elem(type)
     type.can_base_be(@type)
   end
+  def vec_of
+    false
+  end
 end
 
 class VarTypeSpec
   attr_reader :var_name
   attr_reader :extra_dims
+  attr_accessor :vec_of
   def initialize(var_name, extra_dims) # e.g. [[a]] is .new(:a, 2)
     @var_name = var_name
     @extra_dims = extra_dims
-  end
-  def check(type)
-    return true
+    @vec_of = false
   end
   def check_base_elem(type)
     return true
@@ -79,14 +87,15 @@ end
 def spec_to_type(spec, vars)
   case spec
   when Type
-    spec
+    TypeWithVecLevel.new(spec,0)
   when Array
     raise "cannot return multiple values for now" if spec.size != 1
-    spec_to_type(spec[0], vars) + 1
+    TypeWithVecLevel.new(spec_to_type(spec[0], vars).type + 1, 0)
   when Symbol
-    vars[spec]
+    TypeWithVecLevel.new(vars[spec],0)
+  when VecOf
+    TypeWithVecLevel.new(spec_to_type(spec.of, vars).type, 1)
   else
-    p spec
     unknown
   end
 end

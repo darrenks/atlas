@@ -120,26 +120,26 @@ How can we transpose a list defined as so?
     1 2 3 4
     5 6 7 8
 
-The first row will be the heads of each row of `a`, which can be gotten with `!head`
+The first row will be the heads of each row of `a`, which can be gotten with `.` and `head`
 
     a=(1 2 3 4); (5 6 7 8)
-    a !head
+    a.head
     ──────────────────────────────────
     1 5
 
-Note the `!` which means apply this function one level down. Just `head` would have given the first row. You may have been expecting a column of 1 5 instead of a row, but the heads of each element is just a 1D list and so it displays as such.
+Note the `.` which takes one arg and vectorizes it. Just `head` would have given the first row. You may have been expecting a column of 1 5 instead of a row, but the heads of each element is just a 1D list and so it displays as such.
 
 The next row should be the heads of the tails:
 
     a=(1 2 3 4); (5 6 7 8)
-    a !tail !head
+    a.tail head
     ──────────────────────────────────
     2 6
 
 And the next row would be the head of the tail of the tails. So essentially to transpose we want the heads of the repeated tailings of a 2D list, which we can do with circular programming of course.
 
     a=(1 2 3 4); (5 6 7 8)
-    tails= a (tails !!tail)
+    tails= a; (tails..tail%%)
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
@@ -156,7 +156,7 @@ And the next row would be the head of the tail of the tails. So essentially to t
 
 
 
-    2:17 (!!tail) tail on empty list (DynamicError)
+    2:19 (tail) tail on empty list (DynamicError)
 
 It is worth mentioning that this output is a 3D list, which is really just a list of list of a list, there is nothing special about nested lists, they are just lists. The separators for output are different however which makes them display nicely. You can also use the `show` op to display things like Haskell's show function.
 
@@ -167,7 +167,7 @@ Also note the error. It would occur for the same program in Haskell too:
 Anytime we see something of the form `var = something : var` it is defining an infinite list. This list clearly can't be infinite though, hence the error. It can be avoided by taking elements of length equal to the first row.
 
     a=(1 2 3 4); (5 6 7 8)
-    tails= a (tails !!tail)
+    tails= a; (tails..tail%%)
     tails const (a head)
     ──────────────────────────────────
     1 2 3 4
@@ -189,8 +189,8 @@ I have some ideas about creating an op to catch errors and truncate lists, but f
 To get the transpose now we just need to take the heads of each list:
 
     a=(1 2 3 4); (5 6 7 8)
-    tails= a (tails !!tail)
-    tails const (a head) !!head
+    tails= a; (tails..tail%%)
+    tails const (a head)..head
     ──────────────────────────────────
     1 5
     2 6
@@ -202,21 +202,21 @@ To get the transpose now we just need to take the heads of each list:
 We've seen how to do scanl on a list, but how does it work on 2D lists?
 
     a=(1 2 3 4); (5 6 7 8)
-    b=0, (a+b)
-    b !take 10
+    b=0,% (a+b%%)
+    b. take 10
     ──────────────────────────────────
     0 0 0 0 0 0 0 0 0 0
     1 2 3 4
     6 8 10 12
 
-The same way, we just have to start with a list of 0s instead of one. I did a `10 !take` purely for display purposes.
+The same way, we just have to start with a list of 0s instead of one. I did a `10 take` purely for display purposes.
 
 That was easy, but what if we wanted to do it on rows instead of columns without transposing twice?
 
 We can do a zipped append:
 
     a=(1 2 3 4); (5 6 7 8)
-    b=0,! (a+b)
+    b=0 (a+b)
     ──────────────────────────────────
     0 1 3 6 10
     0 5 11 18 26
@@ -274,9 +274,9 @@ The reason is because the `*` zips instead of doing a 'cartesian product'.
 
 Doing a cartesian product is easy though. We just replicate each list in a different dimension
 
-    1 2 3, take 3
+    1 2 3,% take 3
     " and "
-    1 2 3!, !take 3
+    1 2 3., take 3
     ──────────────────────────────────
     1 2 3
     1 2 3
@@ -288,7 +288,7 @@ Doing a cartesian product is easy though. We just replicate each list in a diffe
 
 `,` means repeat, but it could have been done using our circular technique for creating infinite lists. Also the `3 take` is not needed because each list will take the shorter of the two and they are replicated in different directions with the other dimension still being 3. So the final program can be:
 
-    1 2 3, * (1 2 3!,)
+    1 2 3, * (1 2 3.,)
     ──────────────────────────────────
     1 2 3
     2 4 6
@@ -298,7 +298,7 @@ This technique can do any degree of nesting with any dimension lists. Essentiall
 
 Note for code golfers, the left `,` isn't needed since it knows it needs a 2D list. We could have written
 
-    1 2 3*(1 2 3!,)
+    1 2 3*(1 2 3.,)
     ──────────────────────────────────
     1 2 3
     2 4 6
@@ -306,7 +306,7 @@ Note for code golfers, the left `,` isn't needed since it knows it needs a 2D li
 
 or even
 
-    1 2 3:a!,*a
+    1 2 3:a.,*a
     ──────────────────────────────────
     1 2 3
     2 4 6
@@ -472,8 +472,8 @@ In Atlas the solution is simple:
 
     nats=1 (nats+1)
     prisoners=nats take 40
-    gunHolders = prisoners (nats % 3 !and gunHolders concat)
-    gunHolders tail != gunHolders !and gunHolders concat head
+    gunHolders = prisoners (nats % 3 and gunHolders% concat)
+    gunHolders tail.=gunHolders and gunHolders% concat head
     ──────────────────────────────────
     28
 
@@ -481,7 +481,7 @@ The `!then gunHolders!; else $ concat` which is used twice may look scary but th
 
 I guess it is no surprise that a problem involving a circle has a nice circular programming solution. But calculating primes using the Sieve of Eratosthenesis is our next example. Typically the sieve is done on a fixed size, but if you use circular programming you can stream it.
 
-    (1+(1 (v2*v1):v1))%(2 (1+v2):v2)~+1 !& v2 _
+    (1+(1 (v2*v1):v1))%(2 (1+v2):v2)~+1 & v2%_
     ──────────────────────────────────
     2 3 5 7 11 13 17...
 

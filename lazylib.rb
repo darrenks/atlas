@@ -9,12 +9,16 @@ end
 
 def make_promises(node)
   return node.promise if node.promise
-  arg_types = node.replicated_args.map{|arg|arg.type-node.zip_level}
+  if node.op.no_zip
+    arg_types = node.args.map(&:type_with_vec_level)
+  else
+    arg_types = node.args.map(&:type)
+  end
   args = nil
   node.promise = Promise.new {
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
-  args = node.replicated_args.map{|arg| make_promises(arg) }
+  args = node.args.zip(node.rep_levels).map{|arg,rep_level| repn(make_promises(arg),rep_level) }
   node.promise
 end
 
@@ -139,6 +143,14 @@ def repeat(a)
   ret
 end
 
+def repn(a,n)
+  if n<=0
+    a
+  else
+    Promise.new{repeat(repn(a,n-1))}
+  end
+end
+
 # value -> value -> value
 def spaceship(a,b,t)
   if t.dim>0
@@ -172,14 +184,14 @@ def concat_map(v,rhs,first=true,&b)
   end
 end
 
-def inspect_value(t,value)
-  inspect_value_h(t,value,Null)
+def inspect_value(t,value,zip_level)
+  inspect_value_h(t,value,Null,zip_level)
 end
 
-def inspect_value_h(t,value,rhs)
+def inspect_value_h(t,value,rhs,zip_level)
   if t == Nil
     str_to_lazy_list("[]",rhs)
-  elsif t==Str
+  elsif t==Str && zip_level <= 0
     ['"'.ord.const, Promise.new{
       concat_map(value,Promise.new{str_to_lazy_list('"',rhs)}){|v,r,first|
        str_to_lazy_list(escape_str_char(v.value),r)
@@ -190,11 +202,11 @@ def inspect_value_h(t,value,rhs)
   elsif t==Char
     str_to_lazy_list(inspect_char(value.value),rhs)
   else #List
-    ["[".ord.const, Promise.new{
-      concat_map(value,Promise.new{str_to_lazy_list("]",rhs)}){|v,r,first|
+    [(zip_level>0?"<":"[").ord.const, Promise.new{
+      concat_map(value,Promise.new{str_to_lazy_list((zip_level>0?">":"]"),rhs)}){|v,r,first|
         first ?
-          inspect_value_h(t-1,v,r) :
-          [','.ord.const,Promise.new{inspect_value_h(t-1,v,r)}]
+          inspect_value_h(t-1,v,r,zip_level-1) :
+          [','.ord.const,Promise.new{inspect_value_h(t-1,v,r,zip_level-1)}]
       }
     }]
   end
@@ -206,7 +218,7 @@ end
 
 def to_string_h(t, value, orig_dim, rhs)
   if t == Int
-    inspect_value_h(t, value, rhs)
+    inspect_value_h(t, value, rhs, 0)
   elsif t == Char
     [value, rhs]
   else # List

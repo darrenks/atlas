@@ -54,12 +54,6 @@ tests = <<'EOF'
 1+2)+3 -> ParseError
 1+(2*3 -> 1+(2*3)
 
-// !3 -> ParseError todo
-// !"" -> ParseError # todo better error
-! -> ParseError
-
-//"ab"!"cd" -> todo
-
 // Identifiers ->
 AA -> A‿A
 aA -> aA

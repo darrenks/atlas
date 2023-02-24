@@ -1,14 +1,14 @@
 $ir_node_count = 0
 class IR < Struct.new(
     :op,                  # these set during construction
-    :orig_args,
+    :args,
     :from,
-    :type,                # this and rest calculted in infer
+    :type_with_vec_level, # this and rest calculted in infer
     :zip_level,
     :promise,
     :id,
     :used_by,
-    :replicated_args,
+    :rep_levels,
     :last_error,
     :type_updates, # for detecting inf type
     :from_var)
@@ -16,8 +16,11 @@ class IR < Struct.new(
     super(*args)
     self.id = $ir_node_count += 1
   end
-  def explicit_zip_level
-    from ? from.explicit_zip_level : 0
+  def type
+    type_with_vec_level.type
+  end
+  def vec_level
+    type_with_vec_level.vec_level
   end
 end
 
@@ -55,14 +58,14 @@ def check_missing(node,context,been)
     raise(ParseError.new("trivial self dependency is nonsensical", node.from.token)) if context[name] == node
     check_missing(context[name],context,been)
   else
-    node.orig_args.each{|arg| check_missing(arg, context,been) }
+    node.args.each{|arg| check_missing(arg, context,been) }
   end
 end
 
 def lookup_vars(node,context,been)
   return node if been[node.id]
   been[node.id]=true if node.op.name != "var"
-  node.orig_args.map!{|arg| lookup_vars(arg, context,been) }
+  node.args.map!{|arg| lookup_vars(arg, context,been) }
   if node.op.name == "var"
     lookup_vars(context[node.from.token.str],context,been)
   else
@@ -93,7 +96,7 @@ def dfs_helper(node,been,cycle_fn,post_fn)
     cycle_fn[node]
   else
     been[node.id] = Status::PROCESSING
-    node.orig_args.each{|arg|
+    node.args.each{|arg|
       dfs_helper(arg,been,cycle_fn,post_fn)
     }
     post_fn[node]

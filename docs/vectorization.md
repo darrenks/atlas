@@ -31,9 +31,9 @@ Explicit vectorizations are allowed too. For example head returns the first elem
     ──────────────────────────────────
     hi
 
-But we can explicitly vectorize this with `!` to instead return the head of each element. It could be used repeatedly with higher ranked lists.
+But we can explicitly vectorize this with `.` to instead return the head of each element. It could be used repeatedly with higher ranked lists.
 
-    "hi"; "there" !head
+    "hi"; "there". head
     ──────────────────────────────────
     ht
 
@@ -46,7 +46,7 @@ Since implicit vectorization always happens when the operation would be ill type
 
 Since the left arg of take (`(1 2)`) must be a scalar it vectorizes. Taking the first word from the first list of strings and two words from the second list of strings.
 
-    "hi"; "there"; ("next"; "frog") !take (1 2)
+    "hi"; "there"; ("next"; "frog").. take (1 2)
     ──────────────────────────────────
     h th
     n fr
@@ -65,7 +65,7 @@ Promotion and vectorization can both be done implicitly together. For example:
 
     'a [ (1 0) show
     ──────────────────────────────────
-    ["a",""]
+    <"a","">
 
 This is the same as the previous example. Here the ranks differ by 2, but it cannot vectorize twice because the type of append requires a list and the first arg is a scalar, so promotion is used.
 

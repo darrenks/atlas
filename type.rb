@@ -1,5 +1,6 @@
 Inf = 2**61 # for max_pos_dim
 Type = Struct.new(:dim,:base_elem) # base is :int, :char, or :nil
+TypeWithVecLevel = Struct.new(:type,:vec_level)
 
 class Type
   def inspect
@@ -28,8 +29,10 @@ class Type
   def can_base_be(rhs) # return true if self can be rhs
     return self.base_elem == rhs.base_elem
   end
-  def |(rhs)
-    Type.new([dim, rhs.dim].min, base_elem == rhs.base_elem ? base_elem : :nil)
+  def default_value
+    return [] if dim > 0
+    return 32 if is_char
+    return 0
   end
 end
 
@@ -37,4 +40,11 @@ Int = Type.new(0,:int)
 Char = Type.new(0,:char)
 Str = Type.new(1,:char)
 Nil = Type.new(1,:nil)
+NilV0 = TypeWithVecLevel.new(Nil,0)
+
+class TypeWithVecLevel
+  def inspect
+    "<"*vec_level + type.inspect + ">"*vec_level
+  end
+end
 

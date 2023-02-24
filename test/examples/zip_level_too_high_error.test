@@ -1,5 +1,5 @@
 [prog]
-3+(4!+3)
+3+(4.+3)
 
 [stderr]
-1:5 (!+) zip level too high (TypeError)
+1:5 (.) zip level too high (TypeError)

@@ -1,19 +1,14 @@
 require_relative "./type.rb"
 require_relative "./spec.rb"
 
-NO_PROMOTE = :a_no         #
-ALLOW_PROMOTE = :b_allow   # promote if only way to satisfy type spec
-SECOND_PROMOTE = :c_second # promote second only instead of replicate
-PREFER_PROMOTE = :d_prefer # promote instead of replicate
-
 MacroImpl = -> *args { raise "macro impl called" }
 
 class Op < Struct.new(
     :name,
     :sym, # optional
     :type,
-    :min_zip_level,
-    :promote,
+    :min_zip_level, # only const uses it, todo remove probably
+    :no_zip,
     :impl)
   def narg
     type ? type[0].specs.size : 0
@@ -25,7 +20,7 @@ def create_op(
   sym: nil,
   type: ,
   min_zip_level: 0,
-  promote: ALLOW_PROMOTE,
+  no_zip: false,
   poly_impl: nil, # impl that needs type info
   impl: nil,
   impl_with_loc: nil # impl that could throw, needs token location for err msgs
@@ -39,7 +34,7 @@ def create_op(
   else
     built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
-  Op.new(name,sym,type,min_zip_level,promote,built_impl)
+  Op.new(name,sym,type,min_zip_level,no_zip,built_impl)
 end
 
 def int_col(n)
@@ -60,11 +55,9 @@ OpsList = [
       raise DynamicError.new "head on empty list",from if a.empty
       a.value[0].value
     }},
-    promote: NO_PROMOTE,
   ), create_op(
     name: "last",
     sym: "]",
-    promote: NO_PROMOTE,
     # Example: "abc"] -> 'c
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
@@ -75,7 +68,6 @@ OpsList = [
     name: "tail",
     # Example: "abc" tail -> "bc"
     sym: ">",
-    promote: NO_PROMOTE,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "tail on empty list",from if a.empty
@@ -84,7 +76,6 @@ OpsList = [
     name: "init",
     # Example: "abc" init -> "ab"
     sym: "<",
-    promote: NO_PROMOTE,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "init on empty list",from if a.empty
@@ -156,8 +147,8 @@ OpsList = [
   ), create_op(
     name: "rep",
     sym: ",",
-    # Example: 2, -> [2,2,2,2,2...
-    type: { A => [A] },
+    # Example: 2, -> <2,2,2,2,2...
+    type: { A => VecOf.new(A) },
     impl: -> a { repeat(a) }
   ), create_op(
     name: "eq",
@@ -184,7 +175,6 @@ OpsList = [
     name: "len",
     # Example: "asdf"# -> 4
     sym: "#",
-    promote: NO_PROMOTE,
     type: { [A] => Int },
     impl: -> a { len(a) }
   ), create_op(
@@ -194,17 +184,17 @@ OpsList = [
     impl: -> { [] }
   ), create_op(
     name: "const",
-    # Example: "abcd" const "123" -> "abc"
+    # Example: "abcd" const "123"% -> "abc"
     type: { [A,B] => A },
     min_zip_level: 1,
     impl: -> a,b { a.value }
   ), create_op(
     name: "and",
     sym: "&",
-    # Example: 1&2 -> [2]
-    # Test: 0&2 -> []
-    type: { [A,B] => [B] },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? [b,Null] : [] }}
+    # Example: 1&2 -> 2
+    # Test: 0&2 -> 0
+    type: { [A,B] => B },
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
   ), create_op(
     name: "or",
     sym: "|",
@@ -212,7 +202,6 @@ OpsList = [
     # Test: 0|2 -> 2
     type: { [A,A] => A },
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? a.value : b.value }},
-    promote: SECOND_PROMOTE
   ), create_op(
     name: "input",
     sym: "$",
@@ -227,7 +216,8 @@ OpsList = [
     # Test: 'a tostring -> "a"
     # Test: 2; 1 tostring -> "2 1"
     # Test: 2; 1; (3; 4) tostring -> "2 1\n3 4\n"
-    poly_impl: -> t { -> a { to_string(t,a) } }
+    no_zip: true,
+    poly_impl: -> t { -> a { to_string(t.type+t.vec_level,a) } }
   ), create_op(
     name: "show",
     sym: "`",
@@ -236,7 +226,8 @@ OpsList = [
     # Test: "a"` -> "\"a\""
     # Test: 'a` -> "'a"
     # Test: 1;` -> "[1]"
-    poly_impl: -> t { -> a { inspect_value(t,a) } }
+    no_zip: true,
+    poly_impl: -> t { -> a { inspect_value(t.type+t.vec_level,a,t.vec_level) } }
   ), create_op(
     name: "single",
     sym: ";",
@@ -272,12 +263,30 @@ OpsList = [
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
   ), create_op(
-    name: "append",
+    name: "conjoin",
     sym: " ",
-    # Example: "abc" "123" -> "abc123"
+    # Example: "abc" "123" -> ["abc","123"]
     type: { [[A],[A]] => [A] },
-    impl: -> a,b { append(a,b) },
-    promote: PREFER_PROMOTE,
+    no_zip: true,
+    impl: -> a,b { append(a,b) }
+  ), create_op(
+    name: "append",
+    sym: "_",
+    # Example: "abc"_"123" -> "abc123"
+    type: { [[A],[A]] => [A] },
+    impl: -> a,b { append(a,b) }
+  ), create_op(
+    name: "cons",
+    sym: "`",
+    # Example: "abc"`'d -> "dabc"
+    type: { [[A],A] => [A] },
+    impl: -> a,b { [b,a] }
+  ), create_op(
+    name: "snoc",
+    sym: ",",
+    # Example: "abc",'d -> "abcd"
+    type: { [[A],A] => [A] },
+    impl: -> a,b { append(a,[b,Null].const) }
   ), create_op(
     name: "transpose",
     sym: "\\",
@@ -285,6 +294,18 @@ OpsList = [
     # Test: "abc"; "1234"\ -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
+  ), create_op(
+    name: "unzip",
+    sym: "%",
+    # Example: 1 2+3% -> [4,5]
+    type: { VecOf.new(A) => [A] },
+    impl: -> a { a.value },
+  ), create_op(
+    name: "zip",
+    sym: ".",
+    # Example: 1 2 3. -> <1,2,3>
+    type: { [A] => VecOf.new(A) },
+    impl: -> a { a.value },
 
   # Repl/Debug ops
   ), create_op(
@@ -293,26 +314,18 @@ OpsList = [
     # Test: "hi" seeType -> "[Char]"
     # Test: () seeType -> "Nil"
     type: { A => Str },
+    no_zip: true,
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
-  ), create_op(
-    name: "seeParse",
-    # Example: 1 2 3% 4. seeParse -> "1‿2‿3%‿4."
-    type: { A => Str },
-    impl_with_loc: -> from { -> a { str_to_lazy_list(from.from.orig.args[0].to_infix) }},
-  ), create_op(
-    name: "seeMacros",
-    # Example: 1 2 3% 4. seeMacros -> "1‿2‿3!‿(4,)"
-    type: { A => Str },
-    impl_with_loc: -> from { -> a { str_to_lazy_list(from.from.args[0].to_infix) }},
   ), create_op(
     name: "seeInference",
     # Example: 1 ~2 seeInference -> "1;‿(2~;)"
     type: { A => Str },
-    impl_with_loc: -> from { -> a { str_to_lazy_list(from.replicated_args[0].to_infix) }},
+    no_zip: true,
+    impl_with_loc: -> from { -> a { str_to_lazy_list(from.args[0].to_infix) }},
   ), create_op(
     name: "seeVersion",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 15, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 26, 2023)") },
   ), create_op(
     name: "seeOpInfoTodo",
     # TodoExample: seeInfo + -> "add + Int Int->Int
@@ -332,18 +345,6 @@ OpsList = [
     name: "let",
     sym: ":",
     type: { [A,A] => [A] },
-    impl: MacroImpl,
-  ), create_op(
-    name: "mapVar",
-    # Example: "hi"; "there"%[ "ab". -> ["hab","tab"]
-    sym: "%",
-    type: { [A] => A },
-    impl: MacroImpl,
-  ), create_op(
-    name: "map",
-    # Example: "hi"; "there"%[ "ab". -> ["hab","tab"]
-    sym: ".", # todo change it to ! before a delimiter
-    type: { [A] => [A] },
     impl: MacroImpl,
   ), create_op(
     name: "push",
@@ -394,8 +395,6 @@ OpsList.each{|op|
   AllOps[op.name] = AllOps[op.sym] = op
 }
 AllOps[""]=Ops2[""]=Ops2[" "]
-RepOp = AllOps["rep"]
-PromoteOp = AllOps["single"]
 NilOp = AllOps['nil']
 Var = Op.new("var")
 
