@@ -9,9 +9,13 @@ B = :b
 # conditional type can be a type or a type qualifier of a type
 # type can be an actual type or a list of a type (recursively) or a type var e.g. :a
 class FnType < Struct.new(:specs,:ret)
+  def inspect
+    specs.map(&:inspect)*" "+" -> "+parse_raw_arg_spec(ret).inspect
+  end
 end
 
-VecOf = Struct.new(:of)
+class VecOf < Struct.new(:of)
+end
 
 def create_specs(raw_spec)
   case raw_spec
@@ -29,7 +33,7 @@ def create_specs(raw_spec)
           end).map{|a_raw_arg| parse_raw_arg_spec(a_raw_arg) }
         FnType.new(specs,ret)
       }
-  when Type, Array, VecOf
+  when Type, Array, VecOf, Symbol
     [FnType.new([],raw_spec)]
   else
     raise "unknown fn type format"
@@ -68,6 +72,9 @@ class ExactTypeSpec
   def vec_of
     false
   end
+  def inspect
+    type.inspect
+  end
 end
 
 class VarTypeSpec
@@ -81,6 +88,9 @@ class VarTypeSpec
   end
   def check_base_elem(type)
     return true
+  end
+  def inspect
+    (vec_of ? "<" : "")+"["*extra_dims+var_name.to_s+"]"*extra_dims+(vec_of ? ">" : "")
   end
 end
 

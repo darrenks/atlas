@@ -7,11 +7,28 @@ class Op < Struct.new(
     :name,
     :sym, # optional
     :type,
+    :examples,
+    :desc,
     :min_zip_level, # only const uses it, todo remove probably
     :no_zip,
     :impl)
   def narg
     type ? type[0].specs.size : 0
+  end
+  def help
+    puts "#{name} #{sym}"
+    puts desc if desc
+    type.each{|t|
+      puts t.inspect.gsub('->','→').gsub('[Char]','Str')
+    }
+    examples.each{|example|
+      puts example.gsub('->','→')
+    }
+    misc = []
+    misc += ["no_zip=true"] if no_zip
+    misc += ["min_zip_level=#{min_zip_level}"] if min_zip_level>0
+    puts misc*", " if !misc.empty?
+    puts
   end
 end
 
@@ -19,6 +36,10 @@ def create_op(
   name: ,
   sym: nil,
   type: ,
+  example: nil,
+  example2: nil,
+  example3: nil,
+  desc: nil,
   min_zip_level: 0,
   no_zip: false,
   poly_impl: nil, # impl that needs type info
@@ -34,7 +55,11 @@ def create_op(
   else
     built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
-  Op.new(name,sym,type,min_zip_level,no_zip,built_impl)
+  examples = []
+  examples << example if example
+  examples << example2 if example2
+  examples << example3 if example3
+  Op.new(name,sym,type,examples,desc,min_zip_level,no_zip,built_impl)
 end
 
 def int_col(n)
@@ -49,7 +74,7 @@ OpsList = [
   create_op(
     name: "head",
     sym: "[",
-    # Example: "abc"[ -> 'a
+    example: '"abc"[ -> \'a',
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "head on empty list",from if a.empty
@@ -58,7 +83,7 @@ OpsList = [
   ), create_op(
     name: "last",
     sym: "]",
-    # Example: "abc"] -> 'c
+    example: '"abc"] -> \'c',
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "last on empty list",from if a.empty
@@ -66,7 +91,7 @@ OpsList = [
     }}
   ), create_op(
     name: "tail",
-    # Example: "abc" tail -> "bc"
+    example: '"abc"> -> "bc"',
     sym: ">",
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
@@ -74,7 +99,7 @@ OpsList = [
       a.value[1].value}}
   ), create_op(
     name: "init",
-    # Example: "abc" init -> "ab"
+    example: '"abc"< -> "ab"',
     sym: "<",
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
@@ -84,7 +109,8 @@ OpsList = [
   ), create_op(
     name: "add",
     sym: "+",
-    # Example: 1+2 -> 3
+    example: "1+2 -> 3",
+    example2: "'a+1 -> 'b",
     type: { [Int,Int] => Int,
             [Int,Char] => Char,
             [Char,Int] => Char },
@@ -92,20 +118,20 @@ OpsList = [
   ), create_op(
     name: "sub",
     sym: "-",
-    # Example: 5-3 -> 2
+    example: '5-3 -> 2',
     type: { [Int,Int] => Int,
             [Char,Int] => Char,
             [Char,Char] => Int },
     impl: -> a,b { a.value - b.value }
   ), create_op(
     name: "mult",
-    # Example: 2*3 -> 6
+    example: '2*3 -> 6',
     sym: "*",
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value * b.value }
   ), create_op(
     name: "div",
-    # Example: 7/3 -> 2
+    example: '7/3 -> 2',
     sym: "/",
     type: { [Int,Int] => Int },
     impl_with_loc: -> from { -> a,b {
@@ -117,7 +143,7 @@ OpsList = [
     }}
   ), create_op(
     name: "mod",
-    # Example: 7%3 -> 1
+    example: '7%3 -> 1',
     sym: "%",
     type: { [Int,Int] => Int },
     impl_with_loc: -> from { -> a,b {
@@ -132,13 +158,13 @@ OpsList = [
     sym: "~",
     type: { Int => Int,
             Str => [Int] },
+    example: '2~ -> -2',
+    example2: '"1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]',
     poly_impl: -> t {
       case t
       when Int
-        # Example: 2~ -> -2
         -> a { -a.value }
       when Str
-        # Example: "1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]
         -> a { split_non_digits(a) }
       else
         raise
@@ -147,58 +173,53 @@ OpsList = [
   ), create_op(
     name: "rep",
     sym: ",",
-    # Example: 2, -> <2,2,2,2,2...
+    example: '2, -> <2,2,2,2,2...',
     type: { A => VecOf.new(A) },
     impl: -> a { repeat(a) }
   ), create_op(
     name: "eq",
-    # Example: 3=3 -> [3]
+    example: '3=3 -> [3]',
     # Test: 3=2 -> []
     sym: "=",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } }
   ), create_op(
     name: "lessThan",
-    # Example: 4<5 -> [5]
+    example: '4<5 -> [5]',
     # Test: 5<4 -> []
     sym: "<",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [b,Null] : [] } }
   ), create_op(
     name: "greaterThan",
-    # Example: 5>4 -> [4]
+    example: '5>4 -> [4]',
     # Test: 4>5 -> []
     sym: ">",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [b,Null] : [] } }
   ), create_op(
     name: "len",
-    # Example: "asdf"# -> 4
+    example: '"asdf"# -> 4',
     sym: "#",
     type: { [A] => Int },
     impl: -> a { len(a) }
   ), create_op(
-    name: "nil",
-    # Example: nil -> []
-    type: Nil,
-    impl: -> { [] }
-  ), create_op(
     name: "const",
-    # Example: "abcd" const "123"% -> "abc"
+#     example: '"abcd" const "123"% -> "abcd"',
     type: { [A,B] => A },
     min_zip_level: 1,
     impl: -> a,b { a.value }
   ), create_op(
     name: "and",
     sym: "&",
-    # Example: 1&2 -> 2
+    example: '1&2 -> 2',
     # Test: 0&2 -> 0
     type: { [A,B] => B },
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
   ), create_op(
     name: "or",
     sym: "|",
-    # Example: 1|2 -> 1
+    example: '1|2 -> 1',
     # Test: 0|2 -> 2
     type: { [A,A] => A },
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? a.value : b.value }},
@@ -208,20 +229,9 @@ OpsList = [
     type: [Str],
     impl: -> { lines(ReadStdin) }
   ), create_op(
-    # Hidden
-    name: "tostring",
-    # Example: 12 tostring -> "12"
-    type: { A => Str },
-    # Test: "a" tostring -> "a"
-    # Test: 'a tostring -> "a"
-    # Test: 2; 1 tostring -> "2 1"
-    # Test: 2; 1; (3; 4) tostring -> "2 1\n3 4\n"
-    no_zip: true,
-    poly_impl: -> t { -> a { to_string(t.type+t.vec_level,a) } }
-  ), create_op(
     name: "show",
     sym: "`",
-    # Example: 12` -> "12"
+    example: '12` -> "12"',
     type: { A => Str },
     # Test: "a"` -> "\"a\""
     # Test: 'a` -> "'a"
@@ -231,13 +241,13 @@ OpsList = [
   ), create_op(
     name: "single",
     sym: ";",
-    # Example: 2; -> [2]
+    example: '2; -> [2]',
     type: { A => [A] },
     impl: -> a { [a,Null] }
   ), create_op(
     name: "take",
     sym: "[",
-    # Example: "abcd"[3 -> "abc"
+    example: '"abcd"[3 -> "abc"',
     # Test: "abc"[(2~) -> ""
     # Test: ""[2 -> ""
     type: { [[A],Int] => [A] },
@@ -245,27 +255,28 @@ OpsList = [
   ), create_op(
     name: "drop",
     sym: "]",
-    # Example: "abcd"]3 -> "d"
+    example: '"abcd"]3 -> "d"',
     # Test: "abc"](2~) -> "abc"
     # Test: ""]2 -> ""
     type: { [[A],Int] => [A] },
     impl: -> a,b { drop(b.value, a) }
   ), create_op(
     name: "range",
-    # Example: 3 range 7 -> [3,4,5,6]
+    example: '3 range 7 -> [3,4,5,6]',
     type: { [Int,Int] => [Int],
             [Char,Char] => [Char] },
     impl: -> a,b { range(a.value, b.value) }
   ), create_op(
     name: "concat",
     sym: "_",
-    # Example: "abc"; "123"_ -> "abc123"
+    example: '"abc"; "123"_ -> "abc123"',
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
   ), create_op(
     name: "implicit",
     sym: " ",
-    # Example: 1+1 3 -> 6
+    example: '1+1 3 -> 6',
+    example2: '1"a" -> "1a"',
     type: { [Int,Int] => Int,
             [Str,Str] => Str,
             [Str,Int] => Str,
@@ -284,45 +295,45 @@ OpsList = [
   ), create_op(
     name: "append",
     sym: "_",
-    # Example: "abc"_"123" -> "abc123"
+    example: '"abc"_"123" -> "abc123"',
     type: { [[A],[A]] => [A] },
     impl: -> a,b { append(a,b) }
   ), create_op(
     name: "cons",
     sym: "`",
-    # Example: "abc"`'d -> "dabc"
+    example: '"abc"`\'d -> "dabc"',
     type: { [[A],A] => [A] },
     impl: -> a,b { [b,a] }
   ), create_op(
     name: "snoc",
     sym: ",",
-    # Example: "abc",'d -> "abcd"
+    example: '"abc",\'d -> "abcd"',
     type: { [[A],A] => [A] },
     impl: -> a,b { append(a,[b,Null].const) }
   ), create_op(
     name: "transpose",
     sym: "\\",
-    # Example: "abc"; "123"\ -> ["a1","b2","c3"]
+    example: '"abc""123"\\ -> ["a1","b2","c3"]',
     # Test: "abc"; "1234"\ -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
   ), create_op(
-    name: "unzip",
+    name: "unvec",
     sym: "%",
-    # Example: 1 2+3% -> [4,5]
+    example: '1 2+3% -> [4,5]',
     type: { VecOf.new(A) => [A] },
     impl: -> a { a.value },
   ), create_op(
-    name: "zip",
+    name: "vectorize",
     sym: ".",
-    # Example: 1 2 3. -> <1,2,3>
+    example: '1 2 3. -> <1,2,3>',
     type: { [A] => VecOf.new(A) },
     impl: -> a { a.value },
 
   # Repl/Debug ops
   ), create_op(
     name: "type",
-    # Example: 1 type -> "Int"
+    example: '1 type -> "Int"',
     # Test: "hi" type -> "[Char]"
     # Test: () type -> "Nil"
     type: { A => Str },
@@ -334,46 +345,32 @@ OpsList = [
     impl: -> { str_to_lazy_list("Atlas Alpha (Feb 26, 2023)") },
   ), create_op(
     name: "reductions",
+    desc: "operation count so far",
     type: Int,
     impl: -> { $reductions },
 
   # Macros, type only used to specify number of args
   ), create_op(
     name: "let",
+    example: '5:a+a -> 10',
     sym: ":",
     type: { [A,A] => [A] },
     impl: MacroImpl,
   ), create_op(
     name: "push",
-    # Example: 5{*2+} -> 15
+    desc: "duplicate arg onto the stack",
+    example: '5{*2+} -> 15',
     sym: "{",
     type: { A => A },
     impl: MacroImpl,
   ), create_op(
     name: "pop",
-    # Example: 5{*2+} -> 15
+    desc: "pop last push arg from the stack",
+    example: '5{*2+} -> 15',
     sym: "}",
-    type: Int, # todo..
+    type: A,
     impl: MacroImpl,
   ),
-
-  create_op(
-    name: "col1",
-    type: [[Int]],
-    impl: int_col(0)
-  ), create_op(
-    name: "col2",
-    type: [[Int]],
-    impl: int_col(1)
-  ), create_op(
-    name: "col3",
-    type: [[Int]],
-    impl: int_col(2)
-  ), create_op(
-    name: "col4",
-    type: [[Int]],
-    impl: int_col(3)
-  )
 ]
 
 Ops0 = {}
@@ -394,6 +391,12 @@ OpsList.each{|op|
 AllOps[""]=Ops2[""]=Ops2[" "] # allow @ to flip the implicit op (todo pointless for multiplication)
 NilOp = AllOps['nil']
 Var = Op.new("var")
+ToString = create_op(
+  name: "tostring",
+  type: { A => Str },
+  no_zip: true,
+  poly_impl: -> t { -> a { to_string(t.type+t.vec_level,a) } }
+)
 
 def create_char(str)
   raise LexError.new("empty char") if str.size < 2

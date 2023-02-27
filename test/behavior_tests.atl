@@ -1,8 +1,8 @@
 // test atoms
-4 -> 4 : Int
+4 -> 4
 45 -> 45
 
-"" -> "" : [Char]
+"" -> ""
 "hi" -> "hi"
 "//" -> "//"
 "\n\\".; -> <"\n","\\">
@@ -60,7 +60,8 @@
 // leading 0 is separate number
 0-12 -> -12
 0/12 -> 0
-() -> [] : Nil
+() -> []
+() type -> "Nil"
 
 ()[ -> DynamicError
 ()] -> DynamicError

@@ -4,7 +4,14 @@ HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
-  stack=[AST.new(Ops0["col4"],[]),AST.new(Ops0["col3"],[]),AST.new(Ops0["col2"],[]),AST.new(Ops0["col1"],[])]
+
+  stack=3.downto(0).map{|i|
+    AST.new(create_op(
+      name: "col#{i}",
+      type: [[Int]],
+      impl: int_col(i)
+    ),[])
+  }
 
   line_no = 1
 
@@ -25,6 +32,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
       all = context.keys + AllOps.values.filter(&:name).map(&:name)
+      all << "ops"
       all.grep(/^#{Regexp.escape(s)}/)
     }
   end
@@ -48,6 +56,14 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       token_lines,line_no=lex(line, line_no)
       token_lines.each{|tokens| # each line
         next if tokens[0].str == :EOL
+        if tokens.size == 2 && (Ops1[tokens[0].str] || Ops2[tokens[0].str])
+          (op1=Ops1[tokens[0].str]) && op1.help
+          (op2=Ops2[tokens[0].str]) && op2.help
+          next
+        elsif tokens.size == 2 && tokens[0].str == "ops"
+          OpsList.each(&:help)
+          next
+        end
 
         if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_alpha
           assignment = true
@@ -73,7 +89,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
 end
 
 def printit(ir,output,step_limit)
-    ir = IR.new(Ops1['tostring'], [ir])
+    ir = IR.new(ToString, [ir])
     infer(ir)
     run(ir,output,10000,step_limit)
     output.puts if ir.args[0].type.string_dim < 2 # these already printed newline
