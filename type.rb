@@ -29,6 +29,11 @@ class Type
   def can_base_be(rhs) # return true if self can be rhs
     return self.base_elem == rhs.base_elem
   end
+  def data_can_be(rhs)
+    return self if rhs.is_nil && self.dim >= rhs.dim
+    return rhs if self.is_nil && rhs.dim >= self.dim
+    self==rhs ? self : false
+  end
   def default_value
     return [] if dim > 0
     return 32 if is_char

@@ -383,30 +383,11 @@ AllOps[""]=Ops2[""]=Ops2[" "]
 NilOp = AllOps['nil']
 Var = Op.new("var")
 
-def create_int(str)
-  create_op(
-    sym: str,
-    name: str,
-    type: Int,
-    impl: str.to_i
-  )
-end
-
-def create_str(str)
-  raise LexError.new("unterminated string") if str[-1] != '"'
-  create_op(
-    sym: str,
-    name: str,
-    type: Str,
-    impl: str_to_lazy_list(parse_str(str[1...-1]))
-  )
-end
-
 def create_char(str)
   raise LexError.new("empty char") if str.size < 2
   create_op(
-    sym: str,
-    name: str,
+    sym: "data",
+    name: "data",
     type: Char,
     impl: parse_char(str[1..-1]).ord
   )

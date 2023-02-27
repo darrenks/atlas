@@ -315,6 +315,16 @@ def to_lazy_list(l, rhs=Null, ind=0)
   ind >= l.size ? rhs.value : [l[ind].const, Promise.new{to_lazy_list(l, rhs, ind+1)}]
 end
 
+def rec_to_lazy_list(v)
+  to_lazy_list(v.map{|a|
+    if Array === a
+      rec_to_lazy_list(a)
+    else
+      a
+    end
+  })
+end
+
 def truthy(type, value)
   if type == Int
     value.value > 0
