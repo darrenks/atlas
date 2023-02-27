@@ -33,7 +33,7 @@ class Op < Struct.new(
 end
 
 def create_op(
-  name: ,
+  name: nil,
   sym: nil,
   type: ,
   example: nil,
@@ -44,14 +44,17 @@ def create_op(
   no_zip: false,
   poly_impl: nil, # impl that needs type info
   impl: nil,
-  impl_with_loc: nil # impl that could throw, needs token location for err msgs
+  impl_with_loc: nil, # impl that could throw, needs token location for err msgs
+  final_impl: nil
 )
   type = create_specs(type)
-  raise "exactly on of [poly_impl,impl,impl_with_loc] must be set" if [poly_impl,impl,impl_with_loc].compact.size != 1
+  raise "exactly on of [poly_impl,impl,impl_with_loc,final_impl] must be set" if [poly_impl,impl,impl_with_loc,final_impl].compact.size != 1
   if poly_impl
     built_impl = -> arg_types,from { poly_impl[*arg_types] }
   elsif impl_with_loc
     built_impl = -> arg_types,from { impl_with_loc[from] }
+  elsif final_impl
+    built_impl = final_impl
   else
     built_impl = -> arg_types,from { Proc===impl ? impl : lambda { impl } }
   end
@@ -156,20 +159,15 @@ OpsList = [
   ), create_op(
     name: "neg",
     sym: "~",
-    type: { Int => Int,
-            Str => [Int] },
+    type: { Int => Int },
     example: '2~ -> -2',
-    example2: '"1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]',
-    poly_impl: -> t {
-      case t
-      when Int
-        -> a { -a.value }
-      when Str
-        -> a { split_non_digits(a) }
-      else
-        raise
-      end
-    }
+    impl: -> a { -a.value }
+  ), create_op(
+    name: "read",
+    sym: "~",
+    type: { Str => [Int] },
+    example: '"1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]',
+    impl: -> a { split_non_digits(a) }
   ), create_op(
     name: "rep",
     sym: ",",
@@ -377,15 +375,45 @@ Ops0 = {}
 Ops1 = {}
 Ops2 = {}
 AllOps = {}
+
+def addOp(table,op)
+  if (existing=table[op.sym])
+    combined_type = {}
+    op.type.each{|s|combined_type[s.orig_key]=s.orig_val}
+    existing.type.each{|s|combined_type[s.orig_key]=s.orig_val}
+    combined_impl = -> arg_types,from {
+      if existing.type.any?{|fn_type|
+        arg_types.zip(fn_type.specs).all?{|type,spec|
+          spec.check_base_elem(type)
+        }
+      }
+        existing.impl[arg_types,from]
+      else
+        op.impl[arg_types,from]
+      end
+    }
+    combined = create_op(
+      sym: op.sym,
+      type: combined_type,
+      final_impl: combined_impl,
+    )
+    table[op.sym] = combined
+  else
+    table[op.sym] = op
+  end
+  table[op.name] = op
+end
+
 OpsList.each{|op|
   ops = case op.narg
   when 0
-    Ops0[op.name] = Ops0[op.sym] = op
+    addOp(Ops0, op)
   when 1
-    Ops1[op.name] = Ops1[op.sym] = op
+    addOp(Ops1, op)
   when 2
-    Ops2[op.name] = Ops2[op.sym] = op
+    addOp(Ops2, op)
   else; error; end
+  raise "name conflict #{op.name}" if AllOps.include? op.name
   AllOps[op.name] = AllOps[op.sym] = op
 }
 AllOps[""]=Ops2[""]=Ops2[" "] # allow @ to flip the implicit op (todo pointless for multiplication)

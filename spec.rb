@@ -8,7 +8,7 @@ B = :b
 # from can be a list for multiple args or a conditional type
 # conditional type can be a type or a type qualifier of a type
 # type can be an actual type or a list of a type (recursively) or a type var e.g. :a
-class FnType < Struct.new(:specs,:ret)
+class FnType < Struct.new(:specs,:ret,:orig_key,:orig_val)
   def inspect
     specs.map(&:inspect)*" "+" -> "+parse_raw_arg_spec(ret).inspect
   end
@@ -31,10 +31,10 @@ def create_specs(raw_spec)
           else
             [raw_arg]
           end).map{|a_raw_arg| parse_raw_arg_spec(a_raw_arg) }
-        FnType.new(specs,ret)
+        FnType.new(specs,ret,raw_arg,ret)
       }
   when Type, Array, VecOf, Symbol
-    [FnType.new([],raw_spec)]
+    [FnType.new([],raw_spec,[],raw_spec)]
   else
     raise "unknown fn type format"
   end

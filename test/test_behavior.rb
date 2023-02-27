@@ -7,7 +7,7 @@ example_regex = /^ *# ?Test: */
 example_tests = File.read("ops.rb").lines.grep(example_regex).map{|line|line.gsub(example_regex,"")}
 (behavior_tests + example_tests).map{|test|
   (line+=1; next) if test.strip == "" || test =~ /^\/\//
-  check_example(test,line){
+  check_example(test){
     "behavior test line %d" % [line]
   }
   pass += 1

@@ -2,18 +2,19 @@
 .
 %
 add
+~
 [stdout]
 vectorize .
 [a] → <a>
 1 2 3. → <1,2,3>
 
-unvec %
-<a> → [a]
-1 2+3% → [4,5]
-
 mod %
 Int Int → Int
 7%3 → 1
+
+unvec %
+<a> → [a]
+1 2+3% → [4,5]
 
 add +
 Int Int → Int
@@ -21,3 +22,11 @@ Int Char → Char
 Char Int → Char
 1+2 → 3
 'a+1 → 'b
+
+neg ~
+Int → Int
+2~ → -2
+
+read ~
+Str → Int
+"1 2 -3 4a5 - -6 --7" ~ → [1,2,-3,4,5,-6,7]
