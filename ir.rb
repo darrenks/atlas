@@ -9,6 +9,7 @@ class IR < Struct.new(
     :id,
     :used_by,
     :rep_levels,
+    :promote_levels,
     :last_error,
     :type_updates, # for detecting inf type
     :from_var)

@@ -46,6 +46,19 @@
 1@2 -> 2
 "a"@"b" -> "ba"
 
+// Test replication
+"abc""def""xyz"[(1 2 3) -> <["abc"],["abc","def"],["abc","def","xyz"]>
+
+// Test promotion
+5\ -> [[5]]
+5. -> <5>
+'5 read -> [5]
+1'a -> "1a"
+
+/// Test no promotion
+5[ -> AtlasTypeError
+
+
 // disallowed since not needed
 // '\" -> '\"'
 // '\' -> '''

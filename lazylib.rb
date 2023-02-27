@@ -12,13 +12,13 @@ def make_promises(node)
   if node.op.no_zip
     arg_types = node.args.map(&:type_with_vec_level)
   else
-    arg_types = node.args.map{|a|a.type + a.vec_level - node.zip_level}
+    arg_types = node.args.zip(0..).map{|a,i|a.type + a.vec_level - node.zip_level + node.rep_levels[i] + node.promote_levels[i]}
   end
   args = nil
   node.promise = Promise.new {
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
-  args = node.args.zip(node.rep_levels).map{|arg,rep_level| repn(make_promises(arg),rep_level) }
+  args = node.args.zip(0..).map{|arg,i| repn(promoten(make_promises(arg),node.promote_levels[i]),node.rep_levels[i]) }
   node.promise
 end
 
@@ -148,6 +148,14 @@ def repn(a,n)
     a
   else
     Promise.new{repeat(repn(a,n-1))}
+  end
+end
+
+def promoten(a,n)
+  if n<=0
+    a
+  else
+    Promise.new{[promoten(a,n-1),Null]}
   end
 end
 

@@ -3,6 +3,7 @@ ruby test/test_parse.rb
 ruby test/test_vec.rb
 ruby test/test_behavior.rb
 ruby test/test_examples.rb
+ruby test/test_op_examples.rb
 ruby test/test_docs.rb
 sh test/test_repl.sh
 ruby test/update_date.rb

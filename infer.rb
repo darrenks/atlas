@@ -83,9 +83,17 @@ def possible_types(node, fn_type)
   deficits = rank_deficits(arg_types, fn_type.specs, vars)
   t = spec_to_type(fn_type.ret, vars)
   rep_levels = [0]*nargs
+  promote_levels = [0]*nargs
   nargs.times{|i|
     if deficits[i]>0
-      node.last_error ||= AtlasTypeError.new "rank too low for arg #{i+1}",node if deficits[i] > vec_levels[i]
+      if deficits[i] > vec_levels[i]
+        if node.op.no_promote
+          node.last_error ||= AtlasTypeError.new "rank too low for arg #{i+1}",node
+        else
+          promote_levels[i] = deficits[i] - vec_levels[i]
+          deficits[i] = vec_levels[i]
+        end
+      end
     elsif deficits[i] < 0
       rep_levels[i] -= deficits[i]
     end
@@ -99,6 +107,7 @@ def possible_types(node, fn_type)
   }
   node.zip_level = zip_level
   node.rep_levels = rep_levels
+  node.promote_levels = promote_levels
 
   t.vec_level += zip_level
   t

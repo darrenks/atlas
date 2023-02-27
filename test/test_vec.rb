@@ -14,70 +14,70 @@ T = TypeWithVecLevel
 # => zip_level, rep_level, return type
 tests = {
   # [int]
-  [[T.new(Int+0,0)],{[Int]=>Int}] => nil,
-  [[T.new(Int+0,1)],{[Int]=>Int}] => [0,[0],"Int"],
-  [[T.new(Int+1,0)],{[Int]=>Int}] => [0,[0],"Int"],
-  [[T.new(Int+1,1)],{[Int]=>Int}] => [1,[0],"<Int>"],
-  [[T.new(Int+2,0)],{[Int]=>Int}] => [1,[0],"<Int>"],
-  [[T.new(Int+2,1)],{[Int]=>Int}] => [2,[0],"<<Int>>"],
+  [[T.new(Int+0,0)],{[Int]=>Int}] => [0,[0],[1],"Int"],
+  [[T.new(Int+0,1)],{[Int]=>Int}] => [0,[0],[0],"Int"],
+  [[T.new(Int+1,0)],{[Int]=>Int}] => [0,[0],[0],"Int"],
+  [[T.new(Int+1,1)],{[Int]=>Int}] => [1,[0],[0],"<Int>"],
+  [[T.new(Int+2,0)],{[Int]=>Int}] => [1,[0],[0],"<Int>"],
+  [[T.new(Int+2,1)],{[Int]=>Int}] => [2,[0],[0],"<<Int>>"],
 
   # [a]
-  [[T.new(Int+0,0)],{[A]=>A}] => nil,
-  [[T.new(Int+0,1)],{[A]=>A}] => [0,[0],"Int"],
-  [[T.new(Int+1,0)],{[A]=>A}] => [0,[0],"Int"],
-  [[T.new(Int+1,1)],{[A]=>A}] => [1,[0],"<Int>"],
-  [[T.new(Int+2,0)],{[A]=>A}] => [0,[0],"[Int]"],
-  [[T.new(Int+2,1)],{[A]=>A}] => [1,[0],"<[Int]>"],
+  [[T.new(Int+0,0)],{[A]=>A}] => [0,[0],[1],"Int"],
+  [[T.new(Int+0,1)],{[A]=>A}] => [0,[0],[0],"Int"],
+  [[T.new(Int+1,0)],{[A]=>A}] => [0,[0],[0],"Int"],
+  [[T.new(Int+1,1)],{[A]=>A}] => [1,[0],[0],"<Int>"],
+  [[T.new(Int+2,0)],{[A]=>A}] => [0,[0],[0],"[Int]"],
+  [[T.new(Int+2,1)],{[A]=>A}] => [1,[0],[0],"<[Int]>"],
 
   # [int] [int]
-  [[T.new(Int+0,0),T.new(Int+0,0)],{[[Int],[Int]]=>Int}] => nil,
-  [[T.new(Int+2,2),T.new(Int+0,0)],{[[Int],[Int]]=>Int}] => nil,
-  [[T.new(Int+1,0),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [0,[0,0],"Int"],
-  [[T.new(Int+2,0),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [1,[0,1],"<Int>"],
-  [[T.new(Int+1,1),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [1,[0,1],"<Int>"],
-  [[T.new(Int+2,1),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [2,[0,2],"<<Int>>"],
-  [[T.new(Int+1,1),T.new(Int+1,1)],{[[Int],[Int]]=>Int}] => [1,[0,0],"<Int>"],
-  [[T.new(Int+2,1),T.new(Int+1,1)],{[[Int],[Int]]=>Int}] => [2,[0,1],"<<Int>>"],
+  [[T.new(Int+0,0),T.new(Int+0,0)],{[[Int],[Int]]=>Int}] => [0,[0,0],[1,1],"Int"],
+  [[T.new(Int+2,2),T.new(Int+0,0)],{[[Int],[Int]]=>Int}] => [3,[0,3],[0,1],"<<<Int>>>"],
+  [[T.new(Int+1,0),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [0,[0,0],[0,0],"Int"],
+  [[T.new(Int+2,0),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [1,[0,1],[0,0],"<Int>"],
+  [[T.new(Int+1,1),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [1,[0,1],[0,0],"<Int>"],
+  [[T.new(Int+2,1),T.new(Int+1,0)],{[[Int],[Int]]=>Int}] => [2,[0,2],[0,0],"<<Int>>"],
+  [[T.new(Int+1,1),T.new(Int+1,1)],{[[Int],[Int]]=>Int}] => [1,[0,0],[0,0],"<Int>"],
+  [[T.new(Int+2,1),T.new(Int+1,1)],{[[Int],[Int]]=>Int}] => [2,[0,1],[0,0],"<<Int>>"],
 
   # [a] [int]
-  [[T.new(Int+1,0),T.new(Int+0,0)],{[[A],[Int]]=>A}] => nil,
-  [[T.new(Int+1,0),T.new(Int+1,0)],{[[A],[Int]]=>A}] => [0,[0,0],"Int"],
-  [[T.new(Int+1,1),T.new(Int+1,0)],{[[A],[Int]]=>A}] => [1,[0,1],"<Int>"],
-  [[T.new(Int+2,0),T.new(Int+1,0)],{[[A],[Int]]=>A}] => [0,[0,0],"[Int]"],
-  [[T.new(Int+1,0),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[1,0],"<Int>"],
-  [[T.new(Int+1,1),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[0,0],"<Int>"],
-  [[T.new(Int+2,0),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[1,0],"<[Int]>"],
-  [[T.new(Int+2,1),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[0,0],"<[Int]>"],
+  [[T.new(Int+1,0),T.new(Int+0,0)],{[[A],[Int]]=>A}] => [0,[0,0],[0,1],"Int"],
+  [[T.new(Int+1,0),T.new(Int+1,0)],{[[A],[Int]]=>A}] => [0,[0,0],[0,0],"Int"],
+  [[T.new(Int+1,1),T.new(Int+1,0)],{[[A],[Int]]=>A}] => [1,[0,1],[0,0],"<Int>"],
+  [[T.new(Int+2,0),T.new(Int+1,0)],{[[A],[Int]]=>A}] => [0,[0,0],[0,0],"[Int]"],
+  [[T.new(Int+1,0),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[1,0],[0,0],"<Int>"],
+  [[T.new(Int+1,1),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[0,0],[0,0],"<Int>"],
+  [[T.new(Int+2,0),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[1,0],[0,0],"<[Int]>"],
+  [[T.new(Int+2,1),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[0,0],[0,0],"<[Int]>"],
 
   # [a] [a]
-  [[T.new(Int+1,0),T.new(Int+0,0)],{[[A],[A]]=>A}] => nil,
-  [[T.new(Int+1,0),T.new(Int+1,0)],{[[A],[A]]=>A}] => [0,[0,0],"Int"],
-  [[T.new(Int+0,1),T.new(Int+1,0)],{[[A],[A]]=>A}] => [0,[0,0],"Int"],
-  [[T.new(Int+2,0),T.new(Int+1,0)],{[[A],[A]]=>A}] => [1,[0,1],"<Int>"],
-  [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[A]]=>A}] => [2,[0,2],"<<Int>>"],
-  [[T.new(Int+2,0),T.new(Int+2,0)],{[[A],[A]]=>A}] => [0,[0,0],"[Int]"],
-  [[T.new(Int+1,1),T.new(Int+2,0)],{[[A],[A]]=>A}] => [1,[0,0],"<Int>"],
-  [[T.new(Int+2,1),T.new(Int+2,0)],{[[A],[A]]=>A}] => [1,[0,1],"<[Int]>"],
+  [[T.new(Int+1,0),T.new(Int+0,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,1],"Int"],
+  [[T.new(Int+1,0),T.new(Int+1,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"Int"],
+  [[T.new(Int+0,1),T.new(Int+1,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"Int"],
+  [[T.new(Int+2,0),T.new(Int+1,0)],{[[A],[A]]=>A}] => [1,[0,1],[0,0],"<Int>"],
+  [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[A]]=>A}] => [2,[0,2],[0,0],"<<Int>>"],
+  [[T.new(Int+2,0),T.new(Int+2,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"[Int]"],
+  [[T.new(Int+1,1),T.new(Int+2,0)],{[[A],[A]]=>A}] => [1,[0,0],[0,0],"<Int>"],
+  [[T.new(Int+2,1),T.new(Int+2,0)],{[[A],[A]]=>A}] => [1,[0,1],[0,0],"<[Int]>"],
 
   # [a] [b]
-  [[T.new(Int+1,0),T.new(Int+0,0)],{[[A],[B]]=>A}] => nil,
-  [[T.new(Int+1,0),T.new(Int+1,0)],{[[A],[B]]=>A}] => [0,[0,0],"Int"],
-  [[T.new(Int+2,0),T.new(Int+1,0)],{[[A],[B]]=>A}] => [0,[0,0],"[Int]"],
-  [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[B]]=>A}] => [1,[0,1],"<[Int]>"],
-  [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[B]]=>A}] => [1,[0,1],"<[Int]>"],
-  [[T.new(Int+2,1),T.new(Int+1,1)],{[[A],[B]]=>A}] => [1,[0,0],"<[Int]>"],
+  [[T.new(Int+1,0),T.new(Int+0,0)],{[[A],[B]]=>A}] => [0,[0,0],[0,1],"Int"],
+  [[T.new(Int+1,0),T.new(Int+1,0)],{[[A],[B]]=>A}] => [0,[0,0],[0,0],"Int"],
+  [[T.new(Int+2,0),T.new(Int+1,0)],{[[A],[B]]=>A}] => [0,[0,0],[0,0],"[Int]"],
+  [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[B]]=>A}] => [1,[0,1],[0,0],"<[Int]>"],
+  [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[B]]=>A}] => [1,[0,1],[0,0],"<[Int]>"],
+  [[T.new(Int+2,1),T.new(Int+1,1)],{[[A],[B]]=>A}] => [1,[0,0],[0,0],"<[Int]>"],
 
   # Nil tests todo add different type unknown that serves this purpose and add the tests
-  [[T.new(Nil+0,0)],{Int=>Int}] => [0,[0],"Int"],
-  [[T.new(Nil+1,0)],{Int=>Int}] => [0,[0],"Int"],
+  [[T.new(Nil+0,0)],{Int=>Int}] => [0,[0],[0],"Int"],
+  [[T.new(Nil+1,0)],{Int=>Int}] => [0,[0],[0],"Int"],
 
   # [int]
-  [[T.new(Nil+0,0)],{[Int]=>Int}] => [0,[0],"Int"],
-  [[T.new(Nil+1,0)],{[Int]=>Int}] => [0,[0],"Int"],
-  [[T.new(Nil+0,1)],{[Int]=>Int}] => [1,[0],"<Int>"],
+  [[T.new(Nil+0,0)],{[Int]=>Int}] => [0,[0],[0],"Int"],
+  [[T.new(Nil+1,0)],{[Int]=>Int}] => [0,[0],[0],"Int"],
+  [[T.new(Nil+0,1)],{[Int]=>Int}] => [1,[0],[0],"<Int>"],
 
   # [a]
-  [[T.new(Nil-1,0)],{[A]=>A}] => nil,
+  [[T.new(Nil-1,0)],{[A]=>[A]}] => [0,[0],[1],"Nil"],
 }
 
 tests.each{|k,v|
@@ -105,10 +105,11 @@ tests.each{|k,v|
     STDERR.puts "found %p %p %p" % [t.inspect,node.zip_level,node.rep_levels]
     exit
   end
-  ez,er,et = *v
+  ez,er,ep,et = *v
   check(et,t.inspect,"type",k)
   check(ez,node.zip_level,"zip_level",k)
   check(er,node.rep_levels,"rep level",k)
+  check(ep,node.promote_levels,"promote level",k)
 }
 
 puts "PASS #{tests.size} vec tests"

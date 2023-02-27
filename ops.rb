@@ -9,6 +9,7 @@ class Op < Struct.new(
     :type,
     :examples,
     :desc,
+    :no_promote,
     :min_zip_level, # only const uses it, todo remove probably
     :no_zip,
     :impl)
@@ -39,6 +40,7 @@ def create_op(
   example: nil,
   example2: nil,
   example3: nil,
+  no_promote: false,
   desc: nil,
   min_zip_level: 0,
   no_zip: false,
@@ -62,7 +64,7 @@ def create_op(
   examples << example if example
   examples << example2 if example2
   examples << example3 if example3
-  Op.new(name,sym,type,examples,desc,min_zip_level,no_zip,built_impl)
+  Op.new(name,sym,type,examples,desc,no_promote,min_zip_level,no_zip,built_impl)
 end
 
 def int_col(n)
@@ -79,6 +81,7 @@ OpsList = [
     sym: "[",
     example: '"abc"[ -> \'a',
     type: { [A] => A },
+    no_promote: true,
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "head on empty list",from if a.empty
       a.value[0].value
@@ -86,6 +89,7 @@ OpsList = [
   ), create_op(
     name: "last",
     sym: "]",
+    no_promote: true,
     example: '"abc"] -> \'c',
     type: { [A] => A },
     impl_with_loc: -> from { -> a {
@@ -96,6 +100,7 @@ OpsList = [
     name: "tail",
     example: '"abc"> -> "bc"',
     sym: ">",
+    no_promote: true,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "tail on empty list",from if a.empty
@@ -104,6 +109,7 @@ OpsList = [
     name: "init",
     example: '"abc"< -> "ab"',
     sym: "<",
+    no_promote: true,
     type: { [A] => [A] },
     impl_with_loc: -> from { -> a {
       raise DynamicError.new "init on empty list",from if a.empty
@@ -267,6 +273,7 @@ OpsList = [
   ), create_op(
     name: "concat",
     sym: "_",
+    no_promote: true,
     example: '"abc"; "123"_ -> "abc123"',
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
@@ -340,7 +347,7 @@ OpsList = [
   ), create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 26, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 27, 2023)") },
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
