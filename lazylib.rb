@@ -195,6 +195,10 @@ def concat_map(v,rhs,first=true,&b)
   end
 end
 
+def concat(a)
+  concat_map(a,Null){|i,r,first|append(i,r)}
+end
+
 def inspect_value(t,value,zip_level)
   inspect_value_h(t,value,Null,zip_level)
 end

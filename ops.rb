@@ -139,6 +139,18 @@ OpsList = [
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value * b.value }
   ), create_op(
+    name: "pow",
+    example: '2^3 -> 8',
+    sym: "^",
+    type: { [Int,Int] => Int },
+    impl: -> a,b { a.value ** b.value } # todo use formula that will always be int
+  ), create_op(
+    name: "replicate",
+    example: '"ab"^3 -> "ababab"',
+    sym: "^",
+    type: { [Str,Int] => Str },
+    impl: -> a,b { concat(take(b.value,repeat(a).const).const) }
+  ), create_op(
     name: "div",
     example: '7/3 -> 2',
     sym: "/",
@@ -163,6 +175,11 @@ OpsList = [
       end
     }}
   ), create_op(
+    name: "not",
+    type: { A => Int },
+    example: '2 not -> 0',
+    poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }
+  ), create_op(
     name: "neg",
     sym: "~",
     type: { Int => Int },
@@ -175,7 +192,7 @@ OpsList = [
     example: '"1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]',
     impl: -> a { split_non_digits(a) }
   ), create_op(
-    name: "rep",
+    name: "repeat",
     sym: ",",
     example: '2, -> <2,2,2,2,2...',
     type: { A => VecOf.new(A) },
@@ -266,9 +283,9 @@ OpsList = [
     impl: -> a,b { drop(b.value, a) }
   ), create_op(
     name: "range",
-    example: '3 range 7 -> [3,4,5,6]',
-    type: { [Int,Int] => [Int],
-            [Char,Char] => [Char] },
+    example: '3 range 7 -> <3,4,5,6>',
+    type: { [Int,Int] => VecOf.new(Int),
+            [Char,Char] => VecOf.new(Char) },
     impl: -> a,b { range(a.value, b.value) }
   ), create_op(
     name: "concat",
@@ -276,7 +293,7 @@ OpsList = [
     no_promote: true,
     example: '"abc"; "123"_ -> "abc123"',
     type: { [[A]] => [A] },
-    impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
+    impl: -> a { concat(a) },
   ), create_op(
     name: "implicit",
     sym: " ",

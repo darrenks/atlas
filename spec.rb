@@ -62,6 +62,7 @@ end
 class ExactTypeSpec
   attr_reader :req_dim
   attr_reader :type
+  attr_accessor :vec_of
   def initialize(req_dim, type)
     @req_dim = req_dim
     @type = type
@@ -69,11 +70,8 @@ class ExactTypeSpec
   def check_base_elem(type)
     type.can_base_be(@type)
   end
-  def vec_of
-    false
-  end
   def inspect
-    type.inspect
+    (vec_of ? "<" : "")+type.inspect+(vec_of ? ">" : "")
   end
 end
 
