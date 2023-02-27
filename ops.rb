@@ -263,12 +263,24 @@ OpsList = [
     type: { [[A]] => [A] },
     impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
   ), create_op(
-    name: "conjoin",
-    sym: "‿",
-    # Example: "abc" "123" -> ["abc","123"]
-    type: { [[A],[A]] => [A] },
-    no_zip: true,
-    impl: -> a,b { append(a,b) }
+    name: "implicit",
+    sym: " ",
+    # Example: 1+1 3 -> 6
+    type: { [Int,Int] => Int,
+            [Str,Str] => Str,
+            [Str,Int] => Str,
+            [Int,Str] => Str },
+    poly_impl: -> ta,tb {
+      if ta==Int && tb==Int
+        -> a,b { a.value*b.value }
+      else
+        -> a,b {
+          a = inspect_value(Int,a,0).const if ta == Int
+          b = inspect_value(Int,b,0).const if tb == Int
+          append(a,b)
+        }
+      end
+    },
   ), create_op(
     name: "append",
     sym: "_",
@@ -379,7 +391,7 @@ OpsList.each{|op|
   else; error; end
   AllOps[op.name] = AllOps[op.sym] = op
 }
-AllOps[""]=Ops2[""]=Ops2[" "]
+AllOps[""]=Ops2[""]=Ops2[" "] # allow @ to flip the implicit op (todo pointless for multiplication)
 NilOp = AllOps['nil']
 Var = Op.new("var")
 

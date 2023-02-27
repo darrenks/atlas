@@ -35,7 +35,7 @@ def get_expr(tokens,delimiter)
         elsif DataForm === last && DataForm === atom && !was_first && (dtype=last.type.data_can_be(atom.type+1))
           last = DataForm.new(dtype, last.value << atom.value)
         else
-          last = AST.new(Ops2["‿"],[last,atom],t)
+          last = AST.new(Ops2[" "],[last,atom],t)
         end
       end
       lastop = nil

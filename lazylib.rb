@@ -12,7 +12,7 @@ def make_promises(node)
   if node.op.no_zip
     arg_types = node.args.map(&:type_with_vec_level)
   else
-    arg_types = node.args.map(&:type)
+    arg_types = node.args.map{|a|a.type + a.vec_level - node.zip_level}
   end
   args = nil
   node.promise = Promise.new {
