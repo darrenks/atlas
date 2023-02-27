@@ -67,7 +67,6 @@ EOF
 require "./repl.rb"
 
 def clear_volatile(ast)
-  ast.orig = nil
   ast.token = nil
   ast.op.impl = nil
   ast.op.type = nil
@@ -85,11 +84,11 @@ tests.lines.each{|test|
   o.strip!
   begin
     tokens,lines = lex(i)
-    found = parse_line(tokens[0])
+    found = parse_line(tokens[0],[])
     clear_volatile(found)
 
     tokens,lines = lex(o)
-    expected = parse_line(tokens[0])
+    expected = parse_line(tokens[0],[])
     clear_volatile(expected)
   rescue Exception
     found = $!

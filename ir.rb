@@ -44,7 +44,11 @@ def create_ir(node,context) # and register_vars
     set(node.args[1].token, node.args[0], context)
   else
     args=node.args.map{|arg|create_ir(arg,context)}
-    IR.new(node.op,args,node)
+    op = node.op.dup
+    if node.token.str =~ /^@/
+      op.impl = -> *static_args { -> a,b { node.op.impl[*static_args][b,a] } }
+    end
+    IR.new(op,args,node)
   end
 end
 

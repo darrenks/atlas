@@ -1,5 +1,8 @@
-def parse_line(tokens)
-  get_expr(tokens,:EOL)
+AST = Struct.new(:op,:args,:token)
+
+def parse_line(tokens, stack)
+  ast = get_expr(tokens,:EOL)
+  handle_push_pops(ast, stack)
 end
 
 DelimiterPriority = {:EOL => 0, ')' => 1}
@@ -31,30 +34,26 @@ def get_expr(tokens,delimiter)
         last = make_op1(lastop, last)
       end
 
-      check_for_delimiter(t, delimiter, tokens, last, implicit_var){|ret| return ret}
+      if DelimiterPriority[t.str]
+        if t.str != delimiter
+          if DelimiterPriority[t.str] >= DelimiterPriority[delimiter]
+            raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t
+          else # e.g. token is eof, expecting )
+            # return without consuming token
+            tokens.unshift t
+          end
+        end
+        raise ParseError.new("op applied to nothing",t) if implicit_var && !last
+        last ||= AST.new(NilOp,[],t)
+        if implicit_var
+          last = AST.new(Ops2['let'], [last, implicit_var], t)
+        end
+        return last
+      end
+
       lastop = t
     end
   }
-end
-
-
-def check_for_delimiter(t, delimiter, tokens, last, implicit_var)
-  if DelimiterPriority[t.str]
-    if t.str != delimiter
-      if DelimiterPriority[t.str] >= DelimiterPriority[delimiter]
-        raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t
-      else # e.g. token is eof, expecting )
-        # return without consuming token
-        tokens.unshift t
-      end
-    end
-    raise ParseError.new("op applied to nothing",t) if implicit_var && !last
-    last ||= AST.new(NilOp,[],t)
-    if implicit_var
-      last = AST.new(Ops2['let'], [last, implicit_var], t)
-    end
-    yield last
-  end
 end
 
 # return atom or nil
@@ -120,3 +119,23 @@ end
 def is_op(t)
   AllOps.include?(t.name) && !Ops0.include?(t.name)
 end
+
+def handle_push_pops(ast, stack)
+  ast.args[0] = handle_push_pops(ast.args[0], stack) if ast.args.size > 0
+  if ast.op.name == "push"
+    ast = AST.new(Ops2["let"], [ast.args[0], new_var], ast.token)
+    stack.push ast
+  elsif ast.op.name == "pop"
+    raise ParseError.new("pop on empty stack", ast) if stack.empty?
+    ast = stack.pop
+  end
+  ast.args[1] = handle_push_pops(ast.args[1], stack) if ast.args.size > 1
+
+  ast
+end
+
+$new_vars = 0
+def new_var
+  AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
+end
+

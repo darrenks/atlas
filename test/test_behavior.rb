@@ -4,8 +4,7 @@ require 'stringio'
 
 def doit(source,limit)
   tokens,lines = lex(source)
-  root = parse_line(tokens[0])
-  root = apply_macros(root,[])
+  root = parse_line(tokens[0],[])
   root_ir = to_ir(root,{})
   ir = IR.new(Ops1['show'],[root_ir])
   infer(ir)

@@ -52,13 +52,11 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
         if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_alpha
           assignment = true
           assertVar(tokens[0])
-          ast = parse_line(tokens[2..-1])
-          ast = apply_macros(ast, stack)
+          ast = parse_line(tokens[2..-1], stack)
           set(tokens[0], ast, context)
         else
           assignment = false
-          ast = parse_line(tokens)
-          ast = apply_macros(ast, stack)
+          ast = parse_line(tokens, stack)
           ir = to_ir(ast,context)
           printit(ir, output, step_limit)
         end
