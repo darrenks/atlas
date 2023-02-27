@@ -86,9 +86,12 @@ def possible_types(node, fn_type)
   promote_levels = [0]*nargs
   nargs.times{|i|
     if deficits[i]>0
-      if deficits[i] > vec_levels[i]
+      if deficits[i] > vec_levels[i] || node.args[i].op.name == "vectorize"
         if node.op.no_promote
           node.last_error ||= AtlasTypeError.new "rank too low for arg #{i+1}",node
+        elsif node.args[i].op.name == "vectorize"
+          promote_levels[i] = deficits[i]
+          deficits[i] = 0
         else
           promote_levels[i] = deficits[i] - vec_levels[i]
           deficits[i] = vec_levels[i]

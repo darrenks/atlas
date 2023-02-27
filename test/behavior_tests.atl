@@ -58,6 +58,8 @@
 /// Test no promotion
 5[ -> AtlasTypeError
 
+// Test promotion prefered when last op was vec
+"123".~ -> <[1],[2],[3]>
 
 // disallowed since not needed
 // '\" -> '\"'

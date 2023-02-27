@@ -18,7 +18,10 @@ def make_promises(node)
   node.promise = Promise.new {
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
-  args = node.args.zip(0..).map{|arg,i| repn(promoten(make_promises(arg),node.promote_levels[i]),node.rep_levels[i]) }
+  args = node.args.zip(0..).map{|arg,i|
+    promoted = Promise.new{zipn(arg.vec_level, [make_promises(arg)], ->a{promoten(a,node.promote_levels[i]).value})}
+    repn(promoted,node.rep_levels[i])
+  }
   node.promise
 end
 

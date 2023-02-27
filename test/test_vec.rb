@@ -86,6 +86,8 @@ tests.each{|k,v|
   node.args = arg_types.map{|a|
     r=IR.new
     r.type_with_vec_level = a
+    r.op = Op.new
+    r
   }
   node.op=Op.new
   fn_type = create_specs(spec)[0]
