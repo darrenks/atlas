@@ -100,7 +100,6 @@ def possible_types(node, fn_type)
   node.zip_level = zip_level
   node.rep_levels = rep_levels
 
-#   TypeWithVecLevel.new(t, zip_level + extra_vec)
   t.vec_level += zip_level
   t
 end

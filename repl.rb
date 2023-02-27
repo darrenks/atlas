@@ -25,10 +25,6 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
       all = context.keys + AllOps.values.filter(&:name).map(&:name)
-      if !s[/^se/] # hide debug commands
-        all -= all.grep(/^see/)
-        all << "see*"
-      end
       all.grep(/^#{Regexp.escape(s)}/)
     }
   end
@@ -80,7 +76,6 @@ end
 
 def printit(ir,output,step_limit)
     ir = IR.new(Ops1['tostring'], [ir])
-#     puts to_infix(str_ast)
     infer(ir)
     run(ir,output,10000,step_limit)
     output.puts if ir.args[0].type.string_dim < 2 # these already printed newline

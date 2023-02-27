@@ -26,7 +26,6 @@ end
 
 # creates an IR from an AST, replacing vars
 def to_ir(ast,context)
-#   puts ast.to_infix
   ir = create_ir(ast,context)
   check_missing(ir,context,{})
   ir = lookup_vars(ir,context,{})

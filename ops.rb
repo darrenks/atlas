@@ -264,7 +264,7 @@ OpsList = [
     impl: -> a { concat_map(a,Null){|i,r,first|append(i,r)} },
   ), create_op(
     name: "conjoin",
-    sym: " ",
+    sym: "‿",
     # Example: "abc" "123" -> ["abc","123"]
     type: { [[A],[A]] => [A] },
     no_zip: true,
@@ -309,34 +309,19 @@ OpsList = [
 
   # Repl/Debug ops
   ), create_op(
-    name: "seeType",
-    # Example: 1 seeType -> "Int"
-    # Test: "hi" seeType -> "[Char]"
-    # Test: () seeType -> "Nil"
+    name: "type",
+    # Example: 1 type -> "Int"
+    # Test: "hi" type -> "[Char]"
+    # Test: () type -> "Nil"
     type: { A => Str },
     no_zip: true,
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
   ), create_op(
-    name: "seeInference",
-    # Example: 1 ~2 seeInference -> "1;‿(2~;)"
-    type: { A => Str },
-    no_zip: true,
-    impl_with_loc: -> from { -> a { str_to_lazy_list(from.args[0].to_infix) }},
-  ), create_op(
-    name: "seeVersion",
+    name: "version",
     type: Str,
     impl: -> { str_to_lazy_list("Atlas Alpha (Feb 26, 2023)") },
   ), create_op(
-    name: "seeOpInfoTodo",
-    # TodoExample: seeInfo + -> "add + Int Int->Int
-    type: Str,
-    impl: -> { str_to_lazy_list("Todo") },
-  ), create_op(
-    name: "seeTableTodo",
-    type: Str,
-    impl: -> { str_to_lazy_list("Todo") },
-  ), create_op(
-    name: "seeStepCount",
+    name: "reductions",
     type: Int,
     impl: -> { $reductions },
 

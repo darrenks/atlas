@@ -22,7 +22,7 @@ def get_expr(tokens,delimiter)
       elsif !last #first atom
         last = atom
       else # implict cons
-        last = AST.new(Ops2[" "],[last,atom],t)
+        last = AST.new(Ops2["‿"],[last,atom],t)
       end
       lastop = nil
     else # not an atom
