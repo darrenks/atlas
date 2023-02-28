@@ -1,5 +1,12 @@
+# general type vars
 A = :a
 B = :b
+
+# type var of base elem char
+Achar = :Achar
+
+# type var of base elem int
+Aint = :Aint
 
 # type spec ================================
 # { from => to } or just "to" if no args

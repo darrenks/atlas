@@ -227,6 +227,18 @@ def inspect_value_h(t,value,rhs,zip_level)
   end
 end
 
+def coerce(ta, a, tb)
+  return a.value if ta==tb
+  case [ta,tb]
+  when [Int,Str]
+    return str_to_lazy_list(a.value.to_s)
+  when [Str,Int]
+    return a.value
+  else
+    raise "coerce of %p %p not supported"%[ta,tb]
+  end
+end
+
 def to_string(t, value)
   to_string_h(t,value,t.string_dim, Null)
 end

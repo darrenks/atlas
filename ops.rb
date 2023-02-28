@@ -26,9 +26,8 @@ class Op < Struct.new(
       puts example.gsub('->','→')
     }
     misc = []
-    misc += ["no_zip=true"] if no_zip
-    misc += ["min_zip_level=#{min_zip_level}"] if min_zip_level>0
-    puts misc*", " if !misc.empty?
+    puts "no_zip=true" if no_zip
+    puts "min_zip_level=#{min_zip_level}" if min_zip_level>0
     puts
   end
 end
@@ -241,9 +240,17 @@ OpsList = [
     name: "or",
     sym: "|",
     example: '1|2 -> 1',
+    example2: '1|"b" -> "1"',
+    example3: '"b"|3 -> "b"',
     # Test: 0|2 -> 2
-    type: { [A,A] => A },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? a.value : b.value }},
+    # Test: 0|"b" -> "0"
+    # Test: ""|2 -> "2"
+    # Test: 0|'c -> "c"
+    # Test: (4 3)|"f" -> <"4","3">
+    type: { [A,A] => A,
+            [Aint,[Achar]] => [Achar],
+            [[Achar],Aint] => [Achar] },
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce(ta,a,tb) : coerce(tb,b,ta) }},
   ), create_op(
     name: "input",
     sym: "$",
@@ -407,9 +414,11 @@ def addOp(table,op)
     existing.type.each{|s|combined_type[s.orig_key]=s.orig_val}
     combined_impl = -> arg_types,from {
       if existing.type.any?{|fn_type|
-        arg_types.zip(fn_type.specs).all?{|type,spec|
-          spec.check_base_elem(type)
-        }
+        begin
+          check_base_elem_constraints(fn_type.specs, arg_types)
+        rescue AtlasTypeError
+          false
+        end
       }
         existing.impl[arg_types,from]
       else
