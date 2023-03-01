@@ -18,7 +18,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 IdRx = /[a-z][a-zA-Z0-9_]*/
 SymRx = /#{' !`~@#%^&*-_=+[]\\|;<,>.}/?'.chars.map{|c|Regexp.escape c}*'|'}/
 OpRx = /(@?(#{IdRx}|#{SymRx}))|@/
-OtherRx = /[()'":{}$]/  # these cannot be zipped/flipped
+OtherRx = /[()'":{}$]/  # these cannot have op modifiers
 CommentRx = /\/\/.*/
 
 def assertVar(token)

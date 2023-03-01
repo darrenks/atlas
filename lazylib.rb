@@ -227,6 +227,7 @@ def inspect_value_h(t,value,rhs,zip_level)
   end
 end
 
+# convert a from int to str if tb == str and ta == int, but possibly vectorized
 def coerce(ta, a, tb)
   return a.value if ta==tb || tb.is_nil || ta.is_nil #??
   case [ta,tb]

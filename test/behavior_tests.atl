@@ -30,6 +30,7 @@
 ("a","c")"d" -> <"ad","cd">
 1@2 -> 2
 "a"@"b" -> "ba"
+1@`(2,3) -> [1,2,3]
 
 // Test replication
 "abc","def","xyz"[(1,2,3) -> <["abc"],["abc","def"],["abc","def","xyz"]>
