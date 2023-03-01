@@ -59,7 +59,7 @@ Since all ops are overloaded as both unary and binary operators if there are mul
 
 The `+` was a binary op, and the `~` are unary.
 
-Two expressions in a row implicitly append. You don't need a space to use this, but if you want to vectorize it you will need a space after the `!` for now. This implicit operation is still left to right and equal precedence to other operations unlike APL which has a special case.
+Two expressions in a row without an explicit operation do an implicit op. For numbers this multiplies, and for strings it catenates. You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations unlike APL which has a special case.
 
     1-2 3+4
     // Is parsed as:

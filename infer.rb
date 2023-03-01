@@ -84,16 +84,23 @@ def possible_types(node, fn_type)
   t = spec_to_type(fn_type.ret, vars)
   rep_levels = [0]*nargs
   promote_levels = [0]*nargs
+
+  if node.op.name == "snoc" && deficits[1]<0
+    deficits[1] += 1
+    promote_levels[0] += 1
+    t = TypeWithVecLevel.new(t.type+1,t.vec_level)
+  end
+
   nargs.times{|i|
     if deficits[i]>0
       if deficits[i] > vec_levels[i] || node.args[i].op.name == "vectorize"
         if node.op.no_promote
           node.last_error ||= AtlasTypeError.new "rank too low for arg #{i+1}",node
         elsif node.args[i].op.name == "vectorize"
-          promote_levels[i] = deficits[i]
+          promote_levels[i] += deficits[i]
           deficits[i] = 0
         else
-          promote_levels[i] = deficits[i] - vec_levels[i]
+          promote_levels[i] += deficits[i] - vec_levels[i]
           deficits[i] = vec_levels[i]
         end
       end

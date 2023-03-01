@@ -335,27 +335,37 @@ OpsList = [
     impl: -> a,b { [b,a] }
   ), create_op(
     name: "snoc",
+    desc: "this op prefers to promote the 2nd arg once rather than vectorize it in order for inuitive list construction",
     sym: ",",
-    example: '"abc",\'d -> "abcd"',
+    example: '1,2,3 -> [1,2,3]',
+    # Test: 2,1 -> [2,1]
+    # Test: (2,3),1 -> [2,3,1]
+    # Test: (2,3),(4,5),1 -> <[2,3,1],[4,5,1]>
+    # Test: 2,(1,0) -> [[2],[1,0]]
+    # Test: (2,3),(1,0) -> [[2,3],[1,0]]
+    # Test: (2,3).,1 -> <[2,1],[3,1]>
+    # Test: (2,3),(4,5).,1 -> <[2,3,1],[4,5,1]>
+    # Test: 2,(1,0.) ->  <[2,1],[2,0]>
+    # Test: (2,3),(1,0.) -> <[2,3,1],[2,3,0]>
     type: { [[A],A] => [A] },
     impl: -> a,b { append(a,[b,Null].const) }
   ), create_op(
     name: "transpose",
     sym: "\\",
-    example: '"abc""123"\\ -> ["a1","b2","c3"]',
+    example: '"abc","123"\\ -> ["a1","b2","c3"]',
     # Test: "abc"; "1234"\ -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
   ), create_op(
     name: "unvec",
     sym: "%",
-    example: '1 2+3% -> [4,5]',
+    example: '1,2+3% -> [4,5]',
     type: { VecOf.new(A) => [A] },
     impl: -> a { a.value },
   ), create_op(
     name: "vectorize",
     sym: ".",
-    example: '1 2 3. -> <1,2,3>',
+    example: '1,2,3. -> <1,2,3>',
     type: { [A] => VecOf.new(A) },
     impl: -> a { a.value },
 
@@ -459,10 +469,26 @@ ToString = create_op(
   poly_impl: -> t { -> a { to_string(t.type+t.vec_level,a) } }
 )
 
+def create_int(str)
+  create_op(
+    name: "data",
+    type: Int,
+    impl: str.to_i
+  )
+end
+
+def create_str(str)
+  raise LexError.new("unterminated string") if str[-1] != '"'
+  create_op(
+    name: "data",
+    type: Str,
+    impl: str_to_lazy_list(parse_str(str[1...-1]))
+  )
+
+end
 def create_char(str)
   raise LexError.new("empty char") if str.size < 2
   create_op(
-    sym: "data",
     name: "data",
     type: Char,
     impl: parse_char(str[1..-1]).ord

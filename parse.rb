@@ -2,18 +2,14 @@ AST = Struct.new(:op,:args,:token)
 
 def parse_line(tokens, stack)
   ast = get_expr(tokens,:EOL)
-  ast = handle_data_form(ast)
   handle_push_pops(ast, stack)
 end
 
 DelimiterPriority = {:EOL => 0, ')' => 1}
 LBrackets = {"(" => ")"}
 
-DataForm = Struct.new(:type, :value)
-
 def get_expr(tokens,delimiter)
   last = lastop = implicit_var = nil
-  was_first = true
   loop {
     atom,t = get_atom(tokens)
     if atom
@@ -28,15 +24,8 @@ def get_expr(tokens,delimiter)
         last = make_op2(lastop, last, atom)
       elsif !last #first atom
         last = atom
-      else # implict cons
-        if DataForm === last && DataForm === atom && was_first && (dtype=last.type.data_can_be(atom.type))
-          last = DataForm.new(dtype+1, [last.value,atom.value])
-          was_first = false
-        elsif DataForm === last && DataForm === atom && !was_first && (dtype=last.type.data_can_be(atom.type+1))
-          last = DataForm.new(dtype, last.value << atom.value)
-        else
-          last = AST.new(Ops2[" "],[last,atom],t)
-        end
+      else # implict op
+        last = AST.new(Ops2[" "],[last,atom],t)
       end
       lastop = nil
     else # not an atom
@@ -55,12 +44,9 @@ def get_expr(tokens,delimiter)
           end
         end
         raise ParseError.new("op applied to nothing",t) if implicit_var && !last
+        last ||= AST.new(NilOp,[],t)
         if implicit_var
           last = AST.new(Ops2['let'], [last, implicit_var], t)
-        elsif !last
-          last = DataForm.new(Nil,[])
-        elsif DataForm === last && was_first && delimiter != :EOL
-          last = DataForm.new(last.type+1, [last.value])
         end
         return last
       end
@@ -78,9 +64,9 @@ def get_atom(tokens)
     rb = LBrackets[t.str]
     get_expr(tokens,rb)
   elsif str[0] =~ /[0-9]/
-    DataForm.new(Int, str.to_i)
+    AST.new(create_int(str),[],t)
   elsif str[0] == '"'
-    DataForm.new(Str, parse_str(str[1...-1]).chars.map(&:ord))
+    AST.new(create_str(str),[],t)
   elsif str[0] == "'"
     AST.new(create_char(str),[],t)
   elsif (op=Ops0[t.name])
@@ -149,26 +135,4 @@ end
 $new_vars = 0
 def new_var
   AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
-end
-
-def handle_data_form(ast)
-  if DataForm === ast
-    if ast.type == Int
-      impl = ast.value
-    else
-      impl = rec_to_lazy_list(ast.value)
-    end
-    op = create_op(
-      sym: "data",
-      name: "data",
-      type: ast.type,
-      impl: impl
-    )
-    ast = AST.new(op, [])
-  else
-    ast.args.map!{|arg|
-      handle_data_form(arg)
-    }
-  end
-  ast
 end
