@@ -228,7 +228,7 @@ def inspect_value_h(t,value,rhs,zip_level)
 end
 
 def coerce(ta, a, tb)
-  return a.value if ta==tb
+  return a.value if ta==tb || tb.is_nil || ta.is_nil #??
   case [ta,tb]
   when [Int,Str]
     return str_to_lazy_list(a.value.to_s)
@@ -268,7 +268,9 @@ end
 def print_string(value, out, limit)
   begin
     while !value.empty && limit > 0
-      out.print "%c" % value.value[0].value
+      c = value.value[0].value
+      $last_was_newline = c == 10
+      out.print "%c" % c
       value = value.value[1]
       limit -= 1
     end

@@ -243,10 +243,10 @@ OpsList = [
     example2: '1|"b" -> "1"',
     example3: '"b"|3 -> "b"',
     # Test: 0|2 -> 2
-    # Test: 0|"b" -> "0"
+    # Test: 0|"b" -> "b"
     # Test: ""|2 -> "2"
     # Test: 0|'c -> "c"
-    # Test: (4 3)|"f" -> <"4","3">
+    # Test: 4,3|"f" -> <"4","3">
     type: { [A,A] => A,
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
@@ -298,7 +298,7 @@ OpsList = [
     name: "concat",
     sym: "_",
     no_promote: true,
-    example: '"abc"; "123"_ -> "abc123"',
+    example: '"abc","123"_ -> "abc123"',
     type: { [[A]] => [A] },
     impl: -> a { concat(a) },
   ), create_op(
@@ -353,7 +353,7 @@ OpsList = [
     name: "transpose",
     sym: "\\",
     example: '"abc","123"\\ -> ["a1","b2","c3"]',
-    # Test: "abc"; "1234"\ -> ["a1","b2","c3","4"]
+    # Test: "abc","1234"\ -> ["a1","b2","c3","4"]
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
   ), create_op(
@@ -381,7 +381,7 @@ OpsList = [
   ), create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Feb 27, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 01, 2023)") },
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
@@ -460,7 +460,10 @@ OpsList.each{|op|
   AllOps[op.name] = AllOps[op.sym] = op
 }
 AllOps[""]=Ops2[""]=Ops2[" "] # allow @ to flip the implicit op (todo pointless for multiplication)
-NilOp = AllOps['nil']
+NilOp = create_op(
+  name: "nil",
+  type: Nil,
+  impl: [])
 Var = Op.new("var")
 ToString = create_op(
   name: "tostring",

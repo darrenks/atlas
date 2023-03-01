@@ -15,7 +15,7 @@ CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/
 StrRx = /"(\\.|[^"])*"?/
 AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
-IdRx = /[a-z][a-zA-Z0-9_]*|[A-Z]/
+IdRx = /[a-z][a-zA-Z0-9_]*/
 SymRx = /#{' !`~@#%^&*-_=+[]\\|;<,>.}/?'.chars.map{|c|Regexp.escape c}*'|'}/
 OpRx = /(@?(#{IdRx}|#{SymRx}))|@/
 OtherRx = /[()'":{}$]/  # these cannot be zipped/flipped

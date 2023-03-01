@@ -91,5 +91,5 @@ def printit(ir,output,step_limit)
     ir = IR.new(ToString, [ir])
     infer(ir)
     run(ir,output,10000,step_limit)
-    output.puts if ir.args[0].type.string_dim < 2 # these already printed newline
+    output.puts unless $last_was_newline
 end

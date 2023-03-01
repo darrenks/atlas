@@ -1,72 +1,67 @@
 # Vectorization
 
-Automatic vectorization is the implicit zipping or mapping of operations when the ranks of arguments are too large. This is quite useful, one of the reasons APL code is so short.
+Any list can be turned into a vector by using the `.` operator. A vector is just a list, but it prefers to apply operands to its elements instead of the list as a whole.
 
-For example `+` operates on scalars (rank 0). If we give it two lists (each rank 1), it will automatically perform a zip.
+    "abc","123" len
+    "abc","123". len
+    ──────────────────────────────────
+    2
+    3 3
 
-    (1 2 3) + (2 4 6)
+Automatic vectorization can occur to fit the type specification of an operator. For example, the type of `+` is `Int Int -> Int` and so if you give it a list for any of the arguments, their rank is too high and so it vectorizes said argument to bring it down. It is essentially performing a `map`.
+
+    1,2,3.+4 show
+    1,2,3+4 show
+    ──────────────────────────────────
+    <5,6,7>
+    <5,6,7>
+
+Note that the type is a vector not a list, even though `1,2,3` is a list, it was first vectorized. You can convert a vector back to a list using `%`. But usually this isn't needed because unvectorization is also automatically done if an arguments rank is too low.
+
+    1,2,3+4% len
+    1,2,3+4 len
+    ──────────────────────────────────
+    3
+    3
+
+If two vectors are present it pairs them off an performs the operation on each pair. It is essentially performing a `zipWith`
+
+    (1,2,3) + (2,4,6)
     ──────────────────────────────────
     3 6 9
 
 Longer lists are truncated to that of the smaller (this isn't the case for all vectorized languages, but useful in Atlas since we frequently use infinite lists).
 
-    (1 2) + (2 4 6)
+    (1,2) + (2,4,6)
     ──────────────────────────────────
     3 6
 
-Arguments that would have been too small of a rank after zipping are automatically replicated.
+Automatic vectorization can work non scalar arguments as well.
 
-    1 + (1 2 3)
+    "1 2 3","4 5" read show
     ──────────────────────────────────
-    2 3 4
+    <[1,2,3],[4,5]>
 
-That code first became:
+Read expects a string, but was given a list of strings so it vectorizes. Read returns a list of ints always, so that part is just normal operation.
 
-    [1,1,1,1,1...] + [1,2,3]
+It can even work on more complicated types like the type of append (`[a] [a] -> [a]`).
 
-
-Explicit vectorizations are allowed too. For example head returns the first element of a list.
-
-    "hi"; "there" head
+    "abc","xyz" append "123" show
     ──────────────────────────────────
-    hi
+    <"abc123","xyz123">
 
-But we can explicitly vectorize this with `.` to instead return the head of each element. It could be used repeatedly with higher ranked lists.
+Automatic Vectorization can only lower rank, sometimes it needs to be raised. For example transpose works on 2D lists, but if you give it a 1D list it needs to become a 2D list first, by just making it a list with a single element (the original list). I call this promotion.
 
-    "hi"; "there". head
+    "123" \ show
     ──────────────────────────────────
-    ht
+    ["1","2","3"]
 
-Since implicit vectorization always happens when the operation would be ill typed without it, it is an error to also explicitly vectorize. That is because in some cases is possible that there is implicit vectorization happening, but additional explicit vectorization is still possible. For example with operands that take a scalar and an list, like take.
+Automatic promotion and vectorization can both be done implicitly together. For example:
 
-    "hi"; "there"; ("next"; "frog") take (1 2)
-    ──────────────────────────────────
-    hi
-    next frog
-
-Since the left arg of take (`(1 2)`) must be a scalar it vectorizes. Taking the first word from the first list of strings and two words from the second list of strings.
-
-    "hi"; "there"; ("next"; "frog").. take (1 2)
-    ──────────────────────────────────
-    h th
-    n fr
-
-But we also could mean we wanted to do that instead.
-
-The algorithm that decides how much vectorization to do works by finding the arg with the highest excessive rank compared to the op's type specification (since vectorization lowers rank). Any arg that would then have too low of a rank is replicated to bring it back up. This algorithm can work on ops that don't have scalar requirements (something that as far as I know APL variants can't do because they lack homogenous lists and static types). For example:
-
-Todo update this when there is an op of type `[a] [a]->` again that doesn't prefer promotion over vectorization
-
-It even works on `then` statements.
-
-Vectorization can only lower rank, sometimes it needs to be raised. For example transpose works on 2D lists, but if you give it a 1D list it needs to become a 2D list first, by just making it a list with a single element (the original list). I call this promotion. Implicit cons is the only op that defaults to promotion rather than vectorization by the way.
-
-Promotion and vectorization can both be done implicitly together. For example:
-
-    'a [ (1 0) show
+    'a take (1,0) show
     ──────────────────────────────────
     <"a","">
 
-This is the same as the previous example. Here the ranks differ by 2, but it cannot vectorize twice because the type of append requires a list and the first arg is a scalar, so promotion is used.
+Unvectorization is preferred to promotion. That is why the earlier example `1,2,3+4 len` returned `3` instead of `[1,1,1]`.
 
-If you are ever unsure about what implicit operations are happening, run atlas with the `--debug` option and all implicit operations will be printed as explicit operations.
+There is one exception to these rules which is for `,` and this is to enable intuitive list construction from data. This is how `"abc","123","xyz"` creates a list of strings. Without preferring promotion over vectorization of the first arg, `,` would need to be type `a a -> [a]` to get the first use to work and type `[a] a -> [a]` to get the second op to work as well. `,` just prefers to promote once rather than automatically vectorize the first arg, you can still vectorize that arg, you will just need to do so explicitly.

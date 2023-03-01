@@ -1,9 +1,10 @@
 # Types
 
-There are 4 types in Atlas.
+There are 5 types in Atlas.
 -   Integers (arbitrary precision).
 -   Chars which are just integers that may have a different set of operations allowed on them including how they are displayed. Construct them using a single leading `'`.
 -   Lists, which may also be of other lists. A list of a list of integers is what I call a 2D list AKA a rank 2 list. This is not a matrix, each sublist may have a different length.
+-   Vectors, which are just list that prefer to apply operands to their elements instead of the list as a whole.
 -   Nil which means a list of unknown type. This is the type of `()`, the empty list. It needs its own type in order for top down type inference to work (which is what Atlas uses). It becomes the smallest rank type it can when used in ops with type constraints like `append`. You may also see this type displayed as the arg type in invalid circular program's error messages, this is because unknown types start off as nil during inference since it can become anything.
 
 Strings are just lists of characters.
@@ -11,7 +12,7 @@ Strings are just lists of characters.
     123 // This is an integer
     'x // This is a char
     "abc" // This is a string, aka list of chars
-    1 2 3 // This is a list of integers constructed via implicit cons.
+    1,2,3 // This is a list of integers constructed via the snoc (cons on end) operator.
     () show // This is an empty list pretty printed
     ──────────────────────────────────
     123

@@ -5,7 +5,7 @@ TypeWithVecLevel = Struct.new(:type,:vec_level)
 class Type
   def inspect
     d = is_nil ? dim-1 : dim
-    return "(%d %s)"%[dim,base_elem] if d < 0
+    return "(%d %s)"%[dim,base_elem] if d < 0 # ret nicely since could have negative type errors in circular inference that later becomes valid
     "["*d + base_elem.to_s.capitalize + "]"*d
   end
   def -(rhs)
@@ -44,6 +44,7 @@ NilV0 = TypeWithVecLevel.new(Nil,0)
 
 class TypeWithVecLevel
   def inspect
+    return "(%d %s)"%[vec_level,type.inspect] if vec_level < 0 # ret nicely since could have negative type errors in circular inference that later becomes valid
     "<"*vec_level + type.inspect + ">"*vec_level
   end
 end

@@ -1,11 +1,11 @@
 [33m ᐳ [0m1+2*4  // That is an up arrow (prev command 1+2)followed by *4
-[33m ᐳ [0m1 2 seeInference // Two tabs to complete seeInference
+[33m ᐳ [0m1,2 tail // Two tabs to complete tail
 [33m ᐳ [0m
 [33m ᐳ [0m5
-[33m ᐳ [0ma z:a
+[33m ᐳ [0ma,z:a
 5:3 (z) unset identifier "z" ([31mParseError[0m)
 [33m ᐳ [0ma
 6:1 (a) unset identifier "a" ([31mParseError[0m)
 [33m ᐳ [0m12
-1;‿(2;)
+2
 5
