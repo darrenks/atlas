@@ -1,12 +1,12 @@
 Inf = 2**61 # for max_pos_dim
 Type = Struct.new(:dim,:base_elem) # base is :int, :char, or :nil
+# for now :nil 0 = unknown type, [Nil] means list of unknown type aka empty list
 TypeWithVecLevel = Struct.new(:type,:vec_level)
 
 class Type
   def inspect
-    d = is_nil ? dim-1 : dim
-    return "(%d %s)"%[dim,base_elem] if d < 0 # ret nicely since could have negative type errors in circular inference that later becomes valid
-    "["*d + base_elem.to_s.capitalize + "]"*d
+    return "(%d %s)"%[dim,base_elem] if dim < 0 # ret nicely since could have negative type errors in circular inference that later becomes valid
+    "["*dim + base_elem.to_s.capitalize + "]"*dim
   end
   def -(rhs)
     self+-rhs

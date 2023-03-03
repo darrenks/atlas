@@ -374,14 +374,14 @@ OpsList = [
     name: "type",
     example: '1 type -> "Int"',
     # Test: "hi" type -> "[Char]"
-    # Test: () type -> "Nil"
+    # Test: () type -> "[Nil]"
     type: { A => Str },
     no_zip: true,
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
   ), create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 01, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 02, 2023)") },
   ), create_op(
     name: "reductions",
     desc: "operation count so far",

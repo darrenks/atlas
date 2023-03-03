@@ -124,7 +124,7 @@ def possible_types(node, fn_type)
 end
 
 def solve_type_vars(arg_types, specs)
-  vars = {}
+  vars = {} # todo separate hash for ret and uses?
 
   arg_types.zip(specs) { |arg,spec|
     case spec
@@ -150,9 +150,10 @@ def solve_type_vars(arg_types, specs)
   }
 
   vars.each{|name,uses|
-    max_min_dim = uses.map(&:dim).min
+    max_min_dim = uses.reject(&:is_nil).map(&:dim).min
     base_elems = uses.map(&:base_elem).uniq
     base_elem = if base_elems == [:nil]
+      max_min_dim = uses.map(&:dim).max
       :nil
     else
       base_elems -= [:nil]
@@ -172,17 +173,17 @@ end
 
 def rank_deficits(arg_types, specs, vars)
   arg_types.zip(specs).map{|arg,spec|
-    if arg.is_nil && arg.dim > 0
-      0
+    spec_dim = case spec
+      when VarTypeSpec
+        vars[spec.var_name].max_pos_dim + spec.extra_dims
+      when ExactTypeSpec
+        spec.req_dim
+      else
+        error
+      end
+    if arg.is_nil
+      [spec_dim - arg.dim, 0].min
     else
-      spec_dim = case spec
-        when VarTypeSpec
-          vars[spec.var_name].dim + spec.extra_dims
-        when ExactTypeSpec
-          spec.req_dim
-        else
-          error
-        end
       spec_dim - arg.dim
     end
   }

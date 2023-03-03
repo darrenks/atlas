@@ -10,6 +10,10 @@ end
 fn_type = create_specs({[Int]=>Int})[0]
 
 T = TypeWithVecLevel
+U = Nil-1
+
+# todo test VecOf
+# what other things can gen errors? are many errors impossible?
 
 # => zip_level, rep_level, return type
 tests = {
@@ -67,18 +71,42 @@ tests = {
   [[T.new(Int+2,1),T.new(Int+1,0)],{[[A],[B]]=>A}] => [1,[0,1],[0,0],"<[Int]>"],
   [[T.new(Int+2,1),T.new(Int+1,1)],{[[A],[B]]=>A}] => [1,[0,0],[0,0],"<[Int]>"],
 
-  # Nil tests todo add different type unknown that serves this purpose and add the tests
-  [[T.new(Nil+0,0)],{Int=>Int}] => [0,[0],[0],"Int"],
-  [[T.new(Nil+1,0)],{Int=>Int}] => [0,[0],[0],"Int"],
+  # Unknown tests
+  # [int] would all be failures during lookup type fn
 
-  # [int]
-  [[T.new(Nil+0,0)],{[Int]=>Int}] => [0,[0],[0],"Int"],
-  [[T.new(Nil+1,0)],{[Int]=>Int}] => [0,[0],[0],"Int"],
-  [[T.new(Nil+0,1)],{[Int]=>Int}] => [1,[0],[0],"<Int>"],
+  # a
+  [[T.new(U+0,0)],{[A]=>A}] => [0,[0],[0],"Nil"],
+  [[T.new(U+1,0)],{[A]=>A}] => [0,[0],[0],"Nil"],
+  [[T.new(U+2,0)],{[A]=>A}] => [0,[0],[0],"[Nil]"],
+  [[T.new(U+0,0+1)],{[A]=>A}] => [1,[0],[0],"<Nil>"],
+  [[T.new(U+0,0+2)],{[A]=>A}] => [2,[0],[0],"<<Nil>>"],
+  [[T.new(U+2,0+2)],{[A]=>A}] => [2,[0],[0],"<<[Nil]>>"],
 
-  # [a]
-  [[T.new(Nil-1,0)],{[A]=>[A]}] => [0,[0],[1],"Nil"],
+  # [a] [int]
+  [[T.new(U+0,0),T.new(Int+0,0)],{[[A],[Int]]=>A}] => [0,[0,0],[0,1],"Nil"],
+  [[T.new(U+0,0),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [1,[1,0],[0,0],"<Nil>"],
+  [[T.new(U+2,2),T.new(Int+2,0)],{[[A],[Int]]=>A}] => [2,[0,1],[0,0],"<<[Nil]>>"],
+
+  # [a] [a]
+  [[T.new(U+0,0),T.new(U+0,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"Nil"],
+  [[T.new(U+1,0),T.new(U+0,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"Nil"],
+  [[T.new(U+2,0),T.new(U+0,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"[Nil]"],
+  [[T.new(U+1,0),T.new(U+1,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"Nil"],
+  [[T.new(U+2,0),T.new(U+1,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"[Nil]"],
+  [[T.new(U+2,0),T.new(U+2,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"[Nil]"],
+  [[T.new(U+2,0),T.new(U+0,1)],{[[A],[A]]=>A}] => [1,[1,0],[0,0],"<[Nil]>"],
+
+  [[T.new(U+0,0),T.new(Int+0,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,1],"Int"],
+  [[T.new(U+1,0),T.new(Int+0,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,1],"Int"],
+  [[T.new(U+2,0),T.new(Int+0,0)],{[[A],[A]]=>A}] => [1,[0,1],[0,1],"<Int>"],
+  [[T.new(U+0,0),T.new(Int+1,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"Int"],
+  [[T.new(U+0,0),T.new(Int+2,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"[Int]"],
+  [[T.new(U+2,0),T.new(Int+2,0)],{[[A],[A]]=>A}] => [0,[0,0],[0,0],"[Int]"],
+
+  # [a] [b] todo but probably not needed
+
 }
+# tests = {tests.keys[-1] => tests[tests.keys[-1]]}
 
 tests.each{|k,v|
   arg_types, spec = *k
