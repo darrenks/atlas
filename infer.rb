@@ -18,7 +18,7 @@ end
 
 def dfs_infer(node)
   return if node.type_with_vec_level
-  node.type_with_vec_level = NilV0 # for cycle, Nil instead of Unknown since cycle can't be scalar
+  node.type_with_vec_level = EmptyV0 # for cycle, Nil instead of Unknown since cycle can't be scalar
 
   node.args.each{|arg| dfs_infer(arg) }
 
@@ -31,7 +31,7 @@ def update_type(node)
 
   node.last_error = nil
   fn_type = get_fn_type(node)
-  node.type_with_vec_level = fn_type ? possible_types(node,fn_type) : NilV0
+  node.type_with_vec_level = fn_type ? possible_types(node,fn_type) : EmptyV0
 
   if node.type_with_vec_level != prev_type
     node.type_updates = (node.type_updates || 0) + 1
@@ -150,13 +150,13 @@ def solve_type_vars(arg_types, specs)
   }
 
   vars.each{|name,uses|
-    max_min_dim = uses.reject(&:is_nil).map(&:dim).min
+    max_min_dim = uses.reject(&:is_unknown).map(&:dim).min
     base_elems = uses.map(&:base_elem).uniq
-    base_elem = if base_elems == [:nil]
+    base_elem = if base_elems == [Unknown.base_elem]
       max_min_dim = uses.map(&:dim).max
-      :nil
+      Unknown.base_elem
     else
-      base_elems -= [:nil]
+      base_elems -= [Unknown.base_elem]
       raise AtlasTypeError.new("inconsistant base elem %p" % uses, nil) if base_elems.size != 1 && !mixed_typeable
       base_elems[0]
     end
@@ -181,7 +181,7 @@ def rank_deficits(arg_types, specs, vars)
       else
         error
       end
-    if arg.is_nil
+    if arg.is_unknown
       [spec_dim - arg.dim, 0].min
     else
       spec_dim - arg.dim

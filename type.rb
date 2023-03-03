@@ -1,6 +1,6 @@
 Inf = 2**61 # for max_pos_dim
-Type = Struct.new(:dim,:base_elem) # base is :int, :char, or :nil
-# for now :nil 0 = unknown type, [Nil] means list of unknown type aka empty list
+Type = Struct.new(:dim,:base_elem) # base is :int, :char, or :a
+# :a means unknown type, it could be any type with dim >= 0
 TypeWithVecLevel = Struct.new(:type,:vec_level)
 
 class Type
@@ -15,7 +15,7 @@ class Type
     Type.new(dim+zip_level, base_elem)
   end
   def max_pos_dim
-    is_nil ? Inf : dim
+    is_unknown ? Inf : dim
   end
   def string_dim # dim but string = 0
     dim + (is_char ? -1 : 0)
@@ -23,8 +23,8 @@ class Type
   def is_char
     base_elem == :char
   end
-  def is_nil
-    base_elem == :nil
+  def is_unknown
+    base_elem == :a
   end
   def can_base_be(rhs) # return true if self can be rhs
     return self.base_elem == rhs.base_elem
@@ -39,8 +39,9 @@ end
 Int = Type.new(0,:int)
 Char = Type.new(0,:char)
 Str = Type.new(1,:char)
-Nil = Type.new(1,:nil)
-NilV0 = TypeWithVecLevel.new(Nil,0)
+Unknown = Type.new(0,:a)
+Empty = Unknown+1
+EmptyV0 = TypeWithVecLevel.new(Empty,0)
 
 class TypeWithVecLevel
   def inspect

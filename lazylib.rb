@@ -204,7 +204,7 @@ def inspect_value(t,value,zip_level)
 end
 
 def inspect_value_h(t,value,rhs,zip_level)
-  if t == Nil
+  if t == Empty
     str_to_lazy_list("[]",rhs)
   elsif t==Str && zip_level <= 0
     ['"'.ord.const, Promise.new{
@@ -228,8 +228,8 @@ def inspect_value_h(t,value,rhs,zip_level)
 end
 
 # convert a from int to str if tb == str and ta == int, but possibly vectorized
-def coerce(ta, a, tb)
-  return a.value if ta==tb || tb.is_nil || ta.is_nil #??
+def coerce2s(ta, a, tb)
+  return a.value if ta==tb || tb.is_unknown || ta.is_unknown #??
   case [ta,tb]
   when [Int,Str]
     return str_to_lazy_list(a.value.to_s)

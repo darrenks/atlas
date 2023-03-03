@@ -44,7 +44,7 @@ def get_expr(tokens,delimiter)
           end
         end
         raise ParseError.new("op applied to nothing",t) if implicit_var && !last
-        last ||= AST.new(NilOp,[],t)
+        last ||= AST.new(EmptyOp,[],t)
         if implicit_var
           last = AST.new(Ops2['let'], [last, implicit_var], t)
         end

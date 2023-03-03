@@ -250,7 +250,7 @@ OpsList = [
     type: { [A,A] => A,
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce(ta,a,tb) : coerce(tb,b,ta) }},
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb) : coerce2s(tb,b,ta) }},
   ), create_op(
     name: "input",
     sym: "$",
@@ -374,7 +374,7 @@ OpsList = [
     name: "type",
     example: '1 type -> "Int"',
     # Test: "hi" type -> "[Char]"
-    # Test: () type -> "[Nil]"
+    # Test: () type -> "[A]"
     type: { A => Str },
     no_zip: true,
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }},
@@ -460,9 +460,9 @@ OpsList.each{|op|
   AllOps[op.name] = AllOps[op.sym] = op
 }
 AllOps[""]=Ops2[""]=Ops2[" "] # allow @ to flip the implicit op (todo pointless for multiplication)
-NilOp = create_op(
-  name: "nil",
-  type: Nil,
+EmptyOp = create_op(
+  name: "empty",
+  type: Empty,
   impl: [])
 Var = Op.new("var")
 ToString = create_op(

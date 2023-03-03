@@ -1,5 +1,5 @@
 [prog]
 (1+()) + (2+())
 [stderr]
-1:3 (+) op is not definied for arg types: Int,[Nil] (TypeError)
-1:12 (+) op is not definied for arg types: Int,[Nil] (TypeError)
+1:3 (+) op is not definied for arg types: Int,[A] (TypeError)
+1:12 (+) op is not definied for arg types: Int,[A] (TypeError)
