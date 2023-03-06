@@ -274,8 +274,13 @@ v1+(1,2,3,(4,5,6))`(0,):v1] -> <6,15>
 ~+(1,2,3,4)`0 -> [0,1,1,2,2]
 
 
-// This tests a pathological case in var lookups, would throw before runtime
-a:F_F:a -> []
+// This tests a pathological case in var lookups
+a:F_F:a -> InfiniteLoopError
+
+// Using the unknown type
+a:a -> AtlasTypeError
+a:a;# -> 1
+
 
 // infinite type
 a;:a -> AtlasTypeError

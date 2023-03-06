@@ -1,9 +1,33 @@
 def infer(root)
   all = all_nodes(root)
-  all.each{|node|node.used_by = []}
+  q=[]
+  # these are topologically sorted from post traversal dfs which gives a favorable order to start inference from
+  all.each{|node|
+    node.used_by = [];
+    if node.type_with_vec_level == nil
+      node.type_with_vec_level = UnknownV0
+      node.in_q = true
+      q << node
+    end
+  }
   all.each{|node|node.args.each{|arg| arg.used_by << node} }
 
-  dfs_infer(root)
+  q.each{|node| # this uses q as a queue
+    node.in_q = false
+    prev_type = node.type_with_vec_level
+    calc_type(node)
+    if node.type_with_vec_level != prev_type
+      node.type_updates = (node.type_updates || 0) + 1
+      raise AtlasTypeError.new "cannot construct the infinite type",node if node.type_updates > 100
+
+      node.used_by.each{|dep|
+        if !dep.in_q
+          dep.in_q = true
+          q << dep
+        end
+      }
+    end
+  }
 
   errors = []
   dfs(root) { |node|
@@ -16,37 +40,15 @@ def infer(root)
   raise errors[-1] if !errors.empty?
 end
 
-def dfs_infer(node)
-  return if node.type_with_vec_level
-  node.type_with_vec_level = EmptyV0 # for cycle, Nil instead of Unknown since cycle can't be scalar
-
-  node.args.each{|arg| dfs_infer(arg) }
-
-  update_type(node)
-end
-
-def update_type(node)
-  return if node.args.any?{|arg|!arg.type_with_vec_level}
-  prev_type = node.type_with_vec_level
-
+def calc_type(node)
   node.last_error = nil
   fn_type = get_fn_type(node)
-  node.type_with_vec_level = fn_type ? possible_types(node,fn_type) : EmptyV0
-
-  if node.type_with_vec_level != prev_type
-    node.type_updates = (node.type_updates || 0) + 1
-    raise AtlasTypeError.new "cannot construct the infinite type",node if node.type_updates > 100
-    node.used_by.each{|dep| update_type(dep) }
-  end
+  node.type_with_vec_level = fn_type ? possible_types(node,fn_type) : UnknownV0
 end
 
 def get_fn_type(node)
   fn_types = node.op.type.select{|fn_type|
-    begin
-      check_base_elem_constraints(fn_type.specs, node.args.map(&:type))
-    rescue AtlasTypeError
-      false
-    end
+    check_base_elem_constraints(fn_type.specs, node.args.map(&:type))
   }
 
   if fn_types.size == 0
@@ -190,7 +192,11 @@ def rank_deficits(arg_types, specs, vars)
 end
 
 def check_base_elem_constraints(specs, arg_types)
-  solve_type_vars(arg_types, specs) # consistency check
+  begin
+    solve_type_vars(arg_types, specs) # consistency check
+  rescue AtlasTypeError
+    return false
+  end
   arg_types.zip(specs).all?{|type,spec|
     spec.check_base_elem(type)
   }

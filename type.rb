@@ -40,8 +40,8 @@ Int = Type.new(0,:int)
 Char = Type.new(0,:char)
 Str = Type.new(1,:char)
 Unknown = Type.new(0,:a)
+UnknownV0 = TypeWithVecLevel.new(Unknown,0)
 Empty = Unknown+1
-EmptyV0 = TypeWithVecLevel.new(Empty,0)
 
 class TypeWithVecLevel
   def inspect

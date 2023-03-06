@@ -381,7 +381,7 @@ OpsList = [
   ), create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 02, 2023)") },
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 06, 2023)") },
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
@@ -424,11 +424,7 @@ def addOp(table,op)
     existing.type.each{|s|combined_type[s.orig_key]=s.orig_val}
     combined_impl = -> arg_types,from {
       if existing.type.any?{|fn_type|
-        begin
-          check_base_elem_constraints(fn_type.specs, arg_types)
-        rescue AtlasTypeError
-          false
-        end
+        check_base_elem_constraints(fn_type.specs, arg_types)
       }
         existing.impl[arg_types,from]
       else
@@ -464,6 +460,11 @@ EmptyOp = create_op(
   name: "empty",
   type: Empty,
   impl: [])
+UnknownOp = create_op(
+  name: "unknown",
+  type: Unknown,
+  impl_with_loc: -> from { raise AtlasTypeError.new("cannot use value of the unknown type", from) }
+)
 Var = Op.new("var")
 ToString = create_op(
   name: "tostring",

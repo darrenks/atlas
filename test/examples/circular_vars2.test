@@ -8,4 +8,4 @@ c=c
 5
 10
 [stderr]
-5:3 (c) trivial self dependency is nonsensical (ParseError)
+5:3 (c) cannot use value of the unknown type (TypeError)

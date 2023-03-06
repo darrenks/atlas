@@ -9,4 +9,4 @@ OpsList.each{|op|
     pass+=1
   }
 }
-puts "PASS: #{pass} op examples"
+puts "PASS #{pass} op examples"

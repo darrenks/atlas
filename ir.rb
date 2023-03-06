@@ -7,6 +7,7 @@ class IR < Struct.new(
     :zip_level,
     :promise,
     :id,
+    :in_q,
     :used_by,
     :rep_levels,
     :promote_levels,
@@ -59,7 +60,7 @@ def check_missing(node,context,been)
   if node.op.name == "var"
     name = node.from.token.str
     raise(ParseError.new("unset identifier %p" % name, node.from.token)) unless context.include? name
-    raise(ParseError.new("trivial self dependency is nonsensical", node.from.token)) if context[name] == node
+    #raise(ParseError.new("trivial self dependency is nonsensical", node.from.token)) if context[name] == node
     check_missing(context[name],context,been)
   else
     node.args.each{|arg| check_missing(arg, context,been) }
@@ -71,6 +72,7 @@ def lookup_vars(node,context,been)
   been[node.id]=true if node.op.name != "var"
   node.args.map!{|arg| lookup_vars(arg, context,been) }
   if node.op.name == "var"
+    return IR.new(UnknownOp,[],node.from) if context[node.from.token.str] == node
     lookup_vars(context[node.from.token.str],context,been)
   else
     node

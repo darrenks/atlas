@@ -204,9 +204,7 @@ def inspect_value(t,value,zip_level)
 end
 
 def inspect_value_h(t,value,rhs,zip_level)
-  if t == Empty
-    str_to_lazy_list("[]",rhs)
-  elsif t==Str && zip_level <= 0
+  if t==Str && zip_level <= 0
     ['"'.ord.const, Promise.new{
       concat_map(value,Promise.new{str_to_lazy_list('"',rhs)}){|v,r,first|
        str_to_lazy_list(escape_str_char(v.value),r)
