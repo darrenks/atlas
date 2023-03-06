@@ -138,19 +138,6 @@ def solve_type_vars(arg_types, specs)
     end
   }
 
-  mixed_typeable = vars[Achar] && vars[Aint]
-  vars.dup.each{|name,uses|
-    if name == Achar
-      (vars[A]||=[]).concat uses
-      raise AtlasTypeError.new("base elem must be char",nil) if name == Achar && uses.any?{|u|!u.is_char}
-      vars.delete(name)
-    elsif name == Aint
-      (vars[A]||=[]).concat uses
-      vars.delete(name)
-      raise AtlasTypeError.new("base elem must be int",nil) if name == Aint && uses.any?{|u|u.is_char}
-    end
-  }
-
   vars.each{|name,uses|
     max_min_dim = uses.reject(&:is_unknown).map(&:dim).min
     base_elems = uses.map(&:base_elem).uniq
@@ -159,17 +146,11 @@ def solve_type_vars(arg_types, specs)
       Unknown.base_elem
     else
       base_elems -= [Unknown.base_elem]
-      raise AtlasTypeError.new("inconsistant base elem %p" % uses, nil) if base_elems.size != 1 && !mixed_typeable
       base_elems[0]
     end
 
     vars[name] = Type.new([max_min_dim,0].max, base_elem)
   }
-
-  if mixed_typeable
-    vars[Achar] = Type.new(vars[A].dim,Char.base_elem)
-    vars[Aint] = Type.new(vars[A].dim,Int.base_elem)
-  end
   vars
 end
 
@@ -192,12 +173,8 @@ def rank_deficits(arg_types, specs, vars)
 end
 
 def check_base_elem_constraints(specs, arg_types)
-  begin
-    solve_type_vars(arg_types, specs) # consistency check
-  rescue AtlasTypeError
-    return false
-  end
+  uses={}
   arg_types.zip(specs).all?{|type,spec|
-    spec.check_base_elem(type)
+    spec.check_base_elem(uses,type)
   }
 end

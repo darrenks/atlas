@@ -3,10 +3,10 @@ A = :a
 B = :b
 
 # type var of base elem char
-Achar = :Achar
+Achar = :a_char
 
 # type var of base elem int
-Aint = :Aint
+Aint = :a_int
 
 # type spec ================================
 # { from => to } or just "to" if no args
@@ -74,7 +74,7 @@ class ExactTypeSpec
     @req_dim = req_dim
     @type = type
   end
-  def check_base_elem(type)
+  def check_base_elem(uses,type)
     type.can_base_be(@type)
   end
   def inspect
@@ -86,17 +86,26 @@ class VarTypeSpec
   attr_reader :var_name
   attr_reader :extra_dims
   attr_accessor :vec_of
-  def initialize(var_name, extra_dims) # e.g. [[a]] is .new(:a, 2)
-    @var_name = var_name
+  def initialize(var_sym, extra_dims) # e.g. [[a]] is .new(:a, 2)
+    @var_name,@var_constraint = name_and_constraint(var_sym)
     @extra_dims = extra_dims
     @vec_of = false
   end
-  def check_base_elem(type)
-    return true
+  def check_base_elem(uses,type)
+    if @var_constraint
+      @var_constraint == type.base_elem.to_s
+    else
+      type.base_elem == Unknown.base_elem || (uses[var_name]||=type.base_elem) == type.base_elem
+    end
   end
   def inspect
     (vec_of ? "<" : "")+"["*extra_dims+var_name.to_s+"]"*extra_dims+(vec_of ? ">" : "")
   end
+end
+
+def name_and_constraint(var_sym)
+  s = var_sym.to_s.split("_")
+  [s[0].to_sym, s[1]]
 end
 
 def spec_to_type(spec, vars)
@@ -107,7 +116,10 @@ def spec_to_type(spec, vars)
     raise "cannot return multiple values for now" if spec.size != 1
     TypeWithVecLevel.new(spec_to_type(spec[0], vars).type + 1, 0)
   when Symbol
-    TypeWithVecLevel.new(vars[spec],0)
+    name,constraint=name_and_constraint(spec)
+    t=TypeWithVecLevel.new(vars[name],0)
+    t.type.base_elem = constraint.to_sym if constraint
+    t
   when VecOf
     TypeWithVecLevel.new(spec_to_type(spec.of, vars).type, 1)
   else
