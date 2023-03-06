@@ -69,8 +69,6 @@
 ()] -> DynamicError
 5;,6> -> [6]
 5;> -> []
-// todo may want to reconsider and make empty
-// () tail -> DynamicError
 
 /////////// test vars
 5:v1+v1 -> 10
@@ -131,10 +129,20 @@ v1`'-:v1 -> "-------------...
 "def";,"xzy".`"abc" -> <"adef","bxzy">
 "def","xzy"..;`"abc" -> <<"ad","be","cf">,<"ax","bz","cy">>
 
+// coercion tests
 'a | "asdf" -> <'a,'a,'a,'a>
-'  | "asdf"% -> "asdf"
+'  | "asdf" % -> "asdf"
 "asdf" | 'a% -> "asdf"
 "" | ('a;) -> "a"
+0|"b" -> "b"
+""|2 -> "2"
+0|'c -> "c"
+4,3,0|"f" -> <"4","3","f">
+0,1|("f","t") -> ["0","1"]
+("f","t")|(0,1) -> ["f","t"]
+()|1 -> <>
+()|(1;) -> [1]
+()|"a" -> "a"
 
 0 & 2 | 3 -> 3
 1 & 2 | 3 -> 2
@@ -248,18 +256,16 @@ v1+(1,2,3,(4,5,6))`(0,):v1] -> <6,15>
 
 // check incorrect faith attempt
 // this would attempt to access invalid elements if said check was not in place
-// todo
-// 0;. (v1+(3;;):v2) & (4;;[0) | (5;;[0)[:v1` (v2`) -> InfiniteLoopError
+0;;._(v1+(3;;)%%:v2.)%&(4;;[0;)|(5;;[0;)[:v1`_(v2`) -> DynamicError
 
 // tails' faith example that needed padding before
-// todo
-//a+1`0:a=10#&a|(b>+1%)%:b[[ -> 19
+a`0+1:a=10#&a|(b%>+1):b[ -> 19
 
 // Test auto replicating of nil (todo is there another way to test this?)
-// "______MA_"='_ !then "CHISTMAS"!; else ()_ -> "CHISTM"
+"______MA_"='_ & ("CHISTMAS".;) | () _ -> "CHISTM"
 
 
-// Test promotion todo these arent' automatic anymore
+// Test promotion
 "123".;~ -> <[1],[2],[3]>
 "asdf"\ -> ["a","s","d","f"]
 

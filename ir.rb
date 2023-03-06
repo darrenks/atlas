@@ -24,6 +24,10 @@ class IR < Struct.new(
   def vec_level
     type_with_vec_level.vec_level
   end
+  def type_error(msg)
+    self.last_error ||= AtlasTypeError.new msg,self
+    UnknownV0
+  end
 end
 
 # creates an IR from an AST, replacing vars

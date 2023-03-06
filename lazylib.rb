@@ -39,13 +39,13 @@ class Promise
     if Proc===@impl
       begin
         raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
-      @calculating=true
+        @calculating=true
         @impl=@impl[]
       ensure
         # not really needed since new promises are created rather than reused
         @calculating=false
       end
-      raise InfiniteLoopError.new "infinite loop detected2",self,nil if expect_non_empty && @impl == []
+      raise DynamicError.new "infinite loop was assumed to be non empty, but was nonempty",nil if expect_non_empty && @impl == []
     end
     @impl
   end
@@ -228,10 +228,12 @@ end
 # convert a from int to str if tb == str and ta == int, but possibly vectorized
 def coerce2s(ta, a, tb)
   return a.value if ta==tb || tb.is_unknown || ta.is_unknown #??
-  case [ta,tb]
-  when [Int,Str]
-    return str_to_lazy_list(a.value.to_s)
-  when [Str,Int]
+  case [ta.base_elem,tb.base_elem]
+  when [:int,:char]
+    raise if ta.dim+1 != tb.dim
+    return zipn(ta.dim,[a],->av{str_to_lazy_list(av.value.to_s)})
+  when [:char,:int]
+    raise if ta.dim != tb.dim+1
     return a.value
   else
     raise "coerce of %p %p not supported"%[ta,tb]

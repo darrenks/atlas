@@ -246,7 +246,6 @@ OpsList = [
     # Test: 0|"b" -> "b"
     # Test: ""|2 -> "2"
     # Test: 0|'c -> "c"
-    # Test: 4,3|"f" -> <"4","3">
     type: { [A,A] => A,
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },

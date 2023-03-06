@@ -42,24 +42,13 @@ end
 
 def calc_type(node)
   node.last_error = nil
-  fn_type = get_fn_type(node)
-  node.type_with_vec_level = fn_type ? possible_types(node,fn_type) : UnknownV0
-end
-
-def get_fn_type(node)
   fn_types = node.op.type.select{|fn_type|
     check_base_elem_constraints(fn_type.specs, node.args.map(&:type))
   }
 
-  if fn_types.size == 0
-    node.last_error = AtlasTypeError.new("op is not definied for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',', node)
-    nil
-  elsif fn_types.size == 2
-    node.last_error = AtlasTypeError.new("op is ambiguous for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',', node)
-    nil
-  else
-    fn_types[0]
-  end
+  return node.type_error "op is #{fn_types.size==0?'not definied':'ambiguous'} for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',' if fn_types.size != 1
+
+  node.type_with_vec_level = possible_types(node,fn_types[0])
 end
 
 def possible_types(node, fn_type)
@@ -73,7 +62,7 @@ def possible_types(node, fn_type)
 
   vec_levels = vec_levels.zip(fn_type.specs).map{|vec_level,spec|
     if spec.vec_of
-      node.last_error ||= AtlasTypeError.new "vec level is 0, cannot lower",node if vec_level == 0
+      return node.type_error "vec level is 0, cannot lower" if vec_level == 0
       vec_level - 1
     else
       vec_level
@@ -97,7 +86,7 @@ def possible_types(node, fn_type)
     if deficits[i]>0
       if deficits[i] > vec_levels[i] || node.args[i].op.name == "vectorize"
         if node.op.no_promote
-          node.last_error ||= AtlasTypeError.new "rank too low for arg #{i+1}",node
+          return node.type_error "rank too low for arg #{i+1}"
         elsif node.args[i].op.name == "vectorize"
           promote_levels[i] += deficits[i]
           deficits[i] = 0
@@ -115,7 +104,7 @@ def possible_types(node, fn_type)
   zip_level = 0 if node.op.no_zip
   nargs.times{|i|
     rep_levels[i] += zip_level - vec_levels[i] - rep_levels[i]
-    node.last_error ||= AtlasTypeError.new "rank too high for arg #{i+1}",node if rep_levels[i] > zip_level
+    return node.type_error "rank too high for arg #{i+1}" if rep_levels[i] > zip_level
   }
   node.zip_level = zip_level
   node.rep_levels = rep_levels
