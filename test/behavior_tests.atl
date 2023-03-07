@@ -1,7 +1,8 @@
-// test atoms
+// test ints
 4 -> 4
 45 -> 45
 
+// test string and escapes
 "" -> ""
 "hi" -> "hi"
 "//" -> "//"
@@ -11,13 +12,14 @@
 // test utf8 encoding chars
 "├───╯".; -> <"├","─","─","─","╯">
 
+// test char and escapes
 'a -> 'a
 '\n -> '\n
 '\0 -> '\0
 '\ -> '\\
 '" -> '"
 '' -> ''
-//'-> asdf
+'-> LexError
 '\xff-'\0 -> 255
 '\xff -> '\xff
 '\0+5 -> '\x05
@@ -32,10 +34,10 @@
 "a"@"b" -> "ba"
 1@`(2,3) -> [1,2,3]
 
-// Test replication
+// Test replication in auto vectorization
 "abc","def","xyz"[(1,2,3) -> <["abc"],["abc","def"],["abc","def","xyz"]>
 
-// Test promotion
+// Test auto promotion
 5\ -> [[5]]
 5. -> <5>
 '5 read -> [5]
@@ -47,35 +49,29 @@
 // Test promotion prefered when last op was vec
 "123".~ -> <[1],[2],[3]>
 
-// disallowed since not needed
-// '\" -> '\"'
-// '\' -> '''
+// not escaped since not needed
+'\" //" -> "\\ //"
+'\'f -> "\\f"
 
-/////////////////// test basic ops
-5~ -> -5
-5~~ -> 5
-1+2 -> 3
-"a"[+1 -> 'b
 1+() -> AtlasTypeError
 ()%2 -> AtlasTypeError
-// leading 0 is separate number
 0-12 -> -12
 0/12 -> 0
+012 -> 12
 () -> []
 () type -> "[A]"
 ();,()_() -> [[],[]]
 
 ()[ -> DynamicError
 ()] -> DynamicError
-5;,6> -> [6]
 5;> -> []
 
 /////////// test vars
 5:v1+v1 -> 10
 
 // test nil
-// (),(),() -> [[],[],[]]
-// (),(),() type -> [Nil]
+();,(),() -> [[],[],[]]
+();,(),() type -> "[[A]]"
 
 //////// test infinite list
 v1`1:v1 -> [1,1,1,1,1,1,...
@@ -89,33 +85,8 @@ v1`'-:v1 -> "-------------...
 (1;,2)+(4;,6,8) -> <5,8>
 (4;,6,8)+(1;,2) -> <5,8>
 
-4*5 -> 20
-
-4-1 -> 3
 "asdf"-1% -> "`rce"
 "abcd"-"aaa"% -> [0,1,2]
-
-10/5 -> 2
-9/5 -> 1
-11/(5~) -> -3
-10/(5~) -> -2
-11~/5 -> -3
-10~/5 -> -2
-10~/(5~) -> 2
-9~/(5~) -> 1
-1/0 -> DynamicError
-0/0 -> DynamicError
-
-10%5 -> 0
-9%5 -> 4
-11%(5~) -> -4
-10%(5~) -> 0
-11~%5 -> 4
-10~%5 -> 0
-10~%(5~) -> 0
-9~%(5~) -> -4
-//% "abcd" 2 -> [1,0,1,0]
-5%0 -> DynamicError
 
 "abcd","xzy" [ -> "abcd"
 "abcd","xzy".[% -> "ax"
@@ -177,8 +148,6 @@ v1`0+(1+v2%`1:v2)%:v1 -> [1,3,6,10,15...
 1, -> <1,1,1,1...
 "hi".,[5 -> <"hhhhh","iiiii">
 
-
-1; -> [1]
 "hi".; -> <"h","i">
 "asdfg"]2 -> "dfg"
 "abc","123".]2 -> <"c","3">
@@ -191,16 +160,6 @@ v1`0+(1+v2%`1:v2)%:v1 -> [1,3,6,10,15...
 "123".;`"abc" -> <"a1","b2","c3">
 "a","b"._("1","2") -> <"a1","b2">
 'a "b" -> "ab"
-
-1=2 -> []
-1=1 -> [1]
-'a='a -> "a"
-'d=100 -> AtlasTypeError
-"abc"="abc" -> ["abc"]
-"abc"="abd" -> []
-"abc"='a -> <"a","","">
-"abc"=('a.) -> <"a">
-"abc".="abd" -> <"a","b","">
 
 "asdf"< -> "asd"
 "abc","123".< -> <"ab","12">
@@ -215,12 +174,6 @@ v1`0+(1+v2%`1:v2)%:v1 -> [1,3,6,10,15...
 
 // circular programming foldr
 4,5,6+(v1>,0):v1[ -> 15
-
-// TODO keep const around??
-// 5 const 4 -> AtlasTypeError
-//"asdf" const 4 -> AtlasTypeError
-// 5 const "asdf" -> <5,5,5,5>
-// "asdf" const "123"% -> "asd"
 
 // error and catching
 (v1<)`0:v1 -> InfiniteLoopError
@@ -261,7 +214,7 @@ v1+(1,2,3,(4,5,6))`(0,):v1] -> <6,15>
 // tails' faith example that needed padding before
 a`0+1:a=10#&a|(b%>+1):b[ -> 19
 
-// Test auto replicating of nil (todo is there another way to test this?)
+// Test auto replicating of nil
 "______MA_"='_ & ("CHISTMAS".;) | () _ -> "CHISTM"
 
 

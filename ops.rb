@@ -10,7 +10,6 @@ class Op < Struct.new(
     :examples,
     :desc,
     :no_promote,
-    :min_zip_level, # only const uses it, todo remove probably
     :no_zip,
     :impl,
     :tests)
@@ -28,7 +27,6 @@ class Op < Struct.new(
     }
     misc = []
     puts "no_zip=true" if no_zip
-    puts "min_zip_level=#{min_zip_level}" if min_zip_level>0
     puts
   end
   def add_test(s)
@@ -46,7 +44,6 @@ def create_op(
   example3: nil,
   no_promote: false,
   desc: nil,
-  min_zip_level: 0,
   no_zip: false,
   poly_impl: nil, # impl that needs type info
   impl: nil,
@@ -68,7 +65,7 @@ def create_op(
   examples << example if example
   examples << example2 if example2
   examples << example3 if example3
-  Op.new(name,sym,type,examples,desc,no_promote,min_zip_level,no_zip,built_impl,[])
+  Op.new(name,sym,type,examples,desc,no_promote,no_zip,built_impl,[])
 end
 
 def int_col(n)
@@ -165,8 +162,18 @@ OpsList = [
       else
         a.value/b.value
       end
-    }}
-  ), create_op(
+    }})
+   .add_test("10/5 -> 2")
+   .add_test("9/5 -> 1")
+   .add_test("11/(5~) -> -3")
+   .add_test("10/(5~) -> -2")
+   .add_test("11~/5 -> -3")
+   .add_test("10~/5 -> -2")
+   .add_test("10~/(5~) -> 2")
+   .add_test("9~/(5~) -> 1")
+   .add_test("1/0 -> DynamicError")
+   .add_test("0/0 -> DynamicError"),
+  create_op(
     name: "mod",
     example: '7%3 -> 1',
     sym: "%",
@@ -177,8 +184,17 @@ OpsList = [
       else
         a.value % b.value
       end
-    }}
-  ), create_op(
+    }})
+   .add_test("10%5 -> 0")
+   .add_test("9%5 -> 4")
+   .add_test("11%(5~) -> -4")
+   .add_test("10%(5~) -> 0")
+   .add_test("11~%5 -> 4")
+   .add_test("10~%5 -> 0")
+   .add_test("10~%(5~) -> 0")
+   .add_test("9~%(5~) -> -4")
+   .add_test("5%0 -> DynamicError"),
+  create_op(
     name: "not",
     type: { A => Int },
     example: '2 not -> 0',
@@ -206,8 +222,17 @@ OpsList = [
     example: '3=3 -> [3]',
     sym: "=",
     type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } }
-  ).add_test("3=2 -> []"),
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } })
+  .add_test("3=2 -> []")
+  .add_test("1=2 -> []")
+  .add_test("1=1 -> [1]")
+  .add_test('\'a=\'a -> "a"')
+  .add_test("'d=100 -> AtlasTypeError")
+  .add_test('"abc"="abc" -> ["abc"]')
+  .add_test('"abc"="abd" -> []')
+  .add_test('"abc"=\'a -> <"a","","">')
+  .add_test('"abc"=(\'a.) -> <"a">')
+  .add_test('"abc".="abd" -> <"a","b","">'),
   create_op(
     name: "lessThan",
     example: '4<5 -> [5]',
@@ -228,12 +253,6 @@ OpsList = [
     sym: "#",
     type: { [A] => Int },
     impl: -> a { len(a) }
-  ), create_op(
-    name: "const",
-#     example: '"abcd" const "123"% -> "abcd"',
-    type: { [A,B] => A },
-    min_zip_level: 1,
-    impl: -> a,b { a.value }
   ), create_op(
     name: "and",
     sym: "&",

@@ -10,7 +10,7 @@ end
 
 # todo gsub \r\n -> \n and \t -> 8x" " and \r -> \n
 
-NumRx = /0|[0-9]+/
+NumRx = /[0-9]+/
 CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/
 StrRx = /"(\\.|[^"])*"?/
 AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
