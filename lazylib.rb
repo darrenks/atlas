@@ -227,14 +227,14 @@ end
 
 # convert a from int to str if tb == str and ta == int, but possibly vectorized
 def coerce2s(ta, a, tb)
-  return a.value if ta==tb || tb.is_unknown || ta.is_unknown #??
+  return a if ta==tb || tb.is_unknown || ta.is_unknown #??
   case [ta.base_elem,tb.base_elem]
   when [:int,:char]
     raise if ta.dim+1 != tb.dim
-    return zipn(ta.dim,[a],->av{str_to_lazy_list(av.value.to_s)})
+    return Promise.new{zipn(ta.dim,[a],->av{str_to_lazy_list(av.value.to_s)})}
   when [:char,:int]
     raise if ta.dim != tb.dim+1
-    return a.value
+    return a
   else
     raise "coerce of %p %p not supported"%[ta,tb]
   end

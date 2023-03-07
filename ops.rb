@@ -48,6 +48,7 @@ def create_op(
   poly_impl: nil, # impl that needs type info
   impl: nil,
   impl_with_loc: nil, # impl that could throw, needs token location for err msgs
+  coerce: false,
   final_impl: nil
 )
   type = create_specs(type)
@@ -65,6 +66,12 @@ def create_op(
   examples << example if example
   examples << example2 if example2
   examples << example3 if example3
+
+  if coerce
+    f = built_impl
+    built_impl = -> t,from { -> a,b { f[t,from][coerce2s(t[0],a,t[1]),coerce2s(t[1],b,t[0])] }}
+  end
+
   Op.new(name,sym,type,examples,desc,no_promote,no_zip,built_impl,[])
 end
 
@@ -269,7 +276,7 @@ OpsList = [
     type: { [A,A] => A,
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb) : coerce2s(tb,b,ta) }},
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb).value : coerce2s(tb,b,ta).value }},
   ).add_test("0|2 -> 2")
    .add_test('0|"b" -> "b"')
    .add_test('""|2 -> "2"')
@@ -325,44 +332,52 @@ OpsList = [
     type: { [[A]] => [A] },
     impl: -> a { concat(a) },
   ), create_op(
-    name: "implicit",
+    name: "implicitMult",
     sym: " ",
-    example: '1+1 3 -> 6',
-    example2: '1"a" -> "1a"',
-    type: { [Int,Int] => Int,
-            [Str,Str] => Str,
-            [Str,Int] => Str,
-            [Int,Str] => Str },
-    poly_impl: -> ta,tb {
-      if ta==Int && tb==Int
-        -> a,b { a.value*b.value }
-      else
-        -> a,b {
-          a = inspect_value(Int,a,0).const if ta == Int
-          b = inspect_value(Int,b,0).const if tb == Int
-          append(a,b)
-        }
-      end
-    },
+    example: '2 3 -> 6',
+    type: { [Int,Int] => Int },
+    impl: -> a,b { a.value*b.value }
   ), create_op(
+    name: "implicitAppend",
+    sym: " ",
+    example: '1"a" -> "1a"',
+    type: { [Str,Str] => Str,
+            [Aint,[Achar]] => [Achar],
+            [[Achar],Aint] => [Achar] },
+    impl: -> a,b { append(a,b) },
+    coerce: true)
+  .add_test("'a 'b -> \"ab\"")
+  .add_test('"ab","cd" "e" -> <"abe","cde">'),
+  create_op(
     name: "append",
     sym: "_",
     example: '"abc"_"123" -> "abc123"',
-    type: { [[A],[A]] => [A] },
-    impl: -> a,b { append(a,b) }
-  ), create_op(
+    type: { [[A],[A]] => [A],
+            [Aint,[Achar]] => [Achar],
+            [[Achar],Aint] => [Achar] },
+    impl: -> a,b { append(a,b) },
+    coerce: true)
+  .add_test('1_"a" -> "1a"'),
+  create_op(
     name: "cons",
     sym: "`",
     example: '"abc"`\'d -> "dabc"',
-    type: { [[A],A] => [A] },
-    impl: -> a,b { [b,a] }
-  ), create_op(
+    type: { [[A],A] => [A],
+            [Aint,Achar] => [Achar],
+            [[[Achar]],Aint] => [[Achar]] },
+    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta-1,a,tb)] }})
+  .add_test('\'a`5 -> ["5","a"]')
+  .add_test('5`\'a -> "a5"')
+  .add_test('\'b`\'a -> "ab"'),
+  create_op(
     name: "snoc",
     desc: "this op prefers to promote the 2nd arg once rather than vectorize it in order for inuitive list construction",
     sym: ",",
     example: '1,2,3 -> [1,2,3]',
-    type: { [[A],A] => [A] },
-    impl: -> a,b { append(a,[b,Null].const) }
+    type: { [[A],A] => [A],
+            [Aint,Achar] => [Achar],
+            [[[Achar]],Aint] => [[Achar]] },
+    poly_impl: -> ta,tb {-> a,b { append(coerce2s(ta-1,a,tb),[coerce2s(tb,b,ta-1),Null].const) }}
   ).add_test("2,1 -> [2,1]")
   .add_test('(2,3),1 -> [2,3,1]')
   .add_test('(2,3),(4,5),1 -> <[2,3,1],[4,5,1]>')
@@ -371,7 +386,10 @@ OpsList = [
   .add_test('(2,3).,1 -> <[2,1],[3,1]>')
   .add_test('(2,3),(4,5).,1 -> <[2,3,1],[4,5,1]>')
   .add_test('2,(1,0.) ->  <[2,1],[2,0]>')
-  .add_test('(2,3),(1,0.) -> <[2,3,1],[2,3,0]>'),
+  .add_test('(2,3),(1,0.) -> <[2,3,1],[2,3,0]>')
+  .add_test('\'a,5 -> ["a","5"]')
+  .add_test('5,\'a -> "5a"')
+  .add_test('\'b,\'a -> "ba"'),
   create_op(
     name: "transpose",
     sym: "\\",

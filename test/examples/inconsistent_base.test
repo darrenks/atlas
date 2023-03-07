@@ -1,4 +1,0 @@
-[prog]
-1,"a"
-[stderr]
-1:2 (,) op is not definied for arg types: Int,[Char] (TypeError)

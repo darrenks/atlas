@@ -99,7 +99,8 @@ class VarTypeSpec
     end
   end
   def inspect
-    (vec_of ? "<" : "")+"["*extra_dims+var_name.to_s+"]"*extra_dims+(vec_of ? ">" : "")
+    constraint = @var_constraint ? " (#{@var_constraint})" : ""
+    (vec_of ? "<" : "")+"["*extra_dims+var_name.to_s+constraint+"]"*extra_dims+(vec_of ? ">" : "")
   end
 end
 
