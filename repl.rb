@@ -60,7 +60,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
           OpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}.each(&:help)
           next
         elsif tokens.size == 2 && tokens[0].str == "ops"
-          OpsList.each(&:help)
+          OpsList.each{|op|op.help(false)}
           next
         end
 
