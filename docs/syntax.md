@@ -87,15 +87,3 @@ If you want to use the implicit op following a unary op, it would look like you 
     ──────────────────────────────────
     -6
     -6
-
-Currently there is some special behavior to also do this with spaces, but I think it complicates things unnecessarily and will remove it.
-
-    2~ 3
-    ──────────────────────────────────
-    -6
-
-There is also special behavior for todo describe, might remove
-
-    2 ~3
-    ──────────────────────────────────
-    -6

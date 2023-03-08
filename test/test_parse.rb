@@ -23,25 +23,7 @@ tests = <<'EOF'
 (1 2) (3 4) -> 1 2 (3 4)
 (1 2) 3 (4 5) -> 1 2 3 (4 5)
 
-// Space can make unary/cons
-1~ 2 -> 1~ 2
-1 ~ -> 1~
-1 2~ -> 1 2~
-1 2 ~ -> 1 2~
-(1~ ) -> 1~
-
-// Space can prefix a unary op on a single atom
-1 ~2 -> 1 (2~)
-1* ~2 -> 1*(2~)
-1+2 ~3 -> 1+2 (3~)
-1+2* ~3 -> 1+2*(3~)
-1 ~2+3 -> 1 (2~)+3
-1* ~2+3 -> 1*(2~)+3
-1 ~~2+3 -> 1 (2~~)+3
-1* ~~2+3 -> 1*(2~~)+3
-( ~2) -> 2~
-
-// Test space doesnt do anything else
+// Test space doesnt do anything
 1 + 2~ -> 1+2~
 1 + 2*3 -> 1+2*3
 1 ~ -> 1~
@@ -60,7 +42,7 @@ aA -> aA
 a_a -> a_a
 A_ A -> A_ A
 
-1; head 2 -> 1;[ 2
+1; head -> 1;[
 
 EOF
 

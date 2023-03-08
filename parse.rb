@@ -13,12 +13,6 @@ def get_expr(tokens,delimiter)
   loop {
     atom,t = get_atom(tokens)
     if atom
-      # spaces indicate it was to actually be a unary op
-      if lastop && last && Ops1[lastop.name] && (lastop.space_after && !lastop.space_before && !is_op(t) && !lastop.is_alpha || !Ops2[lastop.name])
-        last = make_op1(lastop, last)
-        lastop = nil
-      end
-
       if lastop #binary op
         last = implicit_var = new_var if !last
         last = make_op2(lastop, last, atom)
@@ -43,7 +37,6 @@ def get_expr(tokens,delimiter)
             tokens.unshift t
           end
         end
-        raise ParseError.new("op applied to nothing",t) if implicit_var && !last
         last ||= AST.new(EmptyOp,[],t)
         if implicit_var
           last = AST.new(Ops2['let'], [last, implicit_var], t)
@@ -72,36 +65,12 @@ def get_atom(tokens)
   elsif (op=Ops0[t.name])
     AST.new(op,[],t)
   elsif is_op(t)
-    if !t.is_alpha && t.space_before && !t.space_after
-      atom, t2 = get_prefix_atom(tokens)
-      if atom
-        return [make_op1(t, atom), t]
-      else
-        tokens.unshift t2
-        return [nil, t]
-      end
-    else
-      nil
-    end
+    nil
   elsif DelimiterPriority[str]
     nil
   else
     AST.new(Var,[],t)
   end,t]
-end
-
-def get_prefix_atom(tokens)
-  if is_op(tokens[0])
-    t = tokens.shift
-    atom, t2 = get_prefix_atom(tokens)
-    if atom
-      [make_op1(t, atom), t]
-    else
-      [nil, t2]
-    end
-  else
-    get_atom(tokens)
-  end
 end
 
 def make_op1(t,arg)
