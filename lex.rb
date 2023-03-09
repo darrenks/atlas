@@ -1,6 +1,6 @@
 class Token<Struct.new(:str,:char_no,:line_no)
   def name
-    str[/^@?(.*?)\??$/m,1]
+    str[/^\??(.*?)@?$/m,1]
   end
   def is_alpha
     name =~ /^#{IdRx}$/
@@ -17,7 +17,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-z][a-zA-Z0-9_]*/
 SymRx = /#{' !`~#%^&*-_=+[]\\|;<,>.}/?'.chars.map{|c|Regexp.escape c}*'|'}/
-OpRx = /(@?(#{IdRx}|#{SymRx})\??)|@|\?/
+OpRx = /(\??(#{IdRx}|#{SymRx})@?)|@|\?/
 OtherRx = /[()'":{}$]/  # these cannot have op modifiers
 CommentRx = /\/\/.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/

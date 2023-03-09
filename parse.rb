@@ -56,7 +56,7 @@ def get_expr(tokens,delimiter)
   until nodes.empty?
     o = nodes.pop
 
-    if o.token.str[/\?$/]
+    if o.token.str[/^\?/]
       x = nodes[-1]
       while nodes[-1].args.size<nodes[-1].op.narg
         nodes.pop.args << nodes[-1]

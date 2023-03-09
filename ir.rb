@@ -51,7 +51,7 @@ def create_ir(node,context) # and register_vars
   else
     args=node.args.map{|arg|create_ir(arg,context)}
     op = node.op.dup
-    if node.token && node.token.str =~ /^@/
+    if node.token && node.token.str =~ /@$/
       args.reverse!
     end
     IR.new(op,args,node)

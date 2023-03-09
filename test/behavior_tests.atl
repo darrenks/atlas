@@ -32,7 +32,7 @@
 ("a","c")"d" -> <"ad","cd">
 1@2 -> 2
 "a"@"b" -> "ba"
-1@`(2,3) -> [1,2,3]
+1`@(2,3) -> [1,2,3]
 
 // Test replication in auto vectorization
 "abc","def","xyz"[(1,2,3) -> <["abc"],["abc","def"],["abc","def","xyz"]>
@@ -252,5 +252,5 @@ a;:a -> AtlasTypeError
 `0+1)[5# -> 5
 
 // test apply
-2*3+?4 -> 14
-2*3~+?4 -> 2
+2*3?+4 -> 14
+2*3~?+4 -> 2
