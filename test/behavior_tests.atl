@@ -30,9 +30,6 @@
 1,2"b" -> <"1b","2b">
 "abc"+0"123" -> "abc123"
 ("a","c")"d" -> <"ad","cd">
-1@2 -> 2
-"a"@"b" -> "ba"
-1`@(2,3) -> [1,2,3]
 
 // Test replication in auto vectorization
 "abc","def","xyz"[(1,2,3) -> <["abc"],["abc","def"],["abc","def","xyz"]>
@@ -257,3 +254,9 @@ a;:a -> AtlasTypeError
 
 1+2:3 -> 7
 
+// test flip
+1@2 -> 2
+"a"@"b" -> "ba"
+1`@(2,3) -> [1,2,3]
+
+4@ -> 5 // place holder inc op to make sure it works

@@ -31,7 +31,11 @@ def get_expr(tokens,delimiter)
     else # not an atom
       if lastop
         nodes << implicit_var = new_var if nodes.empty?
-        nodes << make_op1(lastop)
+        if lastop.str == "@"
+          nodes << AST.new(Ops1["@"], [], lastop)
+        else
+          nodes << make_op1(lastop)
+        end
       end
 
       if DelimiterPriority[t.str]

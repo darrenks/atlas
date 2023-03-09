@@ -409,6 +409,11 @@ OpsList = [
     example: '1,2,3. -> <1,2,3>',
     type: { [A] => VecOf.new(A) },
     impl: -> a { a.value },
+  ), create_op(
+    name: "placeHolder",
+    sym: "@",
+    type: { Int => Int },
+    impl: -> a { a.value+1 },
 
   # Repl/Debug ops
   ), create_op(
