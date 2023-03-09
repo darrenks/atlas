@@ -16,7 +16,12 @@ def get_expr(tokens,delimiter)
     if atom
       if lastop #binary op
         nodes << implicit_var = new_var if nodes.empty?
-        nodes << make_op2(lastop) << atom
+        if lastop.str == ":" && atom.op.name == "var"
+          # ":" would register as a modifier to implicit op, override this
+          nodes << AST.new(Ops2[":"], [], lastop) << atom
+        else
+          nodes << make_op2(lastop) << atom
+        end
       elsif nodes.empty? #first atom
         nodes << atom
       else # implict op
@@ -56,7 +61,7 @@ def get_expr(tokens,delimiter)
   until nodes.empty?
     o = nodes.pop
 
-    if o.token.str[/^\?/]
+    if o.token.str[/^:/] && o.op.name != "let"
       x = nodes[-1]
       while nodes[-1].args.size<nodes[-1].op.narg
         nodes.pop.args << nodes[-1]
