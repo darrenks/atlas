@@ -246,3 +246,11 @@ a:a;# -> 1
 a;:a -> AtlasTypeError
 
 'a-1000 -> 'invalid char: -903
+
+// test unbalanced ) for use with circular programming/nil
+) -> []
+`0+1)[5# -> 5
+
+// test apply
+2*3+?4 -> 14
+2*3~+?4 -> 2

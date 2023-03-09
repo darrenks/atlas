@@ -9,44 +9,78 @@ DelimiterPriority = {:EOL => 0, ')' => 1}
 LBrackets = {"(" => ")"}
 
 def get_expr(tokens,delimiter)
-  last = lastop = implicit_var = nil
+  lastop = implicit_var = nil
+  nodes = []
   loop {
     atom,t = get_atom(tokens)
     if atom
       if lastop #binary op
-        last = implicit_var = new_var if !last
-        last = make_op2(lastop, last, atom)
-      elsif !last #first atom
-        last = atom
+        nodes << implicit_var = new_var if nodes.empty?
+        nodes << make_op2(lastop) << atom
+      elsif nodes.empty? #first atom
+        nodes << atom
       else # implict op
-        last = AST.new(Ops2[" "],[last,atom],t)
+        nodes << AST.new(Ops2[" "],[],t) << atom
       end
       lastop = nil
     else # not an atom
       if lastop
-        last = implicit_var = new_var if !last
-        last = make_op1(lastop, last)
+        nodes << implicit_var = new_var if nodes.empty?
+        nodes << make_op1(lastop)
       end
 
       if DelimiterPriority[t.str]
+        nodes << AST.new(EmptyOp,[],t) if nodes.empty?
+        if implicit_var
+          nodes << AST.new(Ops2['let'], [], t) << implicit_var
+          implicit_var = nil
+        end
         if t.str != delimiter
           if DelimiterPriority[t.str] >= DelimiterPriority[delimiter]
-            raise ParseError.new "unexpected #{t.str}, expecting #{delimiter}", t
+            # e.g. encountered ) but no ( to match, do nothing except process implicit_var
+            next
           else # e.g. token is eof, expecting )
             # return without consuming token
             tokens.unshift t
           end
         end
-        last ||= AST.new(EmptyOp,[],t)
-        if implicit_var
-          last = AST.new(Ops2['let'], [last, implicit_var], t)
-        end
-        return last
-      end
 
+        break
+      end
       lastop = t
     end
   }
+
+  ops=[]
+  atoms=[]
+  until nodes.empty?
+    o = nodes.pop
+
+    if o.token.str[/\?$/]
+      x = nodes[-1]
+      while nodes[-1].args.size<nodes[-1].op.narg
+        nodes.pop.args << nodes[-1]
+      end
+      nodes.pop
+      o.args << x
+      (o.op.narg-1).times{ o.args << atoms.pop }
+    end
+
+    if o.args.size==o.op.narg
+      atoms << o
+    else
+      ops << o
+    end
+  end
+
+  v=atoms.pop
+  until ops.empty?
+    n=ops[-1].op.narg
+    ops[-1].args << v
+    v = ops.pop
+    (n-1).times{ v.args << atoms.pop }
+  end
+  v
 end
 
 # return atom or nil
@@ -73,14 +107,14 @@ def get_atom(tokens)
   end,t]
 end
 
-def make_op1(t,arg)
+def make_op1(t)
   op = Ops1[t.name] || raise(ParseError.new("op not defined for unary operations",t))
-  AST.new(op, [arg], t)
+  AST.new(op, [], t)
 end
 
-def make_op2(t,arg1,arg2)
+def make_op2(t)
   op = Ops2[t.name] || raise(ParseError.new("op not defined for binary operations",t))
-  AST.new(op,[arg1,arg2],t)
+  AST.new(op,[],t)
 end
 
 def is_op(t)

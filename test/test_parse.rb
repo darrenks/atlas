@@ -9,7 +9,7 @@ tests = <<'EOF'
 1~~ -> 1~~
 ~2 -> ParseError
 
-// Test implicit cons
+// Test implicit
 1 2 -> 1 2
 1 (2*3) -> 1 (2*3)
 (1*2) 3 -> 1*2 3
@@ -33,10 +33,10 @@ tests = <<'EOF'
 ( 1+2) -> 1+2
 
 // test unbalanced parens
-1+2)+3 -> ParseError
+1+2)+3 -> 1+2+3
 1+(2*3 -> 1+(2*3)
 
-// Identifiers ->
+// Identifiers
 AA -> A A
 aA -> aA
 a_a -> a_a
@@ -44,15 +44,29 @@ A_ A -> A_ A
 
 1; head -> 1;[
 
+// Test apply
+1+2+?3 -> 1+(2+3)
+1+2+?3+?4 -> 1+(2+(3+4))
+1+2~+?3 -> 1+(2~+3)
+1+2~\+?3 -> 1+(2~\+3)
+1+2~?+3 -> 1+(2~)+3
+1+2~?+?3 -> 1+(2~+3)
+1+?2 -> 1+2
+1\? -> 1\
 EOF
 
 require "./repl.rb"
 
-def clear_volatile(ast)
-  ast.token = nil
-  ast.op.impl = nil
-  ast.op.type = nil
-  ast.args.each{|arg| clear_volatile(arg) }
+class AST
+  def ==(rhs)
+    self.op == rhs.op && self.args.zip(rhs.args).all?{|s,r|s==r}
+  end
+end
+
+class Op
+  def ==(rhs)
+    self.name == rhs.name
+  end
 end
 
 start_line=2
@@ -67,11 +81,9 @@ tests.lines.each{|test|
   begin
     tokens,lines = lex(i)
     found = parse_line(tokens[0],[])
-    clear_volatile(found)
 
     tokens,lines = lex(o)
     expected = parse_line(tokens[0],[])
-    clear_volatile(expected)
   rescue Exception
     found = $!
   end
