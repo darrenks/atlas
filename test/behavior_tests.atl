@@ -130,7 +130,7 @@ v1`'-@v1 -> "-------------...
 "a b " . & ("fghi".) | ("jklm".) % -> "fkhm"
 "a b " . & 1 | 0 % -> [1,0,1,0]
 
-1,2.` -> "<1,2>"
+1,2.p -> "<1,2>"
 
 "asdf"[(1,2) -> <"a","as">
 "abc","123".[2 -> <"ab","12">
@@ -198,7 +198,7 @@ v1+(1,2,3,(4,5,6))`(0,)@v1] -> <6,15>
 
 // check incorrect faith attempt
 // this would attempt to access invalid elements if said check was not in place
-0;;._(v1+(3;;)%%@v2.)%&(4;;[0;)|(5;;[0;)[@v1`_(v2`) -> DynamicError
+0;;._(v1+(3;;)%%@v2.)%&(4;;[0;)|(5;;[0;)[@v1 p _(v2 p) -> DynamicError
 
 // tails' faith example that needed padding before
 a`0+1@a=10#&a|(b%>+1)@b[ -> 19

@@ -311,17 +311,18 @@ OpsList = [
     impl: -> { lines(ReadStdin) }
   ), create_op(
     name: "show",
-    sym: "`",
-    example: '12` -> "12"',
+    sym: "p",
+    example: '12p -> "12"',
     type: { A => Str },
     no_zip: true,
     poly_impl: -> t { -> a { inspect_value(t.type+t.vec_level,a,t.vec_level) } }
-  ).add_test('"a"` -> "\"a\""')
-   .add_test('\'a` -> "\'a"')
-   .add_test('1;` -> "[1]"'),
+  ).add_test('"a"p -> "\"a\""')
+   .add_test('\'a p -> "\'a"')
+   .add_test('1;p -> "[1]"'),
   create_op(
     name: "str",
-    example: '12 str -> "12"',
+    sym: "`",
+    example: '12` -> "12"',
     type: { Int => Str },
     impl: -> a { inspect_value(Int,a,0) }
   ), create_op(
