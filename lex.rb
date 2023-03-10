@@ -9,7 +9,7 @@ end
 
 AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.to_a
 UnmodableSymbols='()\'"{}$'.chars.to_a # these cannot have op modifiers
-FlipModifier="@"
+FlipModifier="\\"
 FlipRx=Regexp.escape FlipModifier
 ApplyModifier=":"
 ApplyRx=Regexp.escape ApplyModifier
