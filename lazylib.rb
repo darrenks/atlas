@@ -81,6 +81,10 @@ def range(a,b)
   [a.const, Promise.new{range(a+1,b)}]
 end
 
+def range_from(a)
+  [a.const, Promise.new{range_from(a+1)}]
+end
+
 def init(a)
   raise DynamicError.new "init on empty list",nil if a.empty
   return [] if a.value[1].empty

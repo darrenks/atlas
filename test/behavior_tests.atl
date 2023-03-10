@@ -259,4 +259,5 @@ a;:a -> AtlasTypeError
 "a"@"b" -> "ba"
 1`@(2,3) -> [1,2,3]
 
-4@ -> 5 // place holder inc op to make sure it works
+// place holder inc op to make sure it works
+4@ -> 5

@@ -325,6 +325,12 @@ OpsList = [
             [Char,Char] => VecOf.new(Char) },
     impl: -> a,b { range(a.value, b.value) }
   ), create_op(
+    name: "from",
+    example: '3 from -> <3,4,5,6,7,8...',
+    type: { Int => VecOf.new(Int),
+            Char => VecOf.new(Char) },
+    impl: -> a { range_from(a.value) }
+  ), create_op(
     name: "concat",
     sym: "_",
     no_promote: true,
