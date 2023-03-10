@@ -213,6 +213,12 @@ OpsList = [
     example: '2~ -> -2',
     impl: -> a { -a.value }
   ), create_op(
+    name: "abs",
+    sym: "|",
+    type: { Int => Int },
+    example: '2~| -> 2',
+    impl: -> a { a.value.abs }
+  ), create_op(
     name: "read",
     sym: "~",
     type: { Str => [Int] },
@@ -297,6 +303,11 @@ OpsList = [
    .add_test('\'a` -> "\'a"')
    .add_test('1;` -> "[1]"'),
   create_op(
+    name: "str",
+    example: '12 str -> "12"',
+    type: { Int => Str },
+    impl: -> a { inspect_value(Int,a,0) }
+  ), create_op(
     name: "single",
     sym: ";",
     example: '2; -> [2]',
@@ -352,6 +363,12 @@ OpsList = [
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
   .add_test('1,2,3 sortBy ("hi","there") -> [1,2]'),
+  create_op(
+    name: "chunkWhile",
+    example: '"abcd" chunkWhile "11 1" -> [["ab","c"],["d",""]]',
+    type: { [[A],[B]] => [[[A]]] },
+    poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
+  .add_test('"abcd" chunkWhile " 11 " -> [["","a"],["bc","d"]]'),
   create_op(
     name: "concat",
     sym: "_",

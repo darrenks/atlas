@@ -160,6 +160,59 @@ def to_strict_list(a,sofar=[])
   to_strict_list(a[1],sofar<<to_strict_list(a[0]))
 end
 
+def chunk_while(a,b,t,check_truthy = Promise.new{!b.empty && truthy(t,b.value[0])})
+  return [] if a.empty || b.empty
+  next_true = Promise.new{ !b.empty && !b.value[1].empty && truthy(t,b.value[1].value[0]) }
+
+  # the below code is basically unreadable due to needing to make it lazy enough
+  # the slightly more readable and strict code is here:
+#    rhs = chunk_while(a.value[1],b.value[1],t,next_true) # not lazy
+#   if rhs == []
+#     rhst = rhsf = rest = Null
+#   else
+#     rhst = rhs[0].value[0]
+#     rhsf = rhs[0].value[1].value[0]
+#     rest = rhs[1]
+#   end
+#
+#
+#   if check_truthy.value
+#       [[[a.value[0],rhst].const,[rhsf,Null].const].const,rest]
+#   else
+#     if next_true.value
+#       [[Null,[[a.value[0],Null].const,Null].const].const,rhs.const]
+#     else
+#       [[rhst,[[a.value[0],rhsf].const,Null].const].const,rest]
+#     end
+#   end
+
+  rhs = Promise.new { chunk_while(a.value[1],b.value[1],t,next_true) }
+  if check_truthy.value
+    [
+      [
+       Promise.new{[a.value[0],Promise.new{ rhs.empty ? [] : rhs.value[0].value[0].value }]},
+       [Promise.new{ rhs.empty ? [] : rhs.value[0].value[1].value[0].value },Null].const
+      ].const,
+      Promise.new{rhs.empty ? [] : rhs.value[1].value}
+    ]
+  else
+    if next_true.value
+      [[Null,[Promise.new{[a.value[0],Null]},Null].const].const,rhs]
+    else
+      [
+        [
+          Promise.new{ rhs.empty ? [] : rhs.value[0].value[0] },
+          [
+            Promise.new{[a.value[0],Promise.new{ rhs.empty ? [] : rhs.value[0].value[1].value[0] }]},
+            Null
+          ].const
+        ].const,
+        Promise.new{ rhs.empty ? [] : rhs.value[1] }
+      ]
+    end
+  end
+end
+
 def init(a)
   raise DynamicError.new "init on empty list",nil if a.empty
   return [] if a.value[1].empty
