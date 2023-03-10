@@ -147,6 +147,23 @@ OpsList = [
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value * b.value }
   ), create_op(
+    name: "join",
+    example: '"hi","yo"*" " -> "hi yo"',
+    sym: "*",
+    type: { [[Str],Str] => Str,
+            [[Int],Str] => Str,},
+    poly_impl: -> at,bt { -> a,b { join(coerce2s(at,a,Str+1),b) } })
+  .add_test('1,2,3*", " -> "1, 2, 3"'),
+  create_op(
+    name: "split",
+    example: '"hi, yo"/", " -> ["hi","yo"]',
+    sym: "/",
+    type: { [Str,Str] => [Str] },
+    impl: -> a,b { split(a,b) })
+  .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
+  .add_test('"ab",*" "/"b "[2 -> ["a","a"]') # test laziness
+  .add_test('",a,,b,"/"," -> ["a","b"]'),
+  create_op(
     name: "pow",
     example: '2^3 -> 8',
     sym: "^",
@@ -443,6 +460,12 @@ OpsList = [
     impl: -> a { transpose(a) },
   ).add_test('"abc","1234"\ -> ["a1","b2","c3","4"]'),
   create_op(
+    name: "reverse",
+    sym: "/",
+    example: '"abc" reverse -> "cba"',
+    type: { [A] => [A] },
+    impl: -> a { reverse(a) },
+  ), create_op(
     name: "unvec",
     sym: "%",
     example: '1,2+3% -> [4,5]',

@@ -213,6 +213,38 @@ def chunk_while(a,b,t,check_truthy = Promise.new{!b.empty && truthy(t,b.value[0]
   end
 end
 
+def reverse(a,sofar=[])
+  return sofar if a.empty
+  reverse(a.value[1],[a.value[0],sofar.const])
+end
+
+def join(a,b)
+  concat_map(a,Null){|i,r,first|
+    first ? append(i,r) : append(b,Promise.new{append(i,r)})
+  }
+end
+
+def split(a,b)
+  s=splith(a,b).const
+  filter(s,s,Str)
+end
+
+def splith(a,b)
+  return [Null,Null] if a.empty
+  if (remainder=starts_with(a,b))
+    [Null,Promise.new{splith(remainder,b)}]
+  else
+    rhs=Promise.new{splith(a.value[1],b)}
+    [Promise.new{[a.value[0],Promise.new{rhs.value[0].value}]},Promise.new{rhs.value[1].value}]
+  end
+end
+
+def starts_with(a,b) # assumed to be strs, returns remainder if match otherwise nil
+  return a if b.empty
+  return nil if a.empty || a.value[0].value != b.value[0].value
+  starts_with(a.value[1],b.value[1])
+end
+
 def init(a)
   raise DynamicError.new "init on empty list",nil if a.empty
   return [] if a.value[1].empty
