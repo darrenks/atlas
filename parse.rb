@@ -16,7 +16,7 @@ def get_expr(tokens,delimiter)
     if atom
       if lastop #binary op
         nodes << implicit_var = new_var if nodes.empty?
-        if lastop.str == ":" && atom.op.name == "var"
+        if lastop.str == ApplyModifier && atom.op.name == "var"
           # ":" would register as a modifier to implicit op, override this
           nodes << AST.new(Ops2[":"], [], lastop) << atom
         else
@@ -31,8 +31,15 @@ def get_expr(tokens,delimiter)
     else # not an atom
       if lastop
         nodes << implicit_var = new_var if nodes.empty?
-        if lastop.str == "@"
-          nodes << AST.new(Ops1["@"], [], lastop)
+        if lastop.str =~ /(.*)(#{FlipRx})$/
+          if !$1.empty? # lexer falsely thought it was an op modifier, split it into 2 tokens
+            z=lastop.dup
+            z.str = $1
+            nodes << make_op1(z)
+            lastop.char_no += $1.size
+            lastop.str = $2
+          end
+          nodes << AST.new(Ops1[FlipModifier], [], lastop)
         else
           nodes << make_op1(lastop)
         end

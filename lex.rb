@@ -1,12 +1,19 @@
 class Token<Struct.new(:str,:char_no,:line_no)
   def name
-    str[/^:?(.*?)@?$/m,1]
+    str[/^#{ApplyRx}?(.*?)#{FlipRx}?$/m,1]
   end
   def is_alpha
     name =~ /^#{IdRx}$/
   end
 end
 
+AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.to_a
+UnmodableSymbols='()\'"{}$'.chars.to_a # these cannot have op modifiers
+FlipModifier="@"
+FlipRx=Regexp.escape FlipModifier
+ApplyModifier=":"
+ApplyRx=Regexp.escape ApplyModifier
+ModableSymbols=AllSymbols-UnmodableSymbols-[FlipModifier,ApplyModifier]
 
 # todo gsub \r\n -> \n and \t -> 8x" " and \r -> \n
 
@@ -16,9 +23,9 @@ StrRx = /"(\\.|[^"])*"?/
 AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-z][a-zA-Z0-9_]*/
-SymRx = /#{' !?`~#%^&*-_=+[]\\|;<,>.}/'.chars.map{|c|Regexp.escape c}*'|'}/
-OpRx = /#{IdRx}|:?#{SymRx}@?|@|:/
-OtherRx = /[()'"{}$]/  # these cannot have op modifiers
+SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
+OpRx = /#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}/
+OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /\/\/.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/
 IgnoreRx = /#{CommentRx}|#{EmptyLineRx}*\n[ \t]+| /
