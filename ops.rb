@@ -189,12 +189,12 @@ OpsList = [
     }})
    .add_test("10/5 -> 2")
    .add_test("9/5 -> 1")
-   .add_test("11/(5~) -> -3")
-   .add_test("10/(5~) -> -2")
-   .add_test("11~/5 -> -3")
-   .add_test("10~/5 -> -2")
-   .add_test("10~/(5~) -> 2")
-   .add_test("9~/(5~) -> 1")
+   .add_test("11/(5-) -> -3")
+   .add_test("10/(5-) -> -2")
+   .add_test("11-/5 -> -3")
+   .add_test("10-/5 -> -2")
+   .add_test("10-/(5-) -> 2")
+   .add_test("9-/(5-) -> 1")
    .add_test("1/0 -> DynamicError")
    .add_test("0/0 -> DynamicError"),
   create_op(
@@ -211,35 +211,36 @@ OpsList = [
     }})
    .add_test("10%5 -> 0")
    .add_test("9%5 -> 4")
-   .add_test("11%(5~) -> -4")
-   .add_test("10%(5~) -> 0")
-   .add_test("11~%5 -> 4")
-   .add_test("10~%5 -> 0")
-   .add_test("10~%(5~) -> 0")
-   .add_test("9~%(5~) -> -4")
+   .add_test("11%(5-) -> -4")
+   .add_test("10%(5-) -> 0")
+   .add_test("11-%5 -> 4")
+   .add_test("10-%5 -> 0")
+   .add_test("10-%(5-) -> 0")
+   .add_test("9-%(5-) -> -4")
    .add_test("5%0 -> DynamicError"),
   create_op(
     name: "not",
+    sym: "~",
     type: { A => Int },
-    example: '2 not -> 0',
+    example: '2~ -> 0',
     poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }
   ), create_op(
     name: "neg",
-    sym: "~",
+    sym: "-",
     type: { Int => Int },
-    example: '2~ -> -2',
+    example: '2- -> -2',
     impl: -> a { -a.value }
   ), create_op(
     name: "abs",
     sym: "|",
     type: { Int => Int },
-    example: '2~| -> 2',
+    example: '2-| -> 2',
     impl: -> a { a.value.abs }
   ), create_op(
     name: "read",
-    sym: "~",
+    sym: "&",
     type: { Str => [Int] },
-    example: '"1 2 -3 4a5 - -6 --7" ~ -> [1,2,-3,4,5,-6,7]',
+    example: '"1 2 -3 4a5 - -6 --7" & -> [1,2,-3,4,5,-6,7]',
     impl: -> a { split_non_digits(a) }
   ), create_op(
     name: "repeat",
@@ -337,7 +338,7 @@ OpsList = [
     example: '"abcd"[3 -> "abc"',
     type: { [[A],Int] => [A] },
     impl: -> a,b { take(b.value, a) }
-  ).add_test('"abc"[(2~) -> ""')
+  ).add_test('"abc"[(2-) -> ""')
    .add_test('""[2 -> ""'),
   create_op(
     name: "drop",
@@ -345,7 +346,7 @@ OpsList = [
     example: '"abcd"]3 -> "d"',
     type: { [[A],Int] => [A] },
     impl: -> a,b { drop(b.value, a) }
-  ).add_test('"abc"](2~) -> "abc"')
+  ).add_test('"abc"](2-) -> "abc"')
    .add_test('""]2 -> ""'),
   create_op(
     name: "range",

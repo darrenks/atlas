@@ -32,8 +32,8 @@ If you want it to evaluate the right side first, use parenthesis.
 
 Even unary ops go from left to right, so to negate a number you actually put the `-` after the expression to negate.
 
-    1~
-    1+2~
+    1-
+    1+2-
     ──────────────────────────────────
     -1
     -3
@@ -63,11 +63,11 @@ You can also name expressions:
 
 Since all ops are overloaded as both unary and binary operators if there are multiple ops in a row, the last is the binary operator and the rest are unary.
 
-    3~~+1
+    3--+1
     ──────────────────────────────────
     4
 
-The `+` was a binary op, and the `~` are unary.
+The `+` was a binary op, and the `-` are unary.
 
 Two expressions in a row without an explicit operation do an implicit op. For numbers this multiplies, and for strings it catenates. You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
 
@@ -81,9 +81,9 @@ Two expressions in a row without an explicit operation do an implicit op. For nu
 
 If you want to use the implicit op following a unary op, it would look like you were trying to just do a binary op instead. To overcome this just be explicit and use `*` or `_`.
 
-    2~*3
+    2-*3
     // or
-    (2~)3
+    (2-)3
     ──────────────────────────────────
     -6
     -6
