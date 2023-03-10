@@ -49,6 +49,23 @@ class Promise
     end
     @impl
   end
+  alias by value
+end
+
+class By
+  def initialize(value,by_value)
+    @value=value
+    @by_value=by_value
+  end
+  def by
+    @by_value
+  end
+  def empty
+    @value == []
+  end
+  def value
+    @value
+  end
 end
 
 # Use this to avoid creating promises that are pointless because the value is constant or it will immediately be computed after construction.
@@ -56,6 +73,7 @@ class Const < Struct.new(:value)
   def empty
     value==[]
   end
+  alias by value
 end
 class Object
   def const
@@ -97,6 +115,41 @@ def filter(a,b,b_elem_type)
    [a.value[0],Promise.new{ filter(a.value[1],b.value[1],b_elem_type) }]
   else
     filter(a.value[1],b.value[1],b_elem_type)
+  end
+end
+
+def sortby(a,b,t)
+  sort(toby(a,b),t)
+end
+
+def toby(a,b)
+  return Null if a.empty || b.empty
+  Promise.new{ [By.new(a.value[0].value, b.value[0].value), toby(a.value[1], b.value[1])] }
+end
+
+# It would be very interesting and useful to design a more lazy sorting algorithm
+# so that you can select ith element in O(n) total time after sorting a list.
+def sort(a,t)
+  return [] if a.empty
+  return a.value if a.value[1].empty
+  evens,odds=partition(a)
+  merge(sort(evens,t),sort(odds,t),t)
+end
+
+# This is not lazy at all, but should be ok since used by sort which consumes it right away
+def partition(a)
+  return [Null,Null] if a.empty
+  evens,odds=partition(a.value[1])
+  [[a.value[0],odds].const,evens]
+end
+
+def merge(a,b,t)
+  return b if a==[]
+  return a if b==[]
+  if spaceship(a[0], b[0],t) < 0
+    [a[0], Promise.new{merge(a[1].value,b,t)}]
+  else
+    [b[0], Promise.new{merge(a,b[1].value,t)}]
   end
 end
 
@@ -194,11 +247,11 @@ def spaceship(a,b,t)
     return 0 if a.empty && b.empty
     return -1 if a.empty
     return 1 if b.empty
-    s0 = spaceship(a.value[0],b.value[0],t-1)
+    s0 = spaceship(a.by[0],b.by[0],t-1)
     return s0 if s0 != 0
-    return spaceship(a.value[1],b.value[1],t)
+    return spaceship(a.by[1],b.by[1],t)
   else
-    a.value<=>b.value
+    a.by<=>b.by
   end
 end
 

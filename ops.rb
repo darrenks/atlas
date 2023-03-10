@@ -342,6 +342,17 @@ OpsList = [
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}
   ), create_op(
+    name: "sort",
+    example: '"atlas" sort -> "aalst"',
+    type: { [A] => [A] },
+    poly_impl: -> at { -> a { sort(a,at-1) }}
+  ), create_op(
+    name: "sortBy",
+    example: '"abc" sortBy (3,1,2) -> "bca"',
+    type: { [[A],[B]] => [A] },
+    poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
+  .add_test('1,2,3 sortBy ("hi","there") -> [1,2]'),
+  create_op(
     name: "concat",
     sym: "_",
     no_promote: true,
@@ -444,7 +455,7 @@ OpsList = [
   create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 09, 2023)") }
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 10, 2023)") }
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
