@@ -1,5 +1,5 @@
 [prog]
-a=b+(5:b)
+a=b+(5@b)
 b
 a
 d=d

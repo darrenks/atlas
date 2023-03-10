@@ -500,8 +500,8 @@ OpsList = [
   # Macros, type only used to specify number of args
   create_op(
     name: "let",
-    example: '5:a+a -> 10',
-    sym: ":",
+    example: '5@a+a -> 10',
+    sym: ApplyModifier,
     type: { [A,A] => [A] },
     impl: MacroImpl,
   ), create_op(

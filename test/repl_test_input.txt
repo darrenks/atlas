@@ -2,5 +2,5 @@
 1,2 tai		// Two tabs to complete tail
 
 5
-a,z:a
+a,z@a
 a

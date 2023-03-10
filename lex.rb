@@ -11,7 +11,7 @@ AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.to_a
 UnmodableSymbols='()\'"{}$'.chars.to_a # these cannot have op modifiers
 FlipModifier="\\"
 FlipRx=Regexp.escape FlipModifier
-ApplyModifier=":"
+ApplyModifier="@"
 ApplyRx=Regexp.escape ApplyModifier
 ModableSymbols=AllSymbols-UnmodableSymbols-[FlipModifier,ApplyModifier]
 
