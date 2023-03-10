@@ -9,7 +9,7 @@ tests = <<'EOF'
 1~~ -> 1~~
 neg 2 -> ParseError
 
-// Test implicit
+-- Test implicit
 1 2 -> 1 2
 1 (2*3) -> 1 (2*3)
 (1*2) 3 -> 1*2 3
@@ -23,7 +23,7 @@ neg 2 -> ParseError
 (1 2) (3 4) -> 1 2 (3 4)
 (1 2) 3 (4 5) -> 1 2 3 (4 5)
 
-// Test space doesnt do anything
+-- Test space doesnt do anything
 1 + 2~ -> 1+2~
 1 + 2*3 -> 1+2*3
 1 ~ -> 1~
@@ -32,11 +32,11 @@ neg 2 -> ParseError
 (1+2 ) -> 1+2
 ( 1+2) -> 1+2
 
-// test unbalanced parens
+-- test unbalanced parens
 1+2)+3 -> 1+2+3
 1+(2*3 -> 1+(2*3)
 
-// Identifiers
+-- Identifiers
 AA -> A A
 aA -> aA
 a_a -> a_a
@@ -44,7 +44,7 @@ A_ A -> A_ A
 
 1; head -> 1;[
 
-// Test apply
+-- Test apply
 1+2@+3 -> 1+(2+3)
 1+2@+3@+4 -> 1+(2+(3+4))
 1+2~@+3 -> 1+(2~+3)
@@ -77,7 +77,7 @@ pass = 0
 name = $0.sub('test/test_','').sub(".rb","")
 tests.lines.each{|test|
   start_line += 1
-  next if test.strip == "" || test =~ /^\/\//
+  next if test.strip == "" || test =~ /^--/
   i,o=test.split("-"+">")
   STDERR.puts "INVALID test #{test}" if !o
   o.strip!

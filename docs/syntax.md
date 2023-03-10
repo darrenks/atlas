@@ -57,13 +57,13 @@ You can also name expressions:
 `=` is also used to test equality, it is only used as assignment if first on a line and the left hand side is an identifier.
 
 -   `()` is the empty list.
--   Single line comments are done with `//`
+-   Single line comments are done with `--`
 -   Identifiers must start with a letter but then can have numbers or underscores.
 -   `@` is an op modifier that flips the argument order.
 
 Since all ops are overloaded as both unary and binary operators if there are multiple ops in a row, the last is the binary operator and the rest are unary.
 
-    3--+1
+    3-|+1 -- that is negate then abs value
     ──────────────────────────────────
     4
 
@@ -72,9 +72,9 @@ The `+` was a binary op, and the `-` are unary.
 Two expressions in a row without an explicit operation do an implicit op. For numbers this multiplies, and for strings it catenates. You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
 
     1+2 3*4
-    // Is parsed as:
+    -- Is parsed as:
     ((1+2) 3)*4
-    // And does an implict multiplication
+    -- And does an implict multiplication
     ──────────────────────────────────
     36
     36
@@ -82,7 +82,7 @@ Two expressions in a row without an explicit operation do an implicit op. For nu
 If you want to use the implicit op following a unary op, it would look like you were trying to just do a binary op instead. To overcome this just be explicit and use `*` or `_`.
 
     2-*3
-    // or
+    -- or
     (2-)3
     ──────────────────────────────────
     -6

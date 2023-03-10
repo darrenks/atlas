@@ -1,9 +1,9 @@
 [prog]
-// ignored
-1 // ignored
-2//ignored
+-- ignored
+1 -- ignored
+2--ignored
 3
-  //ignored
+  --ignored
 [stdout]
 1
 2

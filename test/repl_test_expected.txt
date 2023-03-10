@@ -1,5 +1,5 @@
-[33m ᐳ [0m1+2*4  // That is an up arrow (prev command 1+2)followed by *4
-[33m ᐳ [0m1,2 tail // Two tabs to complete tail
+[33m ᐳ [0m1+2*4  -- That is an up arrow (prev command 1+2)followed by *4
+[33m ᐳ [0m1,2 tail -- Two tabs to complete tail
 [33m ᐳ [0m
 [33m ᐳ [0m5
 [33m ᐳ [0ma,z@a

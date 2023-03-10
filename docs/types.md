@@ -9,11 +9,11 @@ There are 5 types in Atlas.
 
 Strings are just lists of characters.
 
-    123 // This is an integer
-    'x // This is a char
-    "abc" // This is a string, aka list of chars
-    1,2,3 // This is a list of integers constructed via the snoc (cons on end) operator.
-    () show // This is an empty list pretty printed
+    123 -- This is an integer
+    'x -- This is a char
+    "abc" -- This is a string, aka list of chars
+    1,2,3 -- This is a list of integers constructed via the snoc (cons on end) operator.
+    () show -- This is an empty list pretty printed
     ──────────────────────────────────
     123
     x

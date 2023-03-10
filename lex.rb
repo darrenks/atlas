@@ -26,7 +26,7 @@ IdRx = /[a-z][a-zA-Z0-9_]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
 OpRx = /#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
-CommentRx = /\/\/.*/
+CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/
 IgnoreRx = /#{CommentRx}|#{EmptyLineRx}*\n[ \t]+| /
 
