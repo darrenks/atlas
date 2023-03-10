@@ -331,6 +331,17 @@ OpsList = [
             Char => VecOf.new(Char) },
     impl: -> a { range_from(a.value) }
   ), create_op(
+    name: "count",
+    example: '"abcaab" count -> [0,0,0,1,2,1]',
+    type: { [A] => [Int] },
+    impl: -> a { occurence_count(a) }
+  ).add_test('"ab","a","ab" count -> [0,0,1]'),
+  create_op(
+    name: "filter",
+    example: '"abcd" filter (0,1,1,0) -> "bc"',
+    type: { [[A],[B]] => [A] },
+    poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}
+  ), create_op(
     name: "concat",
     sym: "_",
     no_promote: true,

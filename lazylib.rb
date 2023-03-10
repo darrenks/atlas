@@ -85,6 +85,28 @@ def range_from(a)
   [a.const, Promise.new{range_from(a+1)}]
 end
 
+# this isn't as lazy as possible, but it gets to use hashes
+def occurence_count(a,h=Hash.new(-1))
+  return [] if a.empty
+  [(h[to_strict_list(a.value[0])]+=1).const, Promise.new{occurence_count(a.value[1], h)}]
+end
+
+def filter(a,b,b_elem_type)
+  return [] if a.empty || b.empty
+  if truthy(b_elem_type,b.value[0])
+   [a.value[0],Promise.new{ filter(a.value[1],b.value[1],b_elem_type) }]
+  else
+    filter(a.value[1],b.value[1],b_elem_type)
+  end
+end
+
+def to_strict_list(a,sofar=[])
+  a=a.value
+  return a if !(Array===a)
+  return sofar if a==[]
+  to_strict_list(a[1],sofar<<to_strict_list(a[0]))
+end
+
 def init(a)
   raise DynamicError.new "init on empty list",nil if a.empty
   return [] if a.value[1].empty
