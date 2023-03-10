@@ -350,44 +350,51 @@ OpsList = [
    .add_test('""]2 -> ""'),
   create_op(
     name: "range",
-    example: '3 range 7 -> <3,4,5,6>',
+    sym: ":",
+    example: '3:7 -> <3,4,5,6>',
     type: { [Int,Int] => VecOf.new(Int),
             [Char,Char] => VecOf.new(Char) },
     impl: -> a,b { range(a.value, b.value) }
   ), create_op(
     name: "from",
-    example: '3 from -> <3,4,5,6,7,8...',
+    sym: ":",
+    example: '3: -> <3,4,5,6,7,8...',
     type: { Int => VecOf.new(Int),
             Char => VecOf.new(Char) },
     impl: -> a { range_from(a.value) }
   ), create_op(
     name: "count",
+    sym: "=",
     example: '"abcaab" count -> [0,0,0,1,2,1]',
     type: { [A] => [Int] },
     impl: -> a { occurence_count(a) }
   ).add_test('"ab","a","ab" count -> [0,0,1]'),
   create_op(
     name: "filter",
-    example: '"abcd" filter (0,1,1,0) -> "bc"',
+    sym: "?",
+    example: '"abcd" ? (0,1,1,0) -> "bc"',
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}
   ), create_op(
     name: "sort",
-    example: '"atlas" sort -> "aalst"',
+    sym: "!",
+    example: '"atlas" ! -> "aalst"',
     type: { [A] => [A] },
     poly_impl: -> at { -> a { sort(a,at-1) }}
   ), create_op(
     name: "sortBy",
-    example: '"abc" sortBy (3,1,2) -> "bca"',
+    sym: "!",
+    example: '"abc" ! (3,1,2) -> "bca"',
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
-  .add_test('1,2,3 sortBy ("hi","there") -> [1,2]'),
+  .add_test('1,2,3 ! ("hi","there") -> [1,2]'),
   create_op(
     name: "chunkWhile",
-    example: '"abcd" chunkWhile "11 1" -> [["ab","c"],["d",""]]',
+    sym: "~",
+    example: '"abcd" ~ "11 1" -> [["ab","c"],["d",""]]',
     type: { [[A],[B]] => [[[A]]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
-  .add_test('"abcd" chunkWhile " 11 " -> [["","a"],["bc","d"]]'),
+  .add_test('"abcd" ~ " 11 " -> [["","a"],["bc","d"]]'),
   create_op(
     name: "concat",
     sym: "_",
