@@ -76,7 +76,7 @@ def possible_types(node, fn_type)
   rep_levels = [0]*nargs
   promote_levels = [0]*nargs
 
-  if node.op.name == "snoc" && deficits[1]<0
+  if node.op.name == "snoc" && deficits[1]<0 #&& arg_types[0] == arg_types[1]
     deficits[1] += 1
     promote_levels[0] += 1
     t = TypeWithVecLevel.new(t.type+1,t.vec_level)

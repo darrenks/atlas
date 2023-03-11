@@ -251,3 +251,8 @@ a;@a -> AtlasTypeError
 "a"\"b" -> "ba"
 1`\(2,3) -> [1,2,3]
 1-\-2 -> <<-3>>
+
+-- this would be type A which should not be possible to construct
+""&a@a -> DynamicError
+
+(1@"") -> "1"

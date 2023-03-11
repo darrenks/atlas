@@ -436,9 +436,12 @@ OpsList = [
     type: { [[A],A] => [A],
             [Aint,Achar] => [Achar],
             [[[Achar]],Aint] => [[Achar]] },
-    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta-1,a,tb)] }})
+    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
   .add_test('\'a`5 -> ["5","a"]')
+  .add_test('"a"`(5) -> ["5","a"]')
+  .add_test('"a";;`(5;) -> [["5"],["a"]]')
   .add_test('5`\'a -> "a5"')
+  .add_test('5;`"a" -> ["a","5"]')
   .add_test('\'b`\'a -> "ab"'),
   create_op(
     name: "snoc",
@@ -448,7 +451,8 @@ OpsList = [
     type: { [[A],A] => [A],
             [Aint,Achar] => [Achar],
             [[[Achar]],Aint] => [[Achar]] },
-    poly_impl: -> ta,tb {-> a,b { append(coerce2s(ta-1,a,tb),[coerce2s(tb,b,ta-1),Null].const) }}
+    poly_impl: -> ta,tb {-> a,b {
+    append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
   ).add_test("2,1 -> [2,1]")
   .add_test('(2,3),1 -> [2,3,1]')
   .add_test('(2,3),(4,5),1 -> <[2,3,1],[4,5,1]>')
@@ -460,6 +464,7 @@ OpsList = [
   .add_test('(2,3),(1,0.) -> <[2,3,1],[2,3,0]>')
   .add_test('\'a,5 -> ["a","5"]')
   .add_test('5,\'a -> "5a"')
+  .add_test('5,"a" -> ["5","a"]')
   .add_test('\'b,\'a -> "ba"'),
   create_op(
     name: "transpose",

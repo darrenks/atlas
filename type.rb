@@ -32,7 +32,8 @@ class Type
   def default_value
     return [] if dim > 0
     return 32 if is_char
-    return 0
+    return 0 if base_elem == :int
+    raise DynamicError.new("access of the unknown type",nil)
   end
 end
 

@@ -5,27 +5,31 @@ symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
 
 
 #symbols = "~!!@@$()-=[]';?:"
-numbers = "012"
-letters = "abCFS"
-spaces = "  \n\n" # twice as likely
+numbers = "0123"
+letters = "abC"
+spaces = " \n\n\n\n" # twice as likely
 
 # Just the interesting characters to focus on testing parse
 # all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
 
-all = (symbols+numbers+letters+spaces).chars-['$'].to_a # remove things that get input since they stall for now
+all = (symbols+numbers+letters+spaces).chars+['"ab12"']
+
+ReadStdin = Promise.new{ str_to_lazy_list("ab12") }
 
 # todo take all tests and make larger programs that are almost correct
 
-n = 100000
+n = 1000000
 step_limit = 1000
 
-1.upto(8){|program_size|
+4.upto(8){|program_size|
   n.times{
     program = program_size.times.map{all[(rand*all.size).to_i]}*""
     program_io=StringIO.new(program)
     output_io=StringIO.new
     begin
+      puts program
       repl(program_io,output_io,step_limit)
+#       puts "output: ", output_io.string
     rescue AtlasError => e
 
     rescue => e
