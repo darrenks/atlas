@@ -120,7 +120,8 @@ def spec_to_type(spec, vars)
     t.type.base_elem = constraint.to_sym if constraint
     t
   when VecOf
-    TypeWithVecLevel.new(spec_to_type(spec.of, vars).type, 1)
+    t=spec_to_type(spec.of, vars)
+    TypeWithVecLevel.new(t.type, t.vec_level+1)
   else
     unknown
   end

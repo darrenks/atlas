@@ -8,7 +8,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   stack=3.downto(0).map{|i|
     AST.new(create_op(
       name: "col#{i}",
-      type: [[Int]],
+      type: VecOf.new(VecOf.new(Int)),
       impl: int_col(i)
     ),[])
   }
