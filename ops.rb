@@ -7,6 +7,7 @@ class Op < Struct.new(
     :name,
     :sym, # optional
     :type,
+    :type_summary,
     :examples,
     :desc,
     :no_promote,
@@ -19,9 +20,13 @@ class Op < Struct.new(
   def help(show_everything=true)
     puts "#{name} #{sym}"
     puts desc if desc
-    type.each{|t|
-      puts t.inspect.gsub('->','→').gsub('[Char]','Str')
-    }
+    if type_summary
+      puts type_summary
+    else
+      type.each{|t|
+        puts t.inspect.gsub('->','→').gsub('[Char]','Str')
+      }
+    end
     (examples+tests*(show_everything ? 1 : 0)).each{|example|
       puts example.gsub('->','→')
     }
@@ -39,9 +44,8 @@ def create_op(
   name: nil,
   sym: nil,
   type: ,
+  type_summary: nil,
   example: nil,
-  example2: nil,
-  example3: nil,
   no_promote: false,
   desc: nil,
   no_zip: false,
@@ -64,15 +68,13 @@ def create_op(
   end
   examples = []
   examples << example if example
-  examples << example2 if example2
-  examples << example3 if example3
 
   if coerce
     f = built_impl
     built_impl = -> t,from { -> a,b { f[t,from][coerce2s(t[0],a,t[1]),coerce2s(t[1],b,t[0])] }}
   end
 
-  Op.new(name,sym,type,examples,desc,no_promote,no_zip,built_impl,[])
+  Op.new(name,sym,type,type_summary,examples,desc,no_promote,no_zip,built_impl,[])
 end
 
 def int_col(n)
@@ -127,12 +129,12 @@ OpsList = [
     name: "add",
     sym: "+",
     example: "1+2 -> 3",
-    example2: "'a+1 -> 'b",
     type: { [Int,Int] => Int,
             [Int,Char] => Char,
             [Char,Int] => Char },
-    impl: -> a,b { a.value + b.value }
-  ), create_op(
+    impl: -> a,b { a.value + b.value })
+   .add_test("'a+1 -> 'b"),
+  create_op(
     name: "sub",
     sym: "-",
     example: '5-3 -> 2',
@@ -222,7 +224,7 @@ OpsList = [
     name: "not",
     sym: "~",
     type: { A => Int },
-    example: '2~ -> 0',
+    example: '2,0.~ -> <0,1>',
     poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }
   ), create_op(
     name: "neg",
@@ -234,15 +236,16 @@ OpsList = [
     name: "abs",
     sym: "|",
     type: { Int => Int },
-    example: '2-| -> 2',
+    example: '2-,3| -> <2,3>',
     impl: -> a { a.value.abs }
   ), create_op(
     name: "read",
     sym: "&",
     type: { Str => [Int] },
-    example: '"1 2 -3 4a5 - -6 --7" & -> [1,2,-3,4,5,-6,7]',
-    impl: -> a { split_non_digits(a) }
-  ), create_op(
+    example: '"1 2 -3"& -> [1,2,-3]',
+    impl: -> a { split_non_digits(a) })
+  .add_test('"1 2 -3 4a5 - -6 --7" & -> [1,2,-3,4,5,-6,7]'),
+  create_op(
     name: "repeat",
     sym: ",",
     example: '2, -> <2,2,2,2,2...',
@@ -287,26 +290,28 @@ OpsList = [
   ), create_op(
     name: "and",
     sym: "&",
-    example: '1&2 -> 2',
+    example: '1&2,(0&2) -> [2,0]',
     type: { [A,B] => B },
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
   ).add_test("0&2 -> 0"),
   create_op(
     name: "or",
     sym: "|",
-    example: '1|2 -> 1',
-    example2: '1|"b" -> "1"',
-    example3: '"b"|3 -> "b"',
+    example: '1|2,(0|2) -> [1,2]',
     type: { [A,A] => A,
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
+    type_summary: "a a -> a (coerces)",
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb).value : coerce2s(tb,b,ta).value }},
   ).add_test("0|2 -> 2")
+   .add_test('1|"b" -> "1"')
+   .add_test('"b"|3 -> "b"')
    .add_test('0|"b" -> "b"')
    .add_test('""|2 -> "2"')
    .add_test(' 0|\'c -> "c"'),
   create_op(
     name: "input",
+    desc: "all lines of stdin",
     sym: "$",
     type: [Str],
     impl: -> { lines(ReadStdin) }
@@ -390,6 +395,7 @@ OpsList = [
   .add_test('1,2,3 ! ("hi","there") -> [1,2]'),
   create_op(
     name: "chunkWhile",
+    desc: "chunk while second arg is truthy, resulting groups are of the form [truthy, falsey]",
     sym: "~",
     example: '"abcd" ~ "11 1" -> [["ab","c"],["d",""]]',
     type: { [[A],[B]] => [[[A]]] },
@@ -412,13 +418,15 @@ OpsList = [
     name: "implicitAppend",
     sym: " ",
     example: '1"a" -> "1a"',
-    type: { [Str,Str] => Str,
+    type: { [[Achar],[Achar]] => [Achar],
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
+    type_summary: "[a] [a] -> [a] (coerces, one must be non int)",
     impl: -> a,b { append(a,b) },
     coerce: true)
   .add_test("'a 'b -> \"ab\"")
-  .add_test('"ab","cd" "e" -> <"abe","cde">'),
+  .add_test('"ab","cd" "e" -> <"abe","cde">')
+  .add_test('("ab";) ("e";) -> ["ab","e"]'),
   create_op(
     name: "append",
     sym: "_",
@@ -426,6 +434,7 @@ OpsList = [
     type: { [[A],[A]] => [A],
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
+    type_summary: "[a] [a] -> [a] (coerces)",
     impl: -> a,b { append(a,b) },
     coerce: true)
   .add_test('1_"a" -> "1a"'),
@@ -436,6 +445,7 @@ OpsList = [
     type: { [[A],A] => [A],
             [Aint,Achar] => [Achar],
             [[[Achar]],Aint] => [[Achar]] },
+    type_summary: "[a] a -> a (coerces)",
     poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
   .add_test('\'a`5 -> ["5","a"]')
   .add_test('"a"`(5) -> ["5","a"]')
@@ -445,12 +455,13 @@ OpsList = [
   .add_test('\'b`\'a -> "ab"'),
   create_op(
     name: "snoc",
-    desc: "this op prefers to promote the 2nd arg once rather than vectorize it in order for inuitive list construction",
+    desc: "rear cons, promote of first arg is allowed for easy list construction",
     sym: ",",
     example: '1,2,3 -> [1,2,3]',
     type: { [[A],A] => [A],
             [Aint,Achar] => [Achar],
             [[[Achar]],Aint] => [[Achar]] },
+    type_summary: "[a] a -> a (coerces)",
     poly_impl: -> ta,tb {-> a,b {
     append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
   ).add_test("2,1 -> [2,1]")
@@ -514,25 +525,45 @@ OpsList = [
   # Macros, type only used to specify number of args
   create_op(
     name: "let",
+    desc: "save to a variable without consuming it",
     example: '5@a+a -> 10',
     sym: ApplyModifier,
     type: { [A,A] => [A] },
     impl: MacroImpl,
   ), create_op(
     name: "push",
-    desc: "duplicate arg onto the stack",
-    example: '5{*2+} -> 15',
+    desc: "duplicate arg onto a lexical stack",
+    example: '5{,1,},2 -> [5,1,5,2]',
     sym: "{",
     type: { A => A },
     impl: MacroImpl,
   ), create_op(
     name: "pop",
-    desc: "pop last push arg from the stack",
-    example: '5{*2+} -> 15',
+    desc: "pop last push arg from a lexical stack",
+    example: '5{,1,},2 -> [5,1,5,2]',
     sym: "}",
     type: A,
     impl: MacroImpl,
+  ),
+
+  # These are here purely for quickref purposes
+  create_op(
+    name: "flip",
+    sym: "\\",
+    desc: "reverse order of previous op's args",
+    example: '2-\\5 -> 3',
+    type: { :"(a->b->c)" => :"(b->a->c)" },
+    impl: MacroImpl,
+  ), create_op(
+    name: "apply",
+    sym: "@",
+    desc: "increase precedence, apply next op before previous op",
+    example: '2*3@+4 -> 14',
+    type: { :"(a->b->c)" => :"(a->b->c)",
+            :"(a->b)" => :"(a->b)" },
+    impl: MacroImpl,
   )
+
 ]
 
 Ops0 = {}
@@ -567,6 +598,7 @@ def addOp(table,op)
 end
 
 OpsList.each{|op|
+  next if op.name == "flip"
   ops = case op.narg
   when 0
     addOp(Ops0, op)

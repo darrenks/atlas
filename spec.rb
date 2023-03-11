@@ -59,7 +59,7 @@ def parse_raw_arg_spec(raw,list_nest_depth=0)
     r.vec_of=true
     r
   when Type
-    ExactTypeSpec.new(raw.dim+list_nest_depth, raw)
+    ExactTypeSpec.new(Type.new(raw.dim+list_nest_depth, raw.base_elem))
   else
     p raw
     error
@@ -67,15 +67,13 @@ def parse_raw_arg_spec(raw,list_nest_depth=0)
 end
 
 class ExactTypeSpec
-  attr_reader :req_dim
   attr_reader :type
   attr_accessor :vec_of
-  def initialize(req_dim, type)
-    @req_dim = req_dim
-    @type = type
+  def initialize(rtype)
+    @type = rtype
   end
-  def check_base_elem(uses,type)
-    type.can_base_be(@type)
+  def check_base_elem(uses,t)
+    t.can_base_be(@type)
   end
   def inspect
     (vec_of ? "<" : "")+type.inspect+(vec_of ? ">" : "")

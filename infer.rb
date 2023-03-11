@@ -149,7 +149,7 @@ def rank_deficits(arg_types, specs, vars)
       when VarTypeSpec
         vars[spec.var_name].max_pos_dim + spec.extra_dims
       when ExactTypeSpec
-        spec.req_dim
+        spec.type.dim
       else
         error
       end
