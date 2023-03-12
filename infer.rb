@@ -16,9 +16,14 @@ def infer(root)
     node.in_q = false
     prev_type = node.type_with_vec_level
     calc_type(node)
-    if node.type_with_vec_level != prev_type
+    if node.type_with_vec_level != prev_type && !node.last_error
       node.type_updates = (node.type_updates || 0) + 1
-      raise AtlasTypeError.new "cannot construct the infinite type",node if node.type_updates > 100
+      if node.type_updates > 100
+        if node.type.dim < 20 && node.vec_level < 20
+          raise "congratulations you have found a program that does not find a fixed point for its type, please report this discovery - I am not sure if it possible and would like to know"
+        end
+        raise AtlasTypeError.new "cannot construct the infinite type" ,node
+      end
 
       node.used_by.each{|dep|
         if !dep.in_q

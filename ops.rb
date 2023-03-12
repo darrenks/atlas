@@ -637,7 +637,7 @@ def create_int(str)
 end
 
 def create_str(str)
-  raise LexError.new("unterminated string") if str[-1] != '"'
+  raise LexError.new("unterminated string") if str[-1] != '"' || str.size==1
   create_op(
     name: "data",
     type: Str,

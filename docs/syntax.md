@@ -1,5 +1,7 @@
 # Syntax
 
+See the [readme](../README.md) for syntax basics.
+
 Atlas uses infix syntax for all operations. It's precedence is left to right. Atlas tries to compromise between simplicity, familiarity, and conciseness. Sticking to math like precedence would be more familiar, but is actually quite complicated and inconsistent. Similar reasoning as APL is also used here in that there are too many ops to keep track of the precedence of each. It's actually very easy to get used to the lack of op specific precedence.
 
 All ops have a symbol version and named version. This is so that code can be written in a legible way (even to newcomers) but you can also make it short if you want to. I have no idea why APL and variants don't do this. Even the named versions are still written infix. For example:
@@ -12,64 +14,29 @@ You can think of it like an OO languages `a.add(5)` if that helps.
 
 Atlas is actually a just a REPL calculator and so if you have multiple lines it is just treated as multiple expressions that are all printed.
 
-    4
-    1+2
+You can still have multiline expressions so long as you indent the extra lines.
+
+    1*2
+      +4
     ──────────────────────────────────
-    4
-    3
+    6
 
-Multiple binary operators are evaluated left to right.
+Single line comments are done with `--`. I recommend setting your syntax highlighting to be Haskell for `.atl` files for an easy keyboard shortcut. If you wanted to negate then subtract, just add then negate instead.
 
-    1+2*3
+    1+1--this is ignored
     ──────────────────────────────────
-    9
+    2
 
-If you want it to evaluate the right side first, use parenthesis.
 
-    1+(2*3)
-    ──────────────────────────────────
-    7
-
-Even unary ops go from left to right, so to negate a number you actually put the `-` after the expression to negate.
-
-    1-
-    1+2-
-    ──────────────────────────────────
-    -1
-    -3
-
-You can also name expressions:
-
-    a = 4
-    a + a
-    ──────────────────────────────────
-    8
-
-`=` is the only thing that will suppress the automatic printing of values, but if an assignment is the last thing in your program it too will be printed.
-
-    a=2
-    3
-    b=4
-    ──────────────────────────────────
-    3
-    4
-
-`=` is also used to test equality, it is only used as assignment if first on a line and the left hand side is an identifier.
-
--   `()` is the empty list.
--   Single line comments are done with `--`
--   Identifiers must start with a letter but then can have numbers or underscores.
--   `@` is an op modifier that flips the argument order.
-
-Since all ops are overloaded as both unary and binary operators if there are multiple ops in a row, the last is the binary operator and the rest are unary.
+Since all ops are overloaded as both unary and binary operators if there are multiple ops in a row, the last is the binary operator and the rest are unary (it is the only way that makes sense).
 
     3-|+1 -- that is negate then abs value
     ──────────────────────────────────
     4
 
-The `+` was a binary op, and the `-` are unary.
+The `+` was a binary op, and the `-` and `|` are unary.
 
-Two expressions in a row without an explicit operation do an implicit op. For numbers this multiplies, and for strings it catenates. You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
+Two expressions in a row without an explicit operation do an implicit op. For numbers this multiplies, and for strings it appends. You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
 
     1+2 3*4
     -- Is parsed as:
@@ -82,8 +49,80 @@ Two expressions in a row without an explicit operation do an implicit op. For nu
 If you want to use the implicit op following a unary op, it would look like you were trying to just do a binary op instead. To overcome this just be explicit and use `*` or `_`.
 
     2-*3
-    -- or
+    -- or you could use parenthesis
     (2-)3
     ──────────────────────────────────
     -6
     -6
+
+In addition to assignment, `=` is also used to test equality, it is only used as assignment if first on a line and the left hand side is an identifier.
+
+`()` is the empty list.
+
+    () show
+    ──────────────────────────────────
+    []
+
+Identifiers must start with a letter but then can have numbers or underscores.
+
+Parens do *not* need to be matched
+
+    )p
+    2*(3+4
+    ──────────────────────────────────
+    []
+    14
+
+`@` is an op modifier that flips the argument order of the next op. It can be used in a nested manner.
+
+    2*1@+1@+1
+    2*(1+(1+1))
+    ──────────────────────────────────
+    6
+    6
+
+It can also be used on unary ops. It will be done implicitly on unary ops if used on a binary op right after it.
+
+    2*1-@+1
+    2*1@-@+1
+    2*((1-)+1)
+    ──────────────────────────────────
+    0
+    0
+    0
+
+`@` is also an assignment that does not consume the value (if there is an identifier on the right).
+
+    1+2@a*a
+    ──────────────────────────────────
+    9
+
+`\` is also a modifier that flips the op order of the previous op.
+
+    5-\8
+    ──────────────────────────────────
+    3
+
+The reason for it being after the op is so that it can also be used as a regular unary op as well (`transpose`).
+
+Both of these modifiers can be used on the implicit op.
+
+    "hi"\"there"
+    2+3@5
+    ──────────────────────────────────
+    therehi
+    17
+
+`{` and `}` may seem special syntactically, but they are not. `{` is a unary op that "pushes" on to a stack (that only exists at parse time) so that the next `}` (which is just an atom) can access the same value. It is equivalent to using assignment or `@`, but shorter when a value is reused only once. It has a nice appearance in that visually matching brackets will tell you which one corresponds to which.
+
+    5*2{*}
+    ──────────────────────────────────
+    100
+
+The curly brackets are nice for avoiding normal variable assignments, but cannot help you write a circular program since they always copy the left value. To do that just use parenthesis with an implicit value. Instead of writing `a cons 1@a` we could just write:
+
+    (cons 1)
+    ──────────────────────────────────
+    1 1 1 1 1 1...
+
+The parenthesis are not actually needed in this case since there is nothing else, I suspect people may use this feature accidentally and so I may require parenthesis to always be used in the future.

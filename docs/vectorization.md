@@ -36,7 +36,7 @@ Longer lists are truncated to that of the smaller (this isn't the case for all v
     ──────────────────────────────────
     3 6
 
-Automatic vectorization can work non scalar arguments as well.
+Automatic vectorization can work on non scalar arguments as well.
 
     "1 2 3","4 5" read show
     ──────────────────────────────────
@@ -61,6 +61,8 @@ Automatic promotion and vectorization can both be done implicitly together. For 
     'a take (1,0) show
     ──────────────────────────────────
     <"a","">
+
+The `(1,0)` is vectorized and the `'a` is promoted to a string.
 
 Unvectorization is preferred to promotion. That is why the earlier example `1,2,3+4 len` returned `3` instead of `[1,1,1]`.
 
