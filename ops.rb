@@ -515,7 +515,7 @@ OpsList = [
   create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 11, 2023)") }
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 13, 2023)") }
   ), create_op(
     name: "reductions",
     desc: "operation count so far",

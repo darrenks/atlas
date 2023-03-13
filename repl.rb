@@ -1,5 +1,5 @@
 require "readline"
-Dir["*.rb"].each{|f| require_relative f }
+Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)

@@ -16,6 +16,8 @@ Or you can use it as a repl with:
 
 You will need Ruby, I have tested it to work with 2.7 and 3.1.
 
+There is also an [online REPL](https://replit.com/@darrenks/Atlas) available.
+
 ## Prerequisites to Cool Stuff
 
 Atlas is like a calculator, all it has are values to which you can apply operators.
@@ -207,7 +209,7 @@ Folds are extremely powerful (see [expressiveness of fold](https://www.cs.nott.a
 
 Since we have seen how to foldr, we can use it to get the nth state or last state. Just foldr, taking the first element where index=n. This would need something that resembles an if statement.
 
-To create an if statement of the form `if a then b else c`, we could treat an non-empty list as true and an empty list as false. Then if we replace all elements of the list `a` with the value `b`, and finally append `c` then just taking the first element of the result would accomplish the task, because if `a` was false (empty) then the value would be `c` but if `a` was true (non empty), it would be the first element which has been replaced with `b`.
+To create an if statement of the form `if a then b else c`, we could treat a non-empty list as true and an empty list as false. Then if we replace all elements of the list `a` with the value `b`, and finally append `c` then just taking the first element of the result would accomplish the task, because if `a` was false (empty) then the value would be `c` but if `a` was true (non empty), it would be the first element which has been replaced with `b`.
 
 We have ops for append and head but what about replace? That can be done by doing a vectorized no op. One way to do that is to append two elements and take the head, thus ignoring the second value.
 
