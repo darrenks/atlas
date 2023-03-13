@@ -201,13 +201,13 @@ def chunk_while(a,b,t,check_truthy = Promise.new{!b.empty && truthy(t,b.value[0]
     else
       [
         [
-          Promise.new{ rhs.empty ? [] : rhs.value[0].value[0] },
+          Promise.new{ rhs.empty ? [] : rhs.value[0].value[0].value },
           [
-            Promise.new{[a.value[0],Promise.new{ rhs.empty ? [] : rhs.value[0].value[1].value[0] }]},
-            Null
+            Promise.new{[a.value[0],Promise.new{ rhs.empty ? [] : rhs.value[0].value[1].value[0].value }]},
+            []
           ].const
         ].const,
-        Promise.new{ rhs.empty ? [] : rhs.value[1] }
+        Promise.new{ rhs.empty ? [] : rhs.value[1].value }
       ]
     end
   end

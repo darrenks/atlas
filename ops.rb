@@ -400,7 +400,7 @@ OpsList = [
     example: '"abcd" ~ "11 1" -> [["ab","c"],["d",""]]',
     type: { [[A],[B]] => [[[A]]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
-  .add_test('"abcd" ~ " 11 " -> [["","a"],["bc","d"]]'),
+  .add_test('"abcde" ~ " 11  " -> [["","a"],["bc","de"]]'),
   create_op(
     name: "concat",
     sym: "_",
