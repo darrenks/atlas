@@ -256,3 +256,6 @@ a;@a -> AtlasTypeError
 ""&a@a -> DynamicError
 
 (1@"") -> "1"
+
+-- test laziness of chunk while using collatz conjecture problem
+a%2&(3*a+1)|(a/2)`8@a~(a=.~%)[ -> [8,4,2,1]

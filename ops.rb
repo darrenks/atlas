@@ -397,10 +397,11 @@ OpsList = [
     name: "chunkWhile",
     desc: "chunk while second arg is truthy, resulting groups are of the form [truthy, falsey]",
     sym: "~",
-    example: '"abcd" ~ "11 1" -> [["ab","c"],["d",""]]',
-    type: { [[A],[B]] => [[[A]]] },
+    example: '"abcd" ~ "11 1" -> ["ab","cd"]',
+    type: { [[A],[B]] => [[A]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
-  .add_test('"abcde" ~ " 11  " -> [["","a"],["bc","de"]]'),
+  .add_test('"abcde" ~ " 11  " -> ["","abc","d","e"]')
+  .add_test('""~() -> [""]'),
   create_op(
     name: "concat",
     sym: "_",
