@@ -20,7 +20,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   elsif !ARGV.empty?
     input_fn = lambda { gets(nil) }
   else
-    if File.exists? HistFile
+    if File.exist? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
     input_fn = lambda {
