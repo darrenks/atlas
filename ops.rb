@@ -529,7 +529,7 @@ OpsList = [
     desc: "save to a variable without consuming it",
     example: '5@a+a -> 10',
     sym: ApplyModifier,
-    type: { [A,A] => [A] },
+    type: { [A,:id] => [A] },
     impl: MacroImpl,
   ), create_op(
     name: "push",
@@ -553,14 +553,14 @@ OpsList = [
     sym: "\\",
     desc: "reverse order of previous op's args",
     example: '2-\\5 -> 3',
-    type: { :"(a->b->c)" => :"(b->a->c)" },
+    type: { :"(a b->c)" => :"(b a->c)" },
     impl: MacroImpl,
   ), create_op(
     name: "apply",
     sym: "@",
     desc: "increase precedence, apply next op before previous op",
     example: '2*3@+4 -> 14',
-    type: { :"(a->b->c)" => :"(a->b->c)",
+    type: { :"(a b->c)" => :"(a b->c)",
             :"(a->b)" => :"(a->b)" },
     impl: MacroImpl,
   )

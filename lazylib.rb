@@ -198,7 +198,7 @@ def split(a,b)
   filter(s,s,Str)
 end
 
-def splith(a,b)
+def splith(a,b) # fyi could be lazier since we know we return a list always
   return [Null,Null] if a.empty
   if (remainder=starts_with(a,b))
     [Null,Promise.new{splith(remainder,b)}]
