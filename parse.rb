@@ -54,6 +54,7 @@ def get_expr(tokens,delimiter)
         if t.str != delimiter
           if DelimiterPriority[t.str] >= DelimiterPriority[delimiter]
             # e.g. encountered ) but no ( to match, do nothing except process implicit_var
+            lastop = nil
             next
           else # e.g. token is eof, expecting )
             # return without consuming token

@@ -33,7 +33,7 @@ end
 # creates an IR from an AST, replacing vars
 def to_ir(ast,context)
   ir = create_ir(ast,context)
-  check_missing(ir,context,{})
+  ir = check_missing(ir,context,{})
   ir = lookup_vars(ir,context,{})
   ir
 end
@@ -50,14 +50,7 @@ def create_ir(node,context) # and register_vars
     set(node.args[1].token, node.args[0], context)
   else
     args=node.args.map{|arg|create_ir(arg,context)}
-    op = if $golf_mode && node.op.name == "var" && !context.include?(node.token.str)
-      create_op(
-        name: "data",
-        type: Str,
-        impl: str_to_lazy_list(node.token.str))
-    else
-      node.op.dup
-    end
+    op = node.op.dup
     if node.token && node.token.str =~ /#{FlipRx}$/
       args.reverse!
     end
@@ -70,11 +63,21 @@ def check_missing(node,context,been)
   been[node.id]=true
   if node.op.name == "var"
     name = node.from.token.str
-    raise(ParseError.new("unset identifier %p" % name, node.from.token)) unless context.include? name
+    if !context.include? name
+      if $golf_mode
+        return IR.new(create_op(
+          name: "data",
+          type: Str,
+          impl: str_to_lazy_list(name)),[],node.from)
+      else
+        raise(ParseError.new("unset identifier %p" % name, node.from.token))
+      end
+    end
     #raise(ParseError.new("trivial self dependency is nonsensical", node.from.token)) if context[name] == node
     check_missing(context[name],context,been)
   else
-    node.args.each{|arg| check_missing(arg, context,been) }
+    node.args.map!{|arg| check_missing(arg, context,been) }
+    node
   end
 end
 
