@@ -6,4 +6,5 @@ ruby test/test_examples.rb
 ruby test/test_op_examples.rb
 ruby test/test_docs.rb
 sh test/test_repl.sh
+sh test/test_golf_mode.sh
 ruby test/update_date.rb

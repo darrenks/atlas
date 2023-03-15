@@ -37,10 +37,14 @@ neg 2 -> ParseError
 1+(2*3 -> 1+(2*3)
 
 -- Identifiers
-AA -> A A
+AA -> AA
 aA -> aA
 a_a -> a_a
 A_ A -> A_ A
+
+-- Test binary character identifiers
+->    -- chr two char 127 in a row
+λλ -> λ λ -- two unicode chars in a row
 
 1; head -> 1;[
 

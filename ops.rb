@@ -80,7 +80,9 @@ end
 def int_col(n)
   -> {
     map(lines(ReadStdin).const){|v|
-      take(1,Promise.new{drop(n,Promise.new{split_non_digits(v)})})
+      v=drop(n,Promise.new{split_non_digits(v)})
+      raise DynamicError.new "int col: empty list",from if v==[]
+      v[0].value
     }
   }
 end
@@ -516,7 +518,7 @@ OpsList = [
   create_op(
     name: "version",
     type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 13, 2023)") }
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 14, 2023)") }
   ), create_op(
     name: "reductions",
     desc: "operation count so far",

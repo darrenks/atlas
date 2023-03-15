@@ -50,7 +50,14 @@ def create_ir(node,context) # and register_vars
     set(node.args[1].token, node.args[0], context)
   else
     args=node.args.map{|arg|create_ir(arg,context)}
-    op = node.op.dup
+    op = if $golf_mode && node.op.name == "var" && !context.include?(node.token.str)
+      create_op(
+        name: "data",
+        type: Str,
+        impl: str_to_lazy_list(node.token.str))
+    else
+      node.op.dup
+    end
     if node.token && node.token.str =~ /#{FlipRx}$/
       args.reverse!
     end

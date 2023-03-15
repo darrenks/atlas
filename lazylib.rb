@@ -383,14 +383,12 @@ def to_string_h(t, value, orig_dim, rhs)
   elsif t == Char
     [value, rhs]
   else # List
-    dim = t.string_dim
+    # print 1d lists on new lines if golf mode
+    dim = $golf_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
     # print newline separators after every element for better interactive io
     separator1 = dim == 2 ? "\n" : ""
     # but don't do this for separators like space, you would end up with trailing space in output
     separator2 = [""," ",""][dim] || "\n"
-
-    # this would make the lang a bit better on golf.shinh.org but not intuitive
-    #separator = "\n" if orig_dim == 1 && dim == 1
 
     concat_map(value,rhs){|v,r,first|
       svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{str_to_lazy_list(separator1, r)}) }

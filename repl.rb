@@ -8,18 +8,29 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   stack=3.downto(0).map{|i|
     AST.new(create_op(
       name: "col#{i}",
-      type: VecOf.new(VecOf.new(Int)),
+      type: VecOf.new(Int),
       impl: int_col(i)
     ),[])
   }
 
   line_no = 1
 
+  if ARGV.include?("-g")
+    $golf_mode = true
+    ARGV.delete("-g")
+  elsif ARGV.include?("-G")
+    $golf_mode = false
+    ARGV.delete("-G")
+  end
+
   if input
+    $golf_mode = false if $golf_mode.nil?
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
+    $golf_mode = true if $golf_mode.nil?
     input_fn = lambda { gets(nil) }
   else
+    $golf_mode = false if $golf_mode.nil?
     if File.exists? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
@@ -64,9 +75,8 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
           next
         end
 
-        if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_alpha
+        if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_name
           assignment = true
-          assertVar(tokens[0])
           ast = parse_line(tokens[2..-1], stack)
           set(tokens[0], ast, context)
         else
