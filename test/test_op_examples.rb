@@ -1,7 +1,7 @@
 require './test/check_example.rb'
 
 pass=0
-OpsList.each{|op|
+ActualOpsList.each{|op|
   (op.examples+op.tests).each{|example|
     check_example(example){
       "example test for op: #{op.name}"

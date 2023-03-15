@@ -10,6 +10,7 @@ class Op < Struct.new(
     :type_summary,
     :examples,
     :desc,
+    :ref_only,
     :no_promote,
     :no_zip,
     :impl,
@@ -31,12 +32,21 @@ class Op < Struct.new(
       puts example.gsub('->','→')
     }
     misc = []
-    puts "no_zip=true" if no_zip
     puts
   end
   def add_test(s)
     tests<<s
     self
+  end
+end
+
+class String
+  def help(unused=true)
+    puts
+    puts "#"*(self.size+4)
+    puts "# "+self+" #"
+    puts "#"*(self.size+4)
+    puts
   end
 end
 
@@ -48,6 +58,7 @@ def create_op(
   example: nil,
   no_promote: false,
   desc: nil,
+  ref_only: false,
   no_zip: false,
   poly_impl: nil, # impl that needs type info
   impl: nil,
@@ -74,7 +85,7 @@ def create_op(
     built_impl = -> t,from { -> a,b { f[t,from][coerce2s(t[0],a,t[1]),coerce2s(t[1],b,t[0])] }}
   end
 
-  Op.new(name,sym,type,type_summary,examples,desc,no_promote,no_zip,built_impl,[])
+  Op.new(name,sym,type,type_summary,examples,desc,ref_only,no_promote,no_zip,built_impl,[])
 end
 
 def int_col(n)
@@ -88,46 +99,8 @@ def int_col(n)
 end
 
 OpsList = [
+  "math",
   create_op(
-    name: "head",
-    sym: "[",
-    example: '"abc"[ -> \'a',
-    type: { [A] => A },
-    no_promote: true,
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "head on empty list",from if a.empty
-      a.value[0].value
-    }},
-  ), create_op(
-    name: "last",
-    sym: "]",
-    no_promote: true,
-    example: '"abc"] -> \'c',
-    type: { [A] => A },
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "last on empty list",from if a.empty
-      last(a)
-    }}
-  ), create_op(
-    name: "tail",
-    example: '"abc"> -> "bc"',
-    sym: ">",
-    no_promote: true,
-    type: { [A] => [A] },
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "tail on empty list",from if a.empty
-      a.value[1].value}}
-  ), create_op(
-    name: "init",
-    example: '"abc"< -> "ab"',
-    sym: "<",
-    no_promote: true,
-    type: { [A] => [A] },
-    impl_with_loc: -> from { -> a {
-      raise DynamicError.new "init on empty list",from if a.empty
-      init(a)
-    }}
-  ), create_op(
     name: "add",
     sym: "+",
     example: "1+2 -> 3",
@@ -150,35 +123,6 @@ OpsList = [
     sym: "*",
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value * b.value }
-  ), create_op(
-    name: "join",
-    example: '"hi","yo"*" " -> "hi yo"',
-    sym: "*",
-    type: { [[Str],Str] => Str,
-            [[Int],Str] => Str,},
-    poly_impl: -> at,bt { -> a,b { join(coerce2s(at,a,Str+1),b) } })
-  .add_test('1,2,3*", " -> "1, 2, 3"'),
-  create_op(
-    name: "split",
-    example: '"hi, yo"/", " -> ["hi","yo"]',
-    sym: "/",
-    type: { [Str,Str] => [Str] },
-    impl: -> a,b { split(a,b) })
-  .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
-  .add_test('"ab",*" "/"b "[2 -> ["a","a"]') # test laziness
-  .add_test('",a,,b,"/"," -> ["a","b"]'),
-  create_op(
-    name: "pow",
-    example: '2^3 -> 8',
-    sym: "^",
-    type: { [Int,Int] => Int },
-    impl: -> a,b { a.value ** b.value } # todo use formula that will always be int
-  ), create_op(
-    name: "replicate",
-    example: '"ab"^3 -> "ababab"',
-    sym: "^",
-    type: { [Str,Int] => Str },
-    impl: -> a,b { concat(take(b.value,repeat(a).const).const) }
   ), create_op(
     name: "div",
     example: '7/3 -> 2',
@@ -223,12 +167,12 @@ OpsList = [
    .add_test("9-%(5-) -> -4")
    .add_test("5%0 -> DynamicError"),
   create_op(
-    name: "not",
-    sym: "~",
-    type: { A => Int },
-    example: '2,0.~ -> <0,1>',
-    poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }
-  ), create_op(
+    name: "pow",
+    example: '2^3 -> 8',
+    sym: "^",
+    type: { [Int,Int] => Int },
+    impl: -> a,b { a.value ** b.value }), # todo use formula that will always be int
+  create_op(
     name: "neg",
     sym: "-",
     type: { Int => Int },
@@ -239,14 +183,20 @@ OpsList = [
     sym: "|",
     type: { Int => Int },
     example: '2-,3| -> <2,3>',
-    impl: -> a { a.value.abs }
+    impl: -> a { a.value.abs }),
+  "vector",
+  create_op(
+    name: "unvec",
+    sym: "%",
+    example: '1,2+3% -> [4,5]',
+    type: { VecOf.new(A) => [A] },
+    impl: -> a { a.value },
   ), create_op(
-    name: "read",
-    sym: "&",
-    type: { Str => [Int] },
-    example: '"1 2 -3"& -> [1,2,-3]',
-    impl: -> a { split_non_digits(a) })
-  .add_test('"1 2 -3 4a5 - -6 --7" & -> [1,2,-3,4,5,-6,7]'),
+    name: "vectorize",
+    sym: ".",
+    example: '1,2,3. -> <1,2,3>',
+    type: { [A] => VecOf.new(A) },
+    impl: -> a { a.value }),
   create_op(
     name: "repeat",
     sym: ",",
@@ -254,92 +204,67 @@ OpsList = [
     type: { A => VecOf.new(A) },
     impl: -> a { repeat(a) }
   ), create_op(
-    name: "eq",
-    example: '3=3 -> [3]',
-    sym: "=",
-    type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } })
-  .add_test("3=2 -> []")
-  .add_test("1=2 -> []")
-  .add_test("1=1 -> [1]")
-  .add_test('\'a=\'a -> "a"')
-  .add_test("'d=100 -> AtlasTypeError")
-  .add_test('"abc"="abc" -> ["abc"]')
-  .add_test('"abc"="abd" -> []')
-  .add_test('"abc"=\'a -> <"a","","">')
-  .add_test('"abc"=(\'a.) -> <"a">')
-  .add_test('"abc".="abd" -> <"a","b","">'),
+    name: "range",
+    sym: ":",
+    example: '3:7 -> <3,4,5,6>',
+    type: { [Int,Int] => VecOf.new(Int),
+            [Char,Char] => VecOf.new(Char) },
+    impl: -> a,b { range(a.value, b.value) }
+  ), create_op(
+    name: "from",
+    sym: ":",
+    example: '3: -> <3,4,5,6,7,8...',
+    type: { Int => VecOf.new(Int),
+            Char => VecOf.new(Char) },
+    impl: -> a { range_from(a.value) }),
+
+  "list",
   create_op(
-    name: "lessThan",
-    example: '4<5 -> [5]',
-    sym: "<",
-    type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [b,Null] : [] } }
-  ).add_test("5<4 -> []"),
-  create_op(
-    name: "greaterThan",
-    example: '5>4 -> [4]',
+    name: "head",
+    sym: "[",
+    example: '"abc"[ -> \'a',
+    type: { [A] => A },
+    no_promote: true,
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "head on empty list",from if a.empty
+      a.value[0].value
+    }},
+  ), create_op(
+    name: "last",
+    sym: "]",
+    no_promote: true,
+    example: '"abc"] -> \'c',
+    type: { [A] => A },
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "last on empty list",from if a.empty
+      last(a)
+    }}
+  ), create_op(
+    name: "tail",
+    example: '"abc"> -> "bc"',
     sym: ">",
-    type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [b,Null] : [] } }
-  ).add_test("4>5 -> []"),
-  create_op(
+    no_promote: true,
+    type: { [A] => [A] },
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "tail on empty list",from if a.empty
+      a.value[1].value}}
+  ), create_op(
+    name: "init",
+    example: '"abc"< -> "ab"',
+    sym: "<",
+    no_promote: true,
+    type: { [A] => [A] },
+    impl_with_loc: -> from { -> a {
+      raise DynamicError.new "init on empty list",from if a.empty
+      init(a)
+    }}
+  ), create_op(
     name: "len",
     example: '"asdf"# -> 4',
     sym: "#",
     type: { [A] => Int },
-    impl: -> a { len(a) }
-  ), create_op(
-    name: "and",
-    sym: "&",
-    example: '1&2,(0&2) -> [2,0]',
-    type: { [A,B] => B },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
-  ).add_test("0&2 -> 0"),
+    impl: -> a { len(a) }),
   create_op(
-    name: "or",
-    sym: "|",
-    example: '1|2,(0|2) -> [1,2]',
-    type: { [A,A] => A,
-            [Aint,[Achar]] => [Achar],
-            [[Achar],Aint] => [Achar] },
-    type_summary: "a a -> a (coerces)",
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb).value : coerce2s(tb,b,ta).value }},
-  ).add_test("0|2 -> 2")
-   .add_test('1|"b" -> "1"')
-   .add_test('"b"|3 -> "b"')
-   .add_test('0|"b" -> "b"')
-   .add_test('""|2 -> "2"')
-   .add_test(' 0|\'c -> "c"'),
-  create_op(
-    name: "input",
-    desc: "all lines of stdin",
-    sym: "$",
-    type: VecOf.new(Str),
-    impl: -> { lines(ReadStdin) }
-  ), create_op(
-    name: "show",
-    sym: "p",
-    example: '12p -> "12"',
-    type: { A => Str },
-    no_zip: true,
-    poly_impl: -> t { -> a { inspect_value(t.type+t.vec_level,a,t.vec_level) } }
-  ).add_test('"a"p -> "\"a\""')
-   .add_test('\'a p -> "\'a"')
-   .add_test('1;p -> "[1]"'),
-  create_op(
-    name: "str",
-    sym: "`",
-    example: '12` -> "12"',
-    type: { Int => Str },
-    impl: -> a { inspect_value(Int,a,0) }
-  ), create_op(
-    name: "single",
-    sym: ";",
-    example: '2; -> [2]',
-    type: { A => [A] },
-    impl: -> a { [a,Null] }
-  ), create_op(
     name: "take",
     sym: "[",
     example: '"abcd"[3 -> "abc"',
@@ -356,20 +281,12 @@ OpsList = [
   ).add_test('"abc"](2-) -> "abc"')
    .add_test('""]2 -> ""'),
   create_op(
-    name: "range",
-    sym: ":",
-    example: '3:7 -> <3,4,5,6>',
-    type: { [Int,Int] => VecOf.new(Int),
-            [Char,Char] => VecOf.new(Char) },
-    impl: -> a,b { range(a.value, b.value) }
-  ), create_op(
-    name: "from",
-    sym: ":",
-    example: '3: -> <3,4,5,6,7,8...',
-    type: { Int => VecOf.new(Int),
-            Char => VecOf.new(Char) },
-    impl: -> a { range_from(a.value) }
-  ), create_op(
+    name: "single",
+    sym: ";",
+    example: '2; -> [2]',
+    type: { A => [A] },
+    impl: -> a { [a,Null] }),
+  create_op(
     name: "count",
     sym: "=",
     example: '"abcaab" count -> [0,0,0,1,2,1]',
@@ -410,27 +327,8 @@ OpsList = [
     no_promote: true,
     example: '"abc","123"_ -> "abc123"',
     type: { [[A]] => [A] },
-    impl: -> a { concat(a) },
-  ), create_op(
-    name: "implicitMult",
-    sym: " ",
-    example: '2 3 -> 6',
-    type: { [Int,Int] => Int },
-    impl: -> a,b { a.value*b.value }
-  ), create_op(
-    name: "implicitAppend",
-    sym: " ",
-    example: '1"a" -> "1a"',
-    type: { [[Achar],[Achar]] => [Achar],
-            [Aint,[Achar]] => [Achar],
-            [[Achar],Aint] => [Achar] },
-    type_summary: "[a] [a] -> [a] (coerces, one must be non int)",
-    impl: -> a,b { append(a,b) },
-    coerce: true)
-  .add_test("'a 'b -> \"ab\"")
-  .add_test('"ab","cd" "e" -> <"abe","cde">')
-  .add_test('("ab";) ("e";) -> ["ab","e"]'),
-  create_op(
+    impl: -> a { concat(a) }),
+      create_op(
     name: "append",
     sym: "_",
     example: '"abc"_"123" -> "abc123"',
@@ -456,7 +354,7 @@ OpsList = [
   .add_test('5`\'a -> "a5"')
   .add_test('5;`"a" -> ["a","5"]')
   .add_test('\'b`\'a -> "ab"'),
-  create_op(
+create_op(
     name: "snoc",
     desc: "rear cons, promote of first arg is allowed for easy list construction",
     sym: ",",
@@ -492,39 +390,118 @@ OpsList = [
     sym: "/",
     example: '"abc" reverse -> "cba"',
     type: { [A] => [A] },
-    impl: -> a { reverse(a) },
-  ), create_op(
-    name: "unvec",
-    sym: "%",
-    example: '1,2+3% -> [4,5]',
-    type: { VecOf.new(A) => [A] },
-    impl: -> a { a.value },
-  ), create_op(
-    name: "vectorize",
-    sym: ".",
-    example: '1,2,3. -> <1,2,3>',
-    type: { [A] => VecOf.new(A) },
-    impl: -> a { a.value },
-
-  # Repl/Debug ops
-  ), create_op(
-    name: "type",
-    example: '1 type -> "Int"',
-    type: { A => Str },
-    no_zip: true,
-    poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }})
-  .add_test('"hi" type -> "[Char]"')
-  .add_test('() type -> "[A]"'),
+    impl: -> a { reverse(a) }),
+  "string",
   create_op(
-    name: "version",
-    type: Str,
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 15, 2023)") }
+    name: "join",
+    example: '"hi","yo"*" " -> "hi yo"',
+    sym: "*",
+    type: { [[Str],Str] => Str,
+            [[Int],Str] => Str,},
+    poly_impl: -> at,bt { -> a,b { join(coerce2s(at,a,Str+1),b) } })
+  .add_test('1,2,3*", " -> "1, 2, 3"'),
+  create_op(
+    name: "split",
+    example: '"hi, yo"/", " -> ["hi","yo"]',
+    sym: "/",
+    type: { [Str,Str] => [Str] },
+    impl: -> a,b { split(a,b) })
+  .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
+  .add_test('"ab",*" "/"b "[2 -> ["a","a"]') # test laziness
+  .add_test('",a,,b,"/"," -> ["a","b"]'
   ), create_op(
-    name: "reductions",
-    desc: "operation count so far",
-    type: Int,
-    impl: -> { $reductions }),
-
+    name: "replicate",
+    example: '"ab"^3 -> "ababab"',
+    sym: "^",
+    type: { [Str,Int] => Str },
+    impl: -> a,b { concat(take(b.value,repeat(a).const).const) }),
+  "logic",
+  create_op(
+    name: "eq",
+    example: '3=3 -> [3]',
+    sym: "=",
+    type: { [A,A] => [A] },
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } })
+  .add_test("3=2 -> []")
+  .add_test("1=2 -> []")
+  .add_test("1=1 -> [1]")
+  .add_test('\'a=\'a -> "a"')
+  .add_test("'d=100 -> AtlasTypeError")
+  .add_test('"abc"="abc" -> ["abc"]')
+  .add_test('"abc"="abd" -> []')
+  .add_test('"abc"=\'a -> <"a","","">')
+  .add_test('"abc"=(\'a.) -> <"a">')
+  .add_test('"abc".="abd" -> <"a","b","">'),
+  create_op(
+    name: "lessThan",
+    example: '4<5 -> [5]',
+    sym: "<",
+    type: { [A,A] => [A] },
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [b,Null] : [] } }
+  ).add_test("5<4 -> []"),
+  create_op(
+    name: "not",
+    sym: "~",
+    type: { A => Int },
+    example: '2,0.~ -> <0,1>',
+    poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }
+  ), create_op(
+    name: "greaterThan",
+    example: '5>4 -> [4]',
+    sym: ">",
+    type: { [A,A] => [A] },
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [b,Null] : [] } }
+  ).add_test("4>5 -> []"),
+  create_op(
+    name: "and",
+    sym: "&",
+    example: '1&2,(0&2) -> [2,0]',
+    type: { [A,B] => B },
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
+  ).add_test("0&2 -> 0"),
+  create_op(
+    name: "or",
+    sym: "|",
+    example: '1|2,(0|2) -> [1,2]',
+    type: { [A,A] => A,
+            [Aint,[Achar]] => [Achar],
+            [[Achar],Aint] => [Achar] },
+    type_summary: "a a -> a (coerces)",
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb).value : coerce2s(tb,b,ta).value }},
+  ).add_test("0|2 -> 2")
+   .add_test('1|"b" -> "1"')
+   .add_test('"b"|3 -> "b"')
+   .add_test('0|"b" -> "b"')
+   .add_test('""|2 -> "2"')
+   .add_test(' 0|\'c -> "c"'),
+  '"io"',
+  create_op(
+    name: "input",
+    desc: "all lines of stdin",
+    sym: "$",
+    type: VecOf.new(Str),
+    impl: -> { lines(ReadStdin) }),
+  create_op(
+    name: "emptyPop",
+    desc: "column of ints from stdin",
+    sym: "}",
+    ref_only: true,
+    type: VecOf.new(Int),
+    impl: MacroImpl),
+  create_op(
+    name: "read",
+    sym: "&",
+    type: { Str => [Int] },
+    example: '"1 2 -3"& -> [1,2,-3]',
+    impl: -> a { split_non_digits(a) })
+  .add_test('"1 2 -3 4a5 - -6 --7" & -> [1,2,-3,4,5,-6,7]'),
+  create_op(
+    name: "str",
+    sym: "`",
+    example: '12` -> "12"',
+    type: { Int => Str },
+    impl: -> a { inspect_value(Int,a,0) }),
+  "special",
   # Macros, type only used to specify number of args
   create_op(
     name: "let",
@@ -555,6 +532,7 @@ OpsList = [
     sym: "\\",
     desc: "reverse order of previous op's args",
     example: '2-\\5 -> 3',
+    ref_only: true,
     type: { :"(a b->c)" => :"(b a->c)" },
     impl: MacroImpl,
   ), create_op(
@@ -565,9 +543,58 @@ OpsList = [
     type: { :"(a b->c)" => :"(a b->c)",
             :"(a->b)" => :"(a->b)" },
     impl: MacroImpl,
-  )
+  ), "debug",
+  create_op(
+    name: "show",
+    sym: "p",
+    example: '12p -> "12"',
+    type: { A => Str },
+    type_summary: "a -> [Char] (no vec)",
+    no_zip: true,
+    poly_impl: -> t { -> a { inspect_value(t.type+t.vec_level,a,t.vec_level) } }
+  ).add_test('"a"p -> "\"a\""')
+   .add_test('\'a p -> "\'a"')
+   .add_test('1;p -> "[1]"'),
+  create_op(
+    name: "implicitMult",
+    sym: " ",
+    example: '2 3 -> 6',
+    type: { [Int,Int] => Int },
+    impl: -> a,b { a.value*b.value }
+  ), create_op(
+    name: "implicitAppend",
+    sym: " ",
+    example: '1"a" -> "1a"',
+    type: { [[Achar],[Achar]] => [Achar],
+            [Aint,[Achar]] => [Achar],
+            [[Achar],Aint] => [Achar] },
+    type_summary: "[a] [a] -> [a] (coerces, one must be non int)",
+    impl: -> a,b { append(a,b) },
+    coerce: true)
+  .add_test("'a 'b -> \"ab\"")
+  .add_test('"ab","cd" "e" -> <"abe","cde">')
+  .add_test('("ab";) ("e";) -> ["ab","e"]'),
+  create_op(
+    name: "type",
+    example: '1 type -> "Int"',
+    type: { A => Str },
+    no_zip: true,
+    poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }})
+  .add_test('"hi" type -> "[Char]"')
+  .add_test('() type -> "[A]"'),
+  create_op(
+    name: "version",
+    type: Str,
+    example: 'version -> "Atlas Alpha (Mar 15, 2023)"',
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 15, 2023)") }
+  ), create_op(
+    name: "reductions",
+    desc: "operation count so far",
+    type: Int,
+    impl: -> { $reductions }),
 
 ]
+ActualOpsList = OpsList.reject{|o|String===o}
 
 Ops0 = {}
 Ops1 = {}
@@ -600,8 +627,8 @@ def addOp(table,op)
   table[op.name] = op
 end
 
-OpsList.each{|op|
-  next if op.name == "flip"
+ActualOpsList.each{|op|
+  next if op.ref_only
   ops = case op.narg
   when 0
     addOp(Ops0, op)

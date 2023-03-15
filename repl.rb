@@ -42,7 +42,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
-      all = context.keys + OpsList.filter(&:name).map(&:name)
+      all = context.keys + ActualOpsList.filter(&:name).map(&:name)
       all << "ops"
       all.grep(/^#{Regexp.escape(s)}/)
     }
@@ -68,10 +68,10 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       token_lines.each{|tokens| # each line
         next if tokens[0].str == :EOL
         if tokens.size == 2 && (Ops1[tokens[0].str] || Ops2[tokens[0].str])
-          OpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}.each(&:help)
+          ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}.each(&:help)
           next
         elsif tokens.size == 2 && tokens[0].str == "ops"
-          OpsList.each{|op|op.help(false)}
+          ActualOpsList.each{|op|op.help(false)}
           next
         end
 
