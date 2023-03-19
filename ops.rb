@@ -231,7 +231,6 @@ OpsList = [
     type: { Int => VecOf.new(Int),
             Char => VecOf.new(Char) },
     impl: -> a { range_from(a.value) }),
-
   "list",
   create_op(
     name: "head",
@@ -399,6 +398,13 @@ create_op(
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
   ).add_test('"abc","1234"\ -> ["a1","b2","c3","4"]'),
+  create_op(
+    name: "catch",
+    desc: "experimental feature, may break faith based circular programs",
+    sym: "?",
+    example: '1/(3,2,1,0,1)? -> [0,0,1]',
+    type: { [A] => [A] },
+    impl: -> a { atlas_catch(a) }),
   create_op(
     name: "reverse",
     sym: "/",

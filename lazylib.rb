@@ -45,11 +45,19 @@ class Promise
         # not really needed since new promises are created rather than reused
         @calculating=false
       end
-      raise DynamicError.new "infinite loop was assumed to be non empty, but was nonempty",nil if expect_non_empty && @impl == []
+      raise DynamicError.new "infinite loop was assumed to be non empty, but was empty",nil if expect_non_empty && @impl == []
     end
     @impl
   end
   alias by value
+  def expand
+    return if @expanded
+    value
+    @expanded = true
+    if Array===@impl
+      @impl.each(&:expand)
+    end
+  end
 end
 
 class By
@@ -66,6 +74,10 @@ class By
   def value
     @value
   end
+  def expand
+    @value.expand
+    @by_value.expand
+  end
 end
 
 # Use this to avoid creating promises that are pointless because the value is constant or it will immediately be computed after construction.
@@ -74,6 +86,12 @@ class Const < Struct.new(:value)
     value==[]
   end
   alias by value
+
+  def expand
+    if Array===@impl
+      @impl.each(&:expand)
+    end
+  end
 end
 class Object
   def const
@@ -223,6 +241,17 @@ end
 # value -> (value -> Promise) -> value
 def map(a,&b)
   a.empty ? [] : [Promise.new{b[a.value[0]]}, Promise.new{map(a.value[1],&b)}]
+end
+
+def atlas_catch(a)
+  begin
+    return [] if a.empty
+#     a.value[0].expand
+    a.value[0].value
+  rescue AtlasError => e
+    return []
+  end
+  [a.value[0],Promise.new{atlas_catch(a.value[1])}]
 end
 
 # value -> value
