@@ -110,20 +110,34 @@ OpsList = [
     impl: -> a,b { a.value + b.value })
    .add_test("'a+1 -> 'b"),
   create_op(
+    name: "sum",
+    sym: "+",
+    example: "1,2,3,4+ -> 10",
+    type: { [Int] => Int },
+    impl: -> a { sum(a) })
+   .add_test("1;>+ -> 0"),
+  create_op(
     name: "sub",
     sym: "-",
     example: '5-3 -> 2',
     type: { [Int,Int] => Int,
             [Char,Int] => Char,
             [Char,Char] => Int },
-    impl: -> a,b { a.value - b.value }
-  ), create_op(
+    impl: -> a,b { a.value - b.value }),
+  create_op(
     name: "mult",
     example: '2*3 -> 6',
     sym: "*",
     type: { [Int,Int] => Int },
-    impl: -> a,b { a.value * b.value }
-  ), create_op(
+    impl: -> a,b { a.value * b.value }),
+  create_op(
+    name: "prod",
+    sym: "*",
+    example: "1,2,3,4* -> 24",
+    type: { [Int] => Int },
+    impl: -> a { prod(a) })
+   .add_test("1;>* -> 1"),
+  create_op(
     name: "div",
     example: '7/3 -> 2',
     sym: "/",

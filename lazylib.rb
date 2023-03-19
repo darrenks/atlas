@@ -295,6 +295,16 @@ def promoten(a,n)
   end
 end
 
+def sum(a)
+  return 0 if a.empty
+  a.value[0].value+sum(a.value[1])
+end
+
+def prod(a)
+  return 1 if a.empty
+  a.value[0].value*prod(a.value[1])
+end
+
 # value -> value -> value
 def spaceship(a,b,t)
   if t.dim>0
