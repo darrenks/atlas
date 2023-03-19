@@ -21,7 +21,7 @@ ModableSymbols=AllSymbols-UnmodableSymbols-[FlipModifier,ApplyModifier]
 # todo gsub \r\n -> \n and \t -> 8x" " and \r -> \n
 
 NumRx = /[0-9]+/
-CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/
+CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRx = /"(\\.|[^"])*"?/
 AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars

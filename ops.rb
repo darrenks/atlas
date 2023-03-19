@@ -508,7 +508,7 @@ create_op(
     desc: "save to a variable without consuming it",
     example: '5@a+a -> 10',
     sym: ApplyModifier,
-    type: { [A,:id] => [A] },
+    type: { [A,:id] => A },
     impl: MacroImpl,
   ), create_op(
     name: "push",
@@ -585,8 +585,8 @@ create_op(
   create_op(
     name: "version",
     type: Str,
-    example: 'version -> "Atlas Alpha (Mar 15, 2023)"',
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 15, 2023)") }
+    example: 'version -> "Atlas Alpha (Mar 19, 2023)"',
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 19, 2023)") }
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
