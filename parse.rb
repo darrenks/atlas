@@ -1,6 +1,9 @@
 AST = Struct.new(:op,:args,:token)
 
 def parse_line(tokens, stack, last=nil)
+  lp = tokens.count{|t|t.str == '('}
+  rp = tokens.count{|t|t.str == ')'}
+  tokens = [Token.new('(')] * [rp-lp,0].max + tokens[0..-2] + [Token.new(')')] * [lp-rp,0].max + tokens[-1,1]
   ast = get_expr(tokens,:EOL, last)
   handle_push_pops(ast, stack)
 end
@@ -51,17 +54,6 @@ def get_expr(tokens,delimiter,implicit_value=nil)
           nodes << AST.new(Ops2['let'], [], t) << implicit_var
           implicit_var = nil
         end
-        if t.str != delimiter
-          if DelimiterPriority[t.str] >= DelimiterPriority[delimiter]
-            # e.g. encountered ) but no ( to match, do nothing except process implicit_var
-            lastop = nil
-            next
-          else # e.g. token is eof, expecting )
-            # return without consuming token
-            tokens.unshift t
-          end
-        end
-
         break
       end
       lastop = t
