@@ -13,8 +13,11 @@ Sets some things that would be useful for golfing, but detrimental to debugging/
 
 The repl (and when running form a file have some helpful features):
 
-`ops`
-Returns a list of all ops and their types with examples.
+`help ops`
+Prints a list of all ops and their types with examples.
+
+`help <op>`
+Print information about any op matching `<op>`
 
 `p`
 Pretty prints a value (technically it turns a string rather than printing)

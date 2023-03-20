@@ -1,21 +1,21 @@
 AST = Struct.new(:op,:args,:token)
 
-def parse_line(tokens, stack)
-  ast = get_expr(tokens,:EOL)
+def parse_line(tokens, stack, last=nil)
+  ast = get_expr(tokens,:EOL, last)
   handle_push_pops(ast, stack)
 end
 
 DelimiterPriority = {:EOL => 0, ')' => 1}
 LBrackets = {"(" => ")"}
 
-def get_expr(tokens,delimiter)
+def get_expr(tokens,delimiter,implicit_value=nil)
   lastop = implicit_var = nil
   nodes = []
   loop {
     atom,t = get_atom(tokens)
     if atom
       if lastop #binary op
-        nodes << implicit_var = new_var if nodes.empty?
+        nodes << (implicit_value || implicit_var = new_var) if nodes.empty?
         if lastop.str == ApplyModifier && atom.op.name == "var"
           # would register as a modifier to implicit op, override this
           nodes << AST.new(Ops2[ApplyModifier], [], lastop) << atom
@@ -30,7 +30,7 @@ def get_expr(tokens,delimiter)
       lastop = nil
     else # not an atom
       if lastop
-        nodes << implicit_var = new_var if nodes.empty?
+        nodes << (implicit_value || implicit_var = new_var) if nodes.empty?
         if lastop.str =~ /(.*)(#{FlipRx})$/
           if !$1.empty? # lexer falsely thought it was an op modifier, split it into 2 tokens
             z=lastop.dup

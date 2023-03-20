@@ -92,7 +92,7 @@ def int_col(n)
   -> {
     map(lines(ReadStdin).const){|v|
       v=drop(n,Promise.new{split_non_digits(v)})
-      raise DynamicError.new "int col: empty list",from if v==[]
+      raise DynamicError.new "int col: empty list",nil if v==[]
       v[0].value
     }
   }

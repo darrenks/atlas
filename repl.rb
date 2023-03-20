@@ -4,6 +4,8 @@ HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   context={}
+  context["last line"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
+  last=AST.new(Var,[],Token.new("last line"))
 
   stack=3.downto(0).map{|i|
     AST.new(create_op(
@@ -67,22 +69,23 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       token_lines,line_no=lex(line, line_no)
       token_lines.each{|tokens| # each line
         next if tokens[0].str == :EOL
-        if tokens.size == 2 && (Ops1[tokens[0].str] || Ops2[tokens[0].str])
-          ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}.each(&:help)
-          next
-        elsif tokens.size == 2 && tokens[0].str == "ops"
+        if tokens.size == 3 && tokens[0].str == "help" && tokens[1].str == "ops"
           ActualOpsList.each{|op|op.help(false)}
+          next
+        elsif tokens.size == 3 && tokens[0].str == "help"
+          ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[1].str)}.each(&:help)
           next
         end
 
         if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_name
           assignment = true
-          ast = parse_line(tokens[2..-1], stack)
+          ast = parse_line(tokens[2..-1], stack, last)
           set(tokens[0], ast, context)
         else
           assignment = false
-          ast = parse_line(tokens, stack)
+          ast = parse_line(tokens, stack, last)
           ir = to_ir(ast,context)
+          context["last line"]=ir
           printit(ir, output, step_limit)
         end
       }

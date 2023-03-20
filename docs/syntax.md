@@ -125,4 +125,10 @@ The curly brackets are nice for avoiding normal variable assignments, but cannot
     ──────────────────────────────────
     1 1 1 1 1 1...
 
-The parenthesis are not actually needed in this case since there is nothing else, I suspect people may use this feature accidentally and so I may require parenthesis to always be used in the future.
+If an implicit value is used at the beginning a line it is the result of the previous line (or stdin if it is the first line).
+
+    1+2
+    -
+    ──────────────────────────────────
+    3
+    -3

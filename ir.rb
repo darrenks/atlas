@@ -13,7 +13,7 @@ class IR < Struct.new(
     :promote_levels,
     :last_error,
     :type_updates, # for detecting inf type
-    :from_var)
+    )
   def initialize(*args)
     super(*args)
     self.id = $ir_node_count += 1
@@ -39,9 +39,7 @@ def to_ir(ast,context)
 end
 
 def set(t,ast,context)
-  ir = context[t.str] = create_ir(ast, context)
-  ir.from_var = t.str
-  ir
+  context[t.str] = create_ir(ast, context)
 end
 
 def create_ir(node,context) # and register_vars

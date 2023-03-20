@@ -1,8 +1,8 @@
 [prog]
-.
-%
-add
--
+help .
+help %
+help add
+help -
 [stdout]
 vectorize .
 [a] → <a>
