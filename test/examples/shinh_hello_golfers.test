@@ -1,0 +1,7 @@
+[prog]
+-- http://golf.shinh.org/p.rb?hello+golfers
+%,world[_\"Hello, "'!
+-- [stdin]
+-- golfers
+[stdout]
+Hello, world!

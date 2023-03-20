@@ -23,6 +23,9 @@ end
 
 class VecOf < Struct.new(:of)
 end
+def v(a)
+  VecOf.new(a)
+end
 
 def create_specs(raw_spec)
   case raw_spec

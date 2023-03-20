@@ -1,3 +1,5 @@
+[flags]
+-G
 [prog]
 a=a+1`0
 a take 10

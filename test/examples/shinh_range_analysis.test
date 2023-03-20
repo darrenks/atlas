@@ -1,0 +1,12 @@
+[prog]
+-- http://golf.shinh.org/p.rb?Range+Analysis
+[6($/'*`%{[.,*}]@,%_!{[)',(}])')
+[input]
+range(2,4) * range(-5,-1)
+range(0,2) * range(-2,-1)
+range(3,4) * range(-3,4)
+[output]
+range(-20,-2)
+range(-4,0)
+range(-12,16)
+

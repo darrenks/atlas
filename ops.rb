@@ -203,33 +203,33 @@ OpsList = [
     name: "unvec",
     sym: "%",
     example: '1,2+3% -> [4,5]',
-    type: { VecOf.new(A) => [A] },
+    type: { v(A) => [A] },
     impl: -> a { a.value },
   ), create_op(
     name: "vectorize",
     sym: ".",
     example: '1,2,3. -> <1,2,3>',
-    type: { [A] => VecOf.new(A) },
+    type: { [A] => v(A) },
     impl: -> a { a.value }),
   create_op(
     name: "repeat",
     sym: ",",
     example: '2, -> <2,2,2,2,2...',
-    type: { A => VecOf.new(A) },
+    type: { A => v(A) },
     impl: -> a { repeat(a) }
   ), create_op(
     name: "range",
     sym: ":",
     example: '3:7 -> <3,4,5,6>',
-    type: { [Int,Int] => VecOf.new(Int),
-            [Char,Char] => VecOf.new(Char) },
+    type: { [Int,Int] => v(Int),
+            [Char,Char] => v(Char) },
     impl: -> a,b { range(a.value, b.value) }
   ), create_op(
     name: "from",
     sym: ":",
     example: '3: -> <3,4,5,6,7,8...',
-    type: { Int => VecOf.new(Int),
-            Char => VecOf.new(Char) },
+    type: { Int => v(Int),
+            Char => v(Char) },
     impl: -> a { range_from(a.value) }),
   "list",
   create_op(
@@ -499,14 +499,14 @@ create_op(
     name: "input",
     desc: "all lines of stdin",
     sym: "$",
-    type: VecOf.new(Str),
+    type: v(Str),
     impl: -> { lines(ReadStdin) }),
   create_op(
     name: "emptyPop",
     desc: "column of ints from stdin",
     sym: "}",
     ref_only: true,
-    type: VecOf.new(Int),
+    type: v(Int),
     impl: MacroImpl),
   create_op(
     name: "read",

@@ -1,3 +1,5 @@
+[flags]
+-G
 [prog]
 a=b
 a

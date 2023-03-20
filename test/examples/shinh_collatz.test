@@ -1,0 +1,15 @@
+[prog]
+-- http://golf.shinh.org/p.rb?Collatz+Problem
+a%2&(3*a+1)|a@/2`}@a~(a-1)[\
+1
+[stdin]
+3
+[stdout]
+3
+10
+5
+16
+8
+4
+2
+1

@@ -16,12 +16,15 @@ tests.each{|test_filename|
   datum = test.split(section_regex)[1..-1]
   prog = nil
   args = ""
+  flags = ""
   expected_stderr = input = expected_stdout = ""
   sections.zip(datum){|section,data|
     case section.chomp[1...-1].downcase
-    when "input"
+    when "flags"
+      flags = data.strip
+    when "input","stdin"
       input = data.strip
-    when "stdout"
+    when "stdout","output"
       expected_stdout = data.strip
     when "stderr"
       expected_stderr = (data||"").strip
@@ -37,7 +40,7 @@ tests.each{|test_filename|
 
   File.write("test/input", input)
   File.write("test/prog.atl",prog)
-  stdout, stderr, status = Open3.capture3("./atlas -G test/prog.atl < test/input")
+  stdout, stderr, status = Open3.capture3("./atlas #{flags} test/prog.atl < test/input")
 
   stdout.strip!
   stderr.strip!

@@ -1,0 +1,15 @@
+[prog]
+-- http://golf.shinh.org/p.rb?Accumulate+Value+in+Reverse
+,0>+})/
+[input]
+1
+2
+3
+4
+5
+[output]
+5
+9
+12
+14
+15
