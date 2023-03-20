@@ -63,10 +63,17 @@ def check_missing(node,context,been)
     name = node.from.token.str
     if !context.include? name
       if $golf_mode
-        return IR.new(create_op(
-          name: "data",
-          type: Str,
-          impl: str_to_lazy_list(name)),[],node.from)
+        if name.size>1
+          return IR.new(create_op(
+            name: "data",
+            type: Str,
+            impl: str_to_lazy_list(name)),[],node.from)
+        else
+          return IR.new(create_op(
+            name: "data",
+            type: Char,
+            impl: name[0].ord),[],node.from)
+        end
       else
         raise(ParseError.new("unset identifier %p" % name, node.from.token))
       end
