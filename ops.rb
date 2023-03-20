@@ -510,11 +510,11 @@ create_op(
     impl: MacroImpl),
   create_op(
     name: "read",
-    sym: "&",
+    sym: "`",
     type: { Str => [Int] },
-    example: '"1 2 -3"& -> [1,2,-3]',
+    example: '"1 2 -3"` -> [1,2,-3]',
     impl: -> a { split_non_digits(a) })
-  .add_test('"1 2 -3 4a5 - -6 --7" & -> [1,2,-3,4,5,-6,7]'),
+  .add_test('"1 2 -3 4a5 - -6 --7" ` -> [1,2,-3,4,5,-6,7]'),
   create_op(
     name: "str",
     sym: "`",
