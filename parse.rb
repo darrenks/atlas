@@ -72,7 +72,7 @@ def get_expr(tokens,delimiter,implicit_value=nil)
   atoms=[]
   until nodes.empty?
     o = nodes.pop
-    if o.token.str[/^#{ApplyRx}/] && o.op.name != "let" && o.args.size < o.op.narg
+    if o.token.str[/^#{ApplyRx}/] && (o.op.name != "let" || o.token.str==ApplyModifier*2) && o.args.size < o.op.narg
       x = nodes[-1]
       while nodes[-1].args.size<nodes[-1].op.narg
         nodes.pop.args << nodes[-1]

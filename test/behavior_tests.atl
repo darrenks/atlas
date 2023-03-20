@@ -247,6 +247,7 @@ a;@a -> AtlasTypeError
 2*3-@+4 -> 2
 
 1+2@3 -> 7
+1+5@@a+a -> 11
 
 -- test apply with implicit circular
 `1@-)[3 -> [-1,-1,-1]
@@ -256,6 +257,10 @@ a;@a -> AtlasTypeError
 "a"\"b" -> "ba"
 1`\(2,3) -> [1,2,3]
 1-\-2 -> <<-3>>
+1,2\\ -> [[1,2]]
+
+-- this would not be useful
+-- (a@\2)+a -> 4
 
 -- this would be type A which should not be possible to construct
 ""&a@a -> DynamicError

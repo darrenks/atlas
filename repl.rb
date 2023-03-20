@@ -77,7 +77,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
           next
         end
 
-        if tokens.size > 2 && tokens[1].str=="=" && tokens[0].is_name
+        if tokens.size > 3 && tokens[1].str=="=" && tokens[0].is_name && !is_op(tokens[2])
           assignment = true
           ast = parse_line(tokens[2..-1], stack, last)
           set(tokens[0], ast, context)

@@ -27,7 +27,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-zA-Z][a-zA-Z0-9_]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
-OpRx = /#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}/
+OpRx = /#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/
