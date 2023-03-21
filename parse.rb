@@ -22,6 +22,8 @@ def get_expr(tokens,delimiter,implicit_value=nil)
         if lastop.str == ApplyModifier && atom.op.name == "var"
           # would register as a modifier to implicit op, override this
           nodes << AST.new(Ops2[ApplyModifier], [], lastop) << atom
+        elsif !Ops2[lastop.name]&&Ops1[lastop.name] # the symbol can only be used as unary, do that plus implicit
+          nodes << make_op1(lastop) << AST.new(Ops2[" "],[],t) << atom
         else
           nodes << make_op2(lastop) << atom
         end

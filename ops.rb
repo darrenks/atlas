@@ -414,7 +414,7 @@ create_op(
   create_op(
     name: "reshape",
     sym: "#",
-    example: '"abcdef" # (1,2) -> ["a","bc","de","f"]',
+    example: '"abcde" # (1,2) -> ["a","bc","de"]',
     type: { [[A],[Int]] => [[A]] },
     impl: -> a,b { reshape(a,b) })
    .add_test('"abc" # 2 -> ["ab","c"]')
@@ -551,8 +551,9 @@ create_op(
     example: '5{,1,},2 -> [5,1,5,2]',
     sym: "{",
     type: { A => A },
-    impl: MacroImpl,
-  ), create_op(
+    impl: MacroImpl)
+  .add_test('2{3+} -> 8'),
+  create_op(
     name: "pop",
     desc: "pop last push arg from a lexical stack",
     example: '5{,1,},2 -> [5,1,5,2]',

@@ -219,6 +219,10 @@ a`0+1@a=10#&a|(b%>+1)@b[ -> 19
 -- Test parse uses previous token correct
 1 (2-) -> -2
 
+-- Test unary op not used as binary op
+2;4 -> <8>
+'a{\'b -> "ba"
+
 -- implicit value is circular program
 (+1`0)[5 -> [0,1,2,3,4]
 +(1,2,3,4)`0 -> [0,1,3,6,10]
