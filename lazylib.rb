@@ -205,6 +205,15 @@ def reverse(a,sofar=[])
   reverse(a.value[1],[a.value[0],sofar.const])
 end
 
+def reshape(a,b)
+  raise DynamicError.new("empty list given for lengths of reshape", nil) if b.empty
+  return [] if a.empty
+  [Promise.new{take(b.value[0].value,a)},
+   Promise.new{
+    reshape(drop(b.value[0].value,a).const,b.value[1].empty ? b : b.value[1])
+   }]
+end
+
 def join(a,b)
   concat_map(a,Null){|i,r,first|
     first ? append(i,r) : append(b,Promise.new{append(i,r)})

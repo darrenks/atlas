@@ -411,6 +411,14 @@ create_op(
     example: '"abc" reverse -> "cba"',
     type: { [A] => [A] },
     impl: -> a { reverse(a) }),
+  create_op(
+    name: "reshape",
+    sym: "#",
+    example: '"abcdef" # (1,2) -> ["a","bc","de","f"]',
+    type: { [[A],[Int]] => [[A]] },
+    impl: -> a,b { reshape(a,b) })
+   .add_test('"abc" # 2 -> ["ab","c"]')
+   .add_test('"" # 2 -> []'),
   "string",
   create_op(
     name: "join",
