@@ -25,7 +25,7 @@ CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRx = /"(\\.|[^"])*"?/
 AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
-IdRx = /[a-zA-Z][a-zA-Z0-9_]*/
+IdRx = /[a-zA-Z][a-zA-Z0-9]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
 OpRx = /#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
