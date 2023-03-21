@@ -25,6 +25,11 @@ unvec %
 <a> → [a]
 1,2+3% → [4,5]
 
+split0 %
+Str Str → [Str]
+"a..b" % "." → ["a","","b"]
+" a "%" " → ["","a",""]
+
 add +
 Int Int → Int
 Int Char → Char

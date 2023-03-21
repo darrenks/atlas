@@ -327,7 +327,7 @@ OpsList = [
   .add_test('1,2,3 ! ("hi","there") -> [1,2]'),
   create_op(
     name: "chunkWhile",
-    desc: "chunk while second arg is truthy, resulting groups are of the form [truthy, falsey]",
+    desc: "chunk while second arg is truthy",
     sym: "~",
     example: '"abcd" ~ "11 1" -> ["ab","cd"]',
     type: { [[A],[B]] => [[A]] },
@@ -436,8 +436,15 @@ create_op(
     impl: -> a,b { split(a,b) })
   .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
   .add_test('"ab",*" "/"b "[2 -> ["a","a"]') # test laziness
-  .add_test('",a,,b,"/"," -> ["a","b"]'
-  ), create_op(
+  .add_test('",a,,b,"/"," -> ["a","b"]'),
+  create_op(
+    name: "split0",
+    example: '"a..b" % "." -> ["a","","b"]',
+    sym: "%",
+    type: { [Str,Str] => [Str] },
+    impl: -> a,b { splith(a,b) })
+  .add_test('" a "%" " -> ["","a",""]'),
+  create_op(
     name: "replicate",
     example: '"ab"^3 -> "ababab"',
     sym: "^",
