@@ -621,8 +621,8 @@ create_op(
   create_op(
     name: "version",
     type: Str,
-    example: 'version -> "Atlas Alpha (Mar 21, 2023)"',
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 21, 2023)") }
+    example: 'version -> "Atlas Alpha (Mar 22, 2023)"',
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 22, 2023)") }
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
