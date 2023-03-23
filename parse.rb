@@ -1,9 +1,7 @@
 AST = Struct.new(:op,:args,:token)
 
 def parse_line(tokens, stack, last=nil)
-  lp = tokens.count{|t|t.str == '('}
-  rp = tokens.count{|t|t.str == ')'}
-  tokens = [Token.new('(')] * [rp-lp,0].max + tokens[0..-2] + [Token.new(')')] * [lp-rp,0].max + tokens[-1,1]
+  tokens = balance_parens(tokens)
   ast = get_expr(tokens,:EOL, last)
   handle_push_pops(ast, stack)
 end
@@ -149,3 +147,17 @@ $new_vars = 0
 def new_var
   AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
 end
+
+def balance_parens(tokens)
+  min=max=cur1=cur2=0
+  tokens.each{|t|
+    (cur1 += 1; cur2 += 1) if t.str == '('
+    (cur1 -= 1; cur2 -= 1) if t.str == ')'
+    max = cur2 if cur2 > max
+    min = cur1 if cur1 < min
+    cur2 = 0 if cur2 < 0
+  }
+  tokens = [Token.new('(')] * -min + tokens[0..-2] + [Token.new(')')] * max + tokens[-1,1]
+  tokens
+end
+
