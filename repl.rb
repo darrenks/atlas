@@ -93,6 +93,10 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
       STDERR.puts e.message
       assignment = false
       context = prev_context
+    rescue SystemStackError => e
+      STDERR.puts DynamicError.new("stack overflow error", nil).message
+      assignment = false
+      context = prev_context
     rescue => e
       STDERR.puts "!!!This is an internal Altas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!\n\n"
       raise e
