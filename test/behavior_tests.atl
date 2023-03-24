@@ -276,3 +276,7 @@ a;@a -> AtlasTypeError
 a%2&(3*a+1)|(a/2)`8@a~(a=.~%)[ -> [8,4,2,1]
 
 5@λ*λ -> 25
+
+1,2+0# -> 2
+-- test will not unvectorize after vec op
+1,2.# -> AtlasTypeError

@@ -114,6 +114,7 @@ OpsList = [
     sym: "+",
     example: "1,2,3,4+ -> 10",
     type: { [Int] => Int },
+    no_promote: true,
     impl: -> a { sum(a) })
    .add_test("1;>+ -> 0"),
   create_op(
@@ -134,6 +135,7 @@ OpsList = [
     name: "prod",
     sym: "*",
     example: "1,2,3,4* -> 24",
+    no_promote: true,
     type: { [Int] => Int },
     impl: -> a { prod(a) })
    .add_test("1;>* -> 1"),
@@ -276,6 +278,7 @@ OpsList = [
     example: '"asdf"# -> 4',
     sym: "#",
     type: { [A] => Int },
+    no_promote: true,
     impl: -> a { len(a) }),
   create_op(
     name: "take",
@@ -304,6 +307,7 @@ OpsList = [
     sym: "=",
     example: '"abcaab" count -> [0,0,0,1,2,1]',
     type: { [A] => [Int] },
+    no_promote: true,
     impl: -> a { occurence_count(a) }
   ).add_test('"ab","a","ab" count -> [0,0,1]'),
   create_op(
@@ -317,6 +321,7 @@ OpsList = [
     sym: "!",
     example: '"atlas" ! -> "aalst"',
     type: { [A] => [A] },
+    no_promote: true,
     poly_impl: -> at { -> a { sort(a,at-1) }}
   ), create_op(
     name: "sortBy",
@@ -410,6 +415,7 @@ create_op(
     sym: "/",
     example: '"abc" reverse -> "cba"',
     type: { [A] => [A] },
+    no_promote: true,
     impl: -> a { reverse(a) }),
   create_op(
     name: "reshape",
