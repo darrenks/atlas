@@ -6,7 +6,7 @@ TypeWithVecLevel = Struct.new(:type,:vec_level)
 class Type
   def inspect
     #return "(%d %s)"%[dim,base_elem] if dim < 0 # ret nicely since could have negative type errors in circular inference that later becomes valid
-    "["*dim + base_elem.to_s.capitalize + "]"*dim
+    "["*dim + (base_elem.to_s.size>1 ? base_elem.to_s.capitalize : base_elem.to_s) + "]"*dim
   end
   def -(rhs)
     self+-rhs

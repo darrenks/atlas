@@ -623,12 +623,12 @@ create_op(
     no_zip: true,
     poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }})
   .add_test('"hi" type -> "[Char]"')
-  .add_test('() type -> "[A]"'),
+  .add_test('() type -> "[a]"'),
   create_op(
     name: "version",
     type: Str,
-    example: 'version -> "Atlas Alpha (Mar 23, 2023)"',
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 23, 2023)") }
+    example: 'version -> "Atlas Alpha (Mar 27, 2023)"',
+    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 27, 2023)") }
   ), create_op(
     name: "reductions",
     desc: "operation count so far",
