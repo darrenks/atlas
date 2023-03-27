@@ -12,7 +12,6 @@ class Op < Struct.new(
     :desc,
     :ref_only,
     :no_promote,
-    :no_zip,
     :impl,
     :tests)
   def narg
@@ -59,7 +58,6 @@ def create_op(
   no_promote: false,
   desc: nil,
   ref_only: false,
-  no_zip: false,
   poly_impl: nil, # impl that needs type info
   impl: nil,
   impl_with_loc: nil, # impl that could throw, needs token location for err msgs
@@ -85,7 +83,7 @@ def create_op(
     built_impl = -> t,from { -> a,b { f[t,from][coerce2s(t[0],a,t[1]),coerce2s(t[1],b,t[0])] }}
   end
 
-  Op.new(name,sym,type,type_summary,examples,desc,ref_only,no_promote,no_zip,built_impl,[])
+  Op.new(name,sym,type,type_summary,examples,desc,ref_only,no_promote,built_impl,[])
 end
 
 def int_col(n)
@@ -585,18 +583,7 @@ create_op(
     type: { :"(a b->c)" => :"(a b->c)",
             :"(a->b)" => :"(a->b)" },
     impl: MacroImpl,
-  ), "debug",
-  create_op(
-    name: "show",
-    sym: "p",
-    example: '12p -> "12"',
-    type: { A => Str },
-    type_summary: "a -> [Char] (no vec)",
-    no_zip: true,
-    poly_impl: -> t { -> a { inspect_value(t.type+t.vec_level,a,t.vec_level) } }
-  ).add_test('"a"p -> "\"a\""')
-   .add_test('\'a p -> "\'a"')
-   .add_test('1;p -> "[1]"'),
+  ),
   create_op(
     name: "implicitMult",
     sym: " ",
@@ -616,25 +603,6 @@ create_op(
   .add_test("'a 'b -> \"ab\"")
   .add_test('"ab","cd" "e" -> <"abe","cde">')
   .add_test('("ab";) ("e";) -> ["ab","e"]'),
-  create_op(
-    name: "type",
-    example: '1 type -> "Int"',
-    type: { A => Str },
-    no_zip: true,
-    poly_impl: -> at { -> a { str_to_lazy_list(at.inspect) }})
-  .add_test('"hi" type -> "[Char]"')
-  .add_test('() type -> "[a]"'),
-  create_op(
-    name: "version",
-    type: Str,
-    example: 'version -> "Atlas Alpha (Mar 27, 2023)"',
-    impl: -> { str_to_lazy_list("Atlas Alpha (Mar 27, 2023)") }
-  ), create_op(
-    name: "reductions",
-    desc: "operation count so far",
-    type: Int,
-    impl: -> { $reductions }),
-
 ]
 ActualOpsList = OpsList.reject{|o|String===o}
 
@@ -693,12 +661,6 @@ UnknownOp = create_op(
   impl_with_loc: -> from { raise AtlasTypeError.new("cannot use value of the unknown type", from) }
 )
 Var = Op.new("var")
-ToString = create_op(
-  name: "tostring",
-  type: { A => Str },
-  no_zip: true,
-  poly_impl: -> t { -> a { to_string(t.type+t.vec_level,a) } }
-)
 
 def create_int(str)
   create_op(
@@ -725,3 +687,38 @@ def create_char(str)
     impl: parse_char(str[1..-1]).ord
   )
 end
+
+Commands = {
+  "help" => ["see op's info", "op", -> tokens, stack, last, context {
+    raise ParseError.new("usage: help <op>",tokens[0]) if tokens.size < 2
+    relevant = ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}
+    if !relevant.empty?
+      relevant.each(&:help)
+    else
+      puts "no such op: #{tokens[0].str}"
+    end
+  }],
+  "ops" => ["see all ops' info", nil, -> tokens, stack, last, context {
+    raise ParseError.new("usage: ops",tokens[0]) if tokens.size > 1
+    ActualOpsList.each{|op|op.help(false)}
+  }],
+  "reductions" => ["see operation count so far", nil, -> tokens, stack, last, context {
+    raise ParseError.new("usage: reductions",tokens[0]) if tokens.size > 1
+    p $reductions
+  }],
+  "version" => ["see atlas version", nil, -> tokens, stack, last, context {
+    raise ParseError.new("usage: version",tokens[0]) if tokens.size > 1
+    puts "Atlas Alpha (Mar 27, 2023)"
+  }],
+  "type" => ["see expression type", "a", -> tokens, stack, last, context {
+    raise ParseError.new("usage: type <expression>",tokens[0]) if tokens.size < 2
+    p infer(to_ir(parse_line(tokens, stack, last),context)).type_with_vec_level
+  }],
+  "p" => ["pretty print value", "a", -> tokens, stack, last, context {
+    raise ParseError.new("usage: p <expression>",tokens[0]) if tokens.size < 2
+    ast = parse_line(tokens, stack, last)
+    ir=infer(to_ir(ast,context))
+    run(ir) {|v| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
+    puts
+  }],
+}

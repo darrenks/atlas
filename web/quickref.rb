@@ -2,14 +2,14 @@ require "./repl.rb"
 require 'cgi'
 
 class String
-  def td
-    "<td>"+self.escape+"</td>"
+  def td(_class=nil)
+    "<td #{'class='+_class.inspect if _class}>"+self.escape+"</td>"
   end
   def escape
     CGI.escape_html self
   end
   def ref
-    puts '<td colspan="4" class="center"><b>'+self+'</b></td>'
+    puts '<tr><td colspan="4" class="center"><b>'+self+'</b></td></tr>'
   end
 end
 
@@ -49,6 +49,16 @@ puts '<!DOCTYPE HTML >
 
 OpsList.reject{|o| !(String===o) && o.name =~ /^implicit/ }.each{|o|
   o.ref
+}
+"debug".ref
+Commands.each{|str,data|
+  desc,arg,impl = data
+  puts "<tr>"
+  puts str.td("code")
+  puts "".td("code")
+  puts (arg||"").td("code")
+  puts desc.td
+  puts "</tr>"
 }
 
 puts '</table></body></html>'

@@ -25,10 +25,9 @@ step_limit = 1000
   n.times{
     program = program_size.times.map{all[(rand*all.size).to_i]}*""
     program_io=StringIO.new(program)
-    output_io=StringIO.new
     begin
       puts program
-      repl(program_io,output_io,step_limit)
+      repl(program_io,step_limit)
 #       puts "output: ", output_io.string
     rescue AtlasError => e
 

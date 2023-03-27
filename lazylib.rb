@@ -2,18 +2,16 @@
 $step_limit=Float::INFINITY
 $reductions = 0
 
-def run(root,out=STDOUT,output_limit=10000,step_limit=Float::INFINITY)
+def run(root,output_limit=nil,step_limit=Float::INFINITY)
+  output_limit ||= ($golf_mode ? Float::INFINITY : 10000)
   $step_limit = step_limit + $reductions
-  print_string(make_promises(root), out, output_limit)
+  v = Promise.new{yield(make_promises(root))}
+  print_string(v, output_limit)
 end
 
 def make_promises(node)
   return node.promise if node.promise
-  if node.op.no_zip
-    arg_types = node.args.map(&:type_with_vec_level)
-  else
-    arg_types = node.args.zip(0..).map{|a,i|a.type + a.vec_level - node.zip_level + node.rep_levels[i] + node.promote_levels[i]}
-  end
+  arg_types = node.args.zip(0..).map{|a,i|a.type + a.vec_level - node.zip_level + node.rep_levels[i] + node.promote_levels[i]}
   args = nil
   node.promise = Promise.new {
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
@@ -445,12 +443,12 @@ def to_string_h(t, value, orig_dim, rhs)
   end
 end
 
-def print_string(value, out, limit)
+def print_string(value, limit)
   begin
     while !value.empty && limit > 0
       c = value.value[0].value
       $last_was_newline = c == 10
-      out.print "%c" % c
+      print "%c" % c
       value = value.value[1]
       limit -= 1
     end
@@ -524,11 +522,24 @@ def to_lazy_list(l, rhs=Null, ind=0)
   ind >= l.size ? rhs.value : [l[ind].const, Promise.new{to_lazy_list(l, rhs, ind+1)}]
 end
 
+def to_eager_list(v)
+  x=[]
+  until v.empty
+    x<<v.value[0].value
+    v=v.value[1]
+  end
+  x
+end
+
+def to_eager_str(v)
+  to_eager_list(v).map{|i|'%c' % i}.join
+end
+
 def truthy(type, value)
   if type == Int
     value.value > 0
   elsif type == Char
-    !!value.value.chr[/\S/]
+    !!('%c'%value.value)[/\S/]
   else # List
     !value.empty
   end

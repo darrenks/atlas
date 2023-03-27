@@ -13,7 +13,7 @@ Strings are just lists of characters.
     'x -- This is a char
     "abc" -- This is a string, aka list of chars
     1,2,3 -- This is a list of integers constructed via the snoc (cons on end) operator.
-    () show -- This is an empty list pretty printed
+    () p -- This is an empty list pretty printed
     ──────────────────────────────────
     123
     x
@@ -47,13 +47,13 @@ So long as there is no oscillation between types this process will eventually te
 
 This last point is important since decreasing list depth can increase vector depth. Consider the code:
 
-    "abcd" = 'c len show
+    "abcd" = 'c len p
     ──────────────────────────────────
     <0,0,1,0>
 
 If we increase the right arg to a string:
 
-    "abcd" = "c" len show
+    "abcd" = "c" len
     ──────────────────────────────────
     0
 

@@ -1,5 +1,4 @@
 require "./repl.rb"
-require 'stringio'
 
 def check_example(test)
   i,o=test.split("->")
@@ -33,11 +32,12 @@ end
 def doit(source,limit)
   tokens,lines = lex(source)
   root = parse_line(tokens[0],[])
-  root_ir = to_ir(root,{})
-  ir = IR.new(Ops1['show'],[root_ir])
+  ir = to_ir(root,{})
   infer(ir)
+  $step_limit = 10000 + $reductions
+  v=make_promises(ir)
+  v=inspect_value(ir.type+ir.vec_level,v,ir.vec_level)
+  v=take(limit,v.const)
 
-  output = StringIO.new
-  run(ir, output, limit)
-  [output.string,root_ir.type.inspect]
+  [to_eager_str(v.const),ir.type.inspect]
 end

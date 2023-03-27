@@ -59,7 +59,7 @@ In addition to assignment, `=` is also used to test equality, it is only used as
 
 `()` is the empty list.
 
-    () show
+    () p
     ──────────────────────────────────
     []
 

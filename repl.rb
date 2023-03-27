@@ -2,7 +2,7 @@ require "readline"
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 HistFile = Dir.home + "/.atlas_history"
 
-def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
+def repl(input=nil,step_limit=Float::INFINITY)
   context={}
   context["last line"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
   last=AST.new(Var,[],Token.new("last line"))
@@ -44,8 +44,7 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
-      all = context.keys + ActualOpsList.filter(&:name).map(&:name)
-      all << "ops"
+      all = context.keys + ActualOpsList.filter(&:name).map(&:name) + Commands.keys
       all.grep(/^#{Regexp.escape(s)}/)
     }
   end
@@ -62,31 +61,29 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
           ir = to_ir(ast,context)
-          printit(ir, output, step_limit)
+          printit(ir, step_limit)
         end
         break
       end
       token_lines,line_no=lex(line, line_no)
       token_lines.each{|tokens| # each line
         next if tokens[0].str == :EOL
-        if tokens.size == 3 && tokens[0].str == "help" && tokens[1].str == "ops"
-          ActualOpsList.each{|op|op.help(false)}
-          next
-        elsif tokens.size == 3 && tokens[0].str == "help"
-          ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[1].str)}.each(&:help)
-          next
-        end
 
-        if tokens.size > 3 && tokens[1].str=="=" && tokens[0].is_name && !is_op(tokens[2])
+        assignment = false
+        if (command=Commands[tokens[0].str])
+          tokens.shift
+          command[2][tokens, stack, last, context]
+        elsif !command && (command=Commands[tokens[-2].str])
+          tokens.delete_at(-2)
+          command[2][tokens, stack, last, context]
+        elsif tokens.size > 3 && tokens[1].str=="=" && tokens[0].is_name && !is_op(tokens[2])
           assignment = true
           ast = parse_line(tokens[2..-1], stack, last)
           set(tokens[0], ast, context)
         else
-          assignment = false
-          ast = parse_line(tokens, stack, last)
-          ir = to_ir(ast,context)
+          ir = to_ir(parse_line(tokens, stack, last),context)
           context["last line"]=ir
-          printit(ir, output, step_limit)
+          printit(ir, step_limit)
         end
       }
     rescue AtlasError => e
@@ -104,9 +101,8 @@ def repl(input=nil,output=STDOUT,step_limit=Float::INFINITY)
   end # until
 end
 
-def printit(ir,output,step_limit)
-    ir = IR.new(ToString, [ir])
+def printit(ir,step_limit)
     infer(ir)
-    run(ir,output,10000,step_limit)
-    output.puts unless $last_was_newline
+    run(ir) {|v| to_string(ir.type+ir.vec_level,v) }
+    puts unless $last_was_newline
 end

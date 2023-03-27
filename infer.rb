@@ -43,6 +43,7 @@ def infer(root)
   }
   errors[0...-1].each{|error| STDERR.puts error.message }
   raise errors[-1] if !errors.empty?
+  root
 end
 
 def calc_type(node)
@@ -57,13 +58,8 @@ def calc_type(node)
 end
 
 def possible_types(node, fn_type)
-  if !node.op.no_zip
-    arg_types = node.args.map(&:type)
-    vec_levels = node.args.map(&:vec_level)
-  else
-    arg_types = node.args.map{|a|a.type+a.vec_level}
-    vec_levels = node.args.map{|a|0}
-  end
+  arg_types = node.args.map(&:type)
+  vec_levels = node.args.map(&:vec_level)
 
   vec_levels = vec_levels.zip(fn_type.specs).map{|vec_level,spec|
     if spec.vec_of
@@ -106,7 +102,6 @@ def possible_types(node, fn_type)
     vec_levels[i] -= deficits[i]
   }
   zip_level = vec_levels.max || 0
-  zip_level = 0 if node.op.no_zip
   nargs.times{|i|
     rep_levels[i] += zip_level - vec_levels[i] - rep_levels[i]
     return node.type_error "rank too high for arg #{i+1}" if rep_levels[i] > zip_level

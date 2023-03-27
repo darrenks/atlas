@@ -10,8 +10,8 @@ Any list can be turned into a vector by using the `.` operator. A vector is just
 
 Automatic vectorization can occur to fit the type specification of an operator. For example, the type of `+` is `Int Int -> Int` and so if you give it a list for any of the arguments, their rank is too high and so it vectorizes said argument to bring it down. It is essentially performing a `map`.
 
-    1,2,3.+4 show
-    1,2,3+4 show
+    1,2,3.+4 p
+    1,2,3+4 p
     ──────────────────────────────────
     <5,6,7>
     <5,6,7>
@@ -38,7 +38,7 @@ Longer lists are truncated to that of the smaller (this isn't the case for all v
 
 Automatic vectorization can work on non scalar arguments as well.
 
-    "1 2 3","4 5" read show
+    "1 2 3","4 5" read p
     ──────────────────────────────────
     <[1,2,3],[4,5]>
 
@@ -46,19 +46,19 @@ Read expects a string, but was given a list of strings so it vectorizes. Read re
 
 It can even work on more complicated types like the type of append (`[a] [a] -> [a]`).
 
-    "abc","xyz" append "123" show
+    "abc","xyz" append "123" p
     ──────────────────────────────────
     <"abc123","xyz123">
 
 Automatic Vectorization can only lower rank, sometimes it needs to be raised. For example transpose works on 2D lists, but if you give it a 1D list it needs to become a 2D list first, by just making it a list with a single element (the original list). I call this promotion.
 
-    "123" \ show
+    "123" \ p
     ──────────────────────────────────
     ["1","2","3"]
 
 Automatic promotion and vectorization can both be done implicitly together. For example:
 
-    'a take (1,0) show
+    'a take (1,0) p
     ──────────────────────────────────
     <"a","">
 
