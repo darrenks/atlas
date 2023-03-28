@@ -40,7 +40,7 @@ tests.each{|test_filename|
 
   File.write("test/input", input)
   File.write("test/prog.atl",prog)
-  stdout, stderr, status = Open3.capture3("./atlas #{flags} test/prog.atl < test/input")
+  stdout, stderr, status = Open3.capture3("./atlas #{flags} -step_limit=1000000 test/prog.atl < test/input")
 
   stdout.strip!
   stderr.strip!

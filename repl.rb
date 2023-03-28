@@ -2,10 +2,10 @@ require "readline"
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 HistFile = Dir.home + "/.atlas_history"
 
-def repl(input=nil,step_limit=Float::INFINITY)
+def repl(input=nil,step_limit=nil,output_limit=nil,golf_mode=nil)
   context={}
-  context["last line"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
-  last=AST.new(Var,[],Token.new("last line"))
+  context["lastAns"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
+  last=AST.new(Var,[],Token.new("lastAns"))
 
   stack=3.downto(0).map{|i|
     AST.new(create_op(
@@ -17,22 +17,20 @@ def repl(input=nil,step_limit=Float::INFINITY)
 
   line_no = 1
 
-  if ARGV.include?("-g")
-    $golf_mode = true
-    ARGV.delete("-g")
-  elsif ARGV.include?("-G")
-    $golf_mode = false
-    ARGV.delete("-G")
-  end
-
   if input
-    $golf_mode = false if $golf_mode.nil?
+    golf_mode = false if golf_mode.nil?
+    step_limit = 1000000 if step_limit == nil
+    output_limit = 10000 if output_limit == nil
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
-    $golf_mode = true if $golf_mode.nil?
+    golf_mode = true if golf_mode.nil?
+    step_limit = 0 if step_limit == nil
+    output_limit = 0 if output_limit == nil
     input_fn = lambda { gets(nil) }
   else
-    $golf_mode = false if $golf_mode.nil?
+    golf_mode = false if golf_mode.nil?
+    step_limit = 1000000 if step_limit == nil
+    output_limit = 10000 if output_limit == nil
     if File.exist? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
@@ -49,6 +47,14 @@ def repl(input=nil,step_limit=Float::INFINITY)
     }
   end
 
+  { "stepLimit" => step_limit,
+  "outputLimit" => output_limit,
+  "reductions" => 0,
+  "golfMode" => golf_mode ? 1 : 0 }.each{|name,val|
+    context[name]=to_ir(AST.new(create_int(val),[],Token.new("bof")),context)
+  }
+
+
   ast = nil
   file_args = !ARGV.empty?
   assignment = false
@@ -61,7 +67,7 @@ def repl(input=nil,step_limit=Float::INFINITY)
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
           ir = to_ir(ast,context)
-          printit(ir, step_limit)
+          printit(ir, context)
         end
         break
       end
@@ -82,8 +88,8 @@ def repl(input=nil,step_limit=Float::INFINITY)
           set(tokens[0], ast, context)
         else
           ir = to_ir(parse_line(tokens, stack, last),context)
-          context["last line"]=ir
-          printit(ir, step_limit)
+          context["lastAns"]=ir
+          printit(ir, context)
         end
       }
     rescue AtlasError => e
@@ -101,8 +107,8 @@ def repl(input=nil,step_limit=Float::INFINITY)
   end # until
 end
 
-def printit(ir,step_limit)
+def printit(ir, context)
     infer(ir)
-    run(ir) {|v| to_string(ir.type+ir.vec_level,v) }
+    run(ir, context) {|v| to_string(ir.type+ir.vec_level,v,context["golfMode"].get_value != 0) }
     puts unless $last_was_newline
 end

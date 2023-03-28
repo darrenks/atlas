@@ -702,13 +702,9 @@ Commands = {
     raise ParseError.new("usage: ops",tokens[0]) if tokens.size > 1
     ActualOpsList.each{|op|op.help(false)}
   }],
-  "reductions" => ["see operation count so far", nil, -> tokens, stack, last, context {
-    raise ParseError.new("usage: reductions",tokens[0]) if tokens.size > 1
-    p $reductions
-  }],
   "version" => ["see atlas version", nil, -> tokens, stack, last, context {
     raise ParseError.new("usage: version",tokens[0]) if tokens.size > 1
-    puts "Atlas Alpha (Mar 27, 2023)"
+    puts "Atlas Alpha (Mar 28, 2023)"
   }],
   "type" => ["see expression type", "a", -> tokens, stack, last, context {
     raise ParseError.new("usage: type <expression>",tokens[0]) if tokens.size < 2
@@ -718,7 +714,7 @@ Commands = {
     raise ParseError.new("usage: p <expression>",tokens[0]) if tokens.size < 2
     ast = parse_line(tokens, stack, last)
     ir=infer(to_ir(ast,context))
-    run(ir) {|v| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
+    run(ir, context) {|v| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
     puts
   }],
 }

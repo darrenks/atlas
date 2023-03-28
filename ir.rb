@@ -28,6 +28,9 @@ class IR < Struct.new(
     self.last_error ||= AtlasTypeError.new msg,self
     UnknownV0
   end
+  def get_value
+    make_promises(infer(self)).value
+  end
 end
 
 # creates an IR from an AST, replacing vars
@@ -40,6 +43,8 @@ end
 
 def set(t,ast,context)
   context[t.str] = create_ir(ast, context)
+  $reductions = context[t.str].get_value if t.str == "reductions"
+  context[t.str]
 end
 
 def create_ir(node,context) # and register_vars
@@ -62,7 +67,7 @@ def check_missing(node,context,been)
   if node.op.name == "var"
     name = node.from.token.str
     if !context.include? name
-      if $golf_mode
+      if context["golfMode"].get_value != 0
         if name.size>1
           return IR.new(create_op(
             name: "data",

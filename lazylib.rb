@@ -2,11 +2,15 @@
 $step_limit=Float::INFINITY
 $reductions = 0
 
-def run(root,output_limit=nil,step_limit=Float::INFINITY)
-  output_limit ||= ($golf_mode ? Float::INFINITY : 10000)
+def run(root,context)
+  output_limit = context["outputLimit"].get_value
+  output_limit = Float::INFINITY if output_limit == 0
+  step_limit = context["stepLimit"].get_value
+  step_limit = Float::INFINITY if step_limit == 0
   $step_limit = step_limit + $reductions
   v = Promise.new{yield(make_promises(root))}
   print_string(v, output_limit)
+    context["reductions"]=to_ir(AST.new(create_int($reductions),[],Token.new("bof")),context)
 end
 
 def make_promises(node)
@@ -17,8 +21,8 @@ def make_promises(node)
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
   args = node.args.zip(0..).map{|arg,i|
-    promoted = Promise.new{zipn(arg.vec_level, [make_promises(arg)], ->a{promoten(a,node.promote_levels[i]).value})}
-    repn(promoted,node.rep_levels[i])
+    promoted = promoten(arg.vec_level, node.promote_levels[i], make_promises(arg))
+    repn(arg.vec_level, node.rep_levels[i], promoted)
   }
   node.promise
 end
@@ -315,19 +319,23 @@ def repeat(a)
   ret
 end
 
-def repn(a,n)
+def repn(vec_level,n,a)
   if n<=0
     a
   else
-    Promise.new{repeat(repn(a,n-1))}
+    Promise.new{zipn(vec_level,[a],-> av {
+      repeat(repn(0,n-1,av))
+    })}
   end
 end
 
-def promoten(a,n)
+def promoten(vec_level,n,a)
   if n<=0
     a
   else
-    Promise.new{[promoten(a,n-1),Null]}
+    Promise.new{zipn(vec_level,[a],-> av {
+      [promoten(0,n-1,av),Null]
+    })}
   end
 end
 
@@ -419,25 +427,25 @@ def coerce2s(ta, a, tb)
   end
 end
 
-def to_string(t, value)
-  to_string_h(t,value,t.string_dim, Null)
+def to_string(t, value, golf_mode)
+  to_string_h(t,value,t.string_dim, Null, golf_mode)
 end
 
-def to_string_h(t, value, orig_dim, rhs)
+def to_string_h(t, value, orig_dim, rhs, golf_mode)
   if t == Int
     inspect_value_h(t, value, rhs, 0)
   elsif t == Char
     [value, rhs]
   else # List
     # print 1d lists on new lines if golf mode
-    dim = $golf_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
+    dim = golf_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
     # print newline separators after every element for better interactive io
     separator1 = dim == 2 ? "\n" : ""
     # but don't do this for separators like space, you would end up with trailing space in output
     separator2 = [""," ",""][dim] || "\n"
 
     concat_map(value,rhs){|v,r,first|
-      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{str_to_lazy_list(separator1, r)}) }
+      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{str_to_lazy_list(separator1, r)}, golf_mode) }
       first ? svalue.value : str_to_lazy_list(separator2, svalue)
     }
   end

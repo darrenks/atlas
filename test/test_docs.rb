@@ -25,7 +25,7 @@ end
     expected.gsub!(/\.\.\.$/,'')
 
     if truncate
-      stdout, stderr, status = Open3.capture3("./atlas -G test/prog.atl | head -c #{truncate}")
+      stdout, stderr, status = Open3.capture3("./atlas -G -output_limit=#{truncate} test/prog.atl")
     else
       stdout, stderr, status = Open3.capture3("./atlas -G test/prog.atl")
     end
