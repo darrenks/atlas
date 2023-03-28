@@ -28,8 +28,12 @@ class IR < Struct.new(
     self.last_error ||= AtlasTypeError.new msg,self
     UnknownV0
   end
-  def get_value
-    make_promises(infer(self)).value
+  def get_value # get internal int value
+    begin
+      make_promises(infer(self)).value
+    rescue
+      0
+    end
   end
 end
 

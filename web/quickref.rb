@@ -63,7 +63,6 @@ Commands.each{|str,data|
 
 "special vars".ref
 { "reductions" => "operation count so far",
-  "stepLimit" => "operation count limit",
   "outputLimit" => "output byte limit",
   "golfMode" => "allow unquoted strings and print 1d lists on newlines",
 }.each{|name,info|

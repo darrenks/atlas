@@ -2,7 +2,7 @@ require "readline"
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 HistFile = Dir.home + "/.atlas_history"
 
-def repl(input=nil,step_limit=nil,output_limit=nil,golf_mode=nil)
+def repl(input=nil,output_limit=nil,golf_mode=nil)
   context={}
   context["lastAns"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
   last=AST.new(Var,[],Token.new("lastAns"))
@@ -19,17 +19,14 @@ def repl(input=nil,step_limit=nil,output_limit=nil,golf_mode=nil)
 
   if input
     golf_mode = false if golf_mode.nil?
-    step_limit = 1000000 if step_limit == nil
     output_limit = 10000 if output_limit == nil
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
     golf_mode = true if golf_mode.nil?
-    step_limit = 0 if step_limit == nil
     output_limit = 0 if output_limit == nil
     input_fn = lambda { gets(nil) }
   else
     golf_mode = false if golf_mode.nil?
-    step_limit = 1000000 if step_limit == nil
     output_limit = 10000 if output_limit == nil
     if File.exist? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
@@ -47,8 +44,7 @@ def repl(input=nil,step_limit=nil,output_limit=nil,golf_mode=nil)
     }
   end
 
-  { "stepLimit" => step_limit,
-  "outputLimit" => output_limit,
+  { "outputLimit" => output_limit,
   "reductions" => 0,
   "golfMode" => golf_mode ? 1 : 0 }.each{|name,val|
     context[name]=to_ir(AST.new(create_int(val),[],Token.new("bof")),context)
@@ -96,6 +92,8 @@ def repl(input=nil,step_limit=nil,output_limit=nil,golf_mode=nil)
       STDERR.puts e.message
       assignment = false
       context = prev_context
+    rescue SignalException => e
+      exit if !ARGV.empty?
     rescue SystemStackError => e
       STDERR.puts DynamicError.new("stack overflow error", nil).message
       assignment = false

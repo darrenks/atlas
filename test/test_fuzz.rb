@@ -19,7 +19,7 @@ ReadStdin = Promise.new{ str_to_lazy_list("ab12") }
 # todo take all tests and make larger programs that are almost correct
 
 n = 1000000
-step_limit = 1000
+$step_limit = 1000
 
 4.upto(8){|program_size|
   n.times{
@@ -27,7 +27,8 @@ step_limit = 1000
     program_io=StringIO.new(program)
     begin
       puts program
-      repl(program_io,step_limit)
+      $reductions = 0
+      repl(program_io)
 #       puts "output: ", output_io.string
     rescue AtlasError => e
 

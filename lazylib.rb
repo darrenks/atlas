@@ -5,9 +5,6 @@ $reductions = 0
 def run(root,context)
   output_limit = context["outputLimit"].get_value
   output_limit = Float::INFINITY if output_limit == 0
-  step_limit = context["stepLimit"].get_value
-  step_limit = Float::INFINITY if step_limit == 0
-  $step_limit = step_limit + $reductions
   v = Promise.new{yield(make_promises(root))}
   print_string(v, output_limit)
     context["reductions"]=to_ir(AST.new(create_int($reductions),[],Token.new("bof")),context)

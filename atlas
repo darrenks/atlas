@@ -10,16 +10,10 @@ elsif ARGV.include?("-G")
   ARGV.delete("-G")
 end
 
-step_limit = nil
-if !(args=ARGV.grep(/^-step_limit\=/)).empty?
-  step_limit=args[0][/\d+/].to_i
-  ARGV.delete(args[0])
-end
-
 output_limit = nil
 if !(args=ARGV.grep(/^-output_limit\=/)).empty?
   output_limit=args[0][/\d+/].to_i
   ARGV.delete(args[0])
 end
 
-repl(nil, step_limit, output_limit, golf_mode)
+repl(nil, output_limit, golf_mode)
