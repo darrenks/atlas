@@ -29,11 +29,9 @@ class IR < Struct.new(
     UnknownV0
   end
   def get_value # get internal int value
-    begin
-      make_promises(infer(self)).value
-    rescue
-      0
-    end
+    infer(self)
+    raise AtlasTypeError.new("var must be type Int",self) if self.type != Int || self.vec_level != 0
+    make_promises(self).value
   end
 end
 

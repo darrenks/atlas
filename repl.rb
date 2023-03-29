@@ -93,7 +93,7 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
       assignment = false
       context = prev_context
     rescue SignalException => e
-      exit if !ARGV.empty?
+      exit if !ARGV.empty? || input # not repl mode
     rescue SystemStackError => e
       STDERR.puts DynamicError.new("stack overflow error", nil).message
       assignment = false

@@ -6,4 +6,4 @@
 [stdout]
 ├───╯
 [stderr]
-?:? invalid character for printing ordinal value: -903 (DynamicError)
+?:? invalid character with ord value: -903 (DynamicError)

@@ -12,7 +12,7 @@ spaces = " \n\n\n\n" # twice as likely
 # Just the interesting characters to focus on testing parse
 # all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
 
-all = (symbols+numbers+letters+spaces).chars+['"ab12"']
+all = (symbols+numbers+letters+spaces).chars+['"ab12"','p','help','ops','version','type']
 
 ReadStdin = Promise.new{ str_to_lazy_list("ab12") }
 

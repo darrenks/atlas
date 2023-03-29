@@ -236,7 +236,7 @@ a@a;# -> 1
 -- infinite type
 a;@a -> AtlasTypeError
 
-'a-1000 -> 'invalid char: -903
+'a-1000 -> DynamicError
 
 -- test unbalanced ) for use with circular programming/nil
 ) -> []

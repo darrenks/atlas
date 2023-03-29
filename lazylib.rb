@@ -448,23 +448,31 @@ def to_string_h(t, value, orig_dim, rhs, golf_mode)
   end
 end
 
-def print_string(value, limit)
+def to_char(i)
   begin
-    while !value.empty && limit > 0
-      c = value.value[0].value
-      $last_was_newline = c == 10
-      print "%c" % c
-      value = value.value[1]
-      limit -= 1
-    end
+    "%c" % i
   rescue ArgumentError
-    raise DynamicError.new "invalid character for printing ordinal value: %d" % value.value[0].value, nil
+    raise DynamicError.new "invalid character with ord value: %d" % i, nil
   end
+end
+
+def print_string(value, limit)
+  while !value.empty && limit > 0
+    c = value.value[0].value
+    $last_was_newline = c == 10
+    print to_char(c)
+    value = value.value[1]
+    limit -= 1
+  end
+end
+
+def is_digit(i)
+  i>=48 && i<58
 end
 
 def read_int(s)
   multiplier=1
-  until s.empty || s.value[0].value.chr =~ /[0-9]/
+  until s.empty || is_digit(s.value[0].value)
     if s.value[0].value == ?-.ord
       multiplier *= -1
     else
@@ -474,7 +482,7 @@ def read_int(s)
   end
   v = 0
   found_int = false
-  until s.empty || !(s.value[0].value.chr =~ /[0-9]/)
+  until s.empty || !is_digit(s.value[0].value)
     found_int = true
     v = v*10+s.value[0].value-48
     s = s.value[1]
@@ -537,14 +545,14 @@ def to_eager_list(v)
 end
 
 def to_eager_str(v)
-  to_eager_list(v).map{|i|'%c' % i}.join
+  to_eager_list(v).map{|i|to_char i}.join
 end
 
 def truthy(type, value)
   if type == Int
     value.value > 0
   elsif type == Char
-    !!('%c'%value.value)[/\S/]
+    !!to_char(value.value)[/\S/]
   else # List
     !value.empty
   end
