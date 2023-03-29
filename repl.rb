@@ -2,7 +2,7 @@ require "readline"
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 HistFile = Dir.home + "/.atlas_history"
 
-def repl(input=nil,output_limit=nil,golf_mode=nil)
+def repl(input=nil)
   context={}
   context["lastAns"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
   last=AST.new(Var,[],Token.new("lastAns"))
@@ -18,16 +18,11 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
   line_no = 1
 
   if input
-    golf_mode = false if golf_mode.nil?
-    output_limit = 10000 if output_limit == nil
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
-    golf_mode = true if golf_mode.nil?
-    output_limit = 0 if output_limit == nil
     input_fn = lambda { gets(nil) }
   else
-    golf_mode = false if golf_mode.nil?
-    output_limit = 10000 if output_limit == nil
+    $repl_mode = true
     if File.exist? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
@@ -44,13 +39,6 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
     }
   end
 
-  { "outputLimit" => output_limit,
-  "reductions" => 0,
-  "golfMode" => golf_mode ? 1 : 0 }.each{|name,val|
-    context[name]=to_ir(AST.new(create_int(val),[],Token.new("bof")),context)
-  }
-
-
   ast = nil
   file_args = !ARGV.empty?
   assignment = false
@@ -63,7 +51,7 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
           ir = to_ir(ast,context)
-          printit(ir, context)
+          printit(ir)
         end
         break
       end
@@ -85,7 +73,7 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
         else
           ir = to_ir(parse_line(tokens, stack, last),context)
           context["lastAns"]=ir
-          printit(ir, context)
+          printit(ir)
         end
       }
     rescue AtlasError => e
@@ -98,6 +86,8 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
       STDERR.puts DynamicError.new("stack overflow error", nil).message
       assignment = false
       context = prev_context
+    rescue Errno::EPIPE
+      exit
     rescue => e
       STDERR.puts "!!!This is an internal Altas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!\n\n"
       raise e
@@ -105,8 +95,8 @@ def repl(input=nil,output_limit=nil,golf_mode=nil)
   end # until
 end
 
-def printit(ir, context)
+def printit(ir)
     infer(ir)
-    run(ir, context) {|v| to_string(ir.type+ir.vec_level,v,context["golfMode"].get_value != 0) }
+    run(ir) {|v| to_string(ir.type+ir.vec_level,v,$repl_mode) }
     puts unless $last_was_newline
 end

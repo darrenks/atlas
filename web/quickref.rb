@@ -61,17 +61,4 @@ Commands.each{|str,data|
   puts "</tr>"
 }
 
-"special vars".ref
-{ "reductions" => "operation count so far",
-  "outputLimit" => "output byte limit",
-  "golfMode" => "allow unquoted strings and print 1d lists on newlines",
-}.each{|name,info|
-  puts "<tr>"
-  puts name.td("code")
-  puts "".td("code")
-  puts "-> Int".td("code")
-  puts info.td
-  puts "</tr>"
-}
-
 puts '</table></body></html>'

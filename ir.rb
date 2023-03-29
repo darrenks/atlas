@@ -28,11 +28,6 @@ class IR < Struct.new(
     self.last_error ||= AtlasTypeError.new msg,self
     UnknownV0
   end
-  def get_value # get internal int value
-    infer(self)
-    raise AtlasTypeError.new("var must be type Int",self) if self.type != Int || self.vec_level != 0
-    make_promises(self).value
-  end
 end
 
 # creates an IR from an AST, replacing vars
@@ -45,8 +40,6 @@ end
 
 def set(t,ast,context)
   context[t.str] = create_ir(ast, context)
-  $reductions = context[t.str].get_value if t.str == "reductions"
-  context[t.str]
 end
 
 def create_ir(node,context) # and register_vars
@@ -69,20 +62,17 @@ def check_missing(node,context,been)
   if node.op.name == "var"
     name = node.from.token.str
     if !context.include? name
-      if context["golfMode"].get_value != 0
-        if name.size>1
-          return IR.new(create_op(
-            name: "data",
-            type: Str,
-            impl: str_to_lazy_list(name)),[],node.from)
-        else
-          return IR.new(create_op(
-            name: "data",
-            type: Char,
-            impl: name[0].ord),[],node.from)
-        end
+      warn("unset identifier %p" % name, node.from.token) if $repl_mode
+      if name.size>1
+        return IR.new(create_op(
+          name: "data",
+          type: Str,
+          impl: str_to_lazy_list(name)),[],node.from)
       else
-        raise(ParseError.new("unset identifier %p" % name, node.from.token))
+        return IR.new(create_op(
+          name: "data",
+          type: Char,
+          impl: name[0].ord),[],node.from)
       end
     end
     #raise(ParseError.new("trivial self dependency is nonsensical", node.from.token)) if context[name] == node

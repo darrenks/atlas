@@ -1,10 +1,8 @@
-[flags]
--G
 [prog]
 a=a+1`0
-a take 10
-a take 10
-a take 10
+a take 10;
+a take 10;
+a take 10;
 [stdout]
 0 1 2 3 4 5 6 7 8 9
 0 1 2 3 4 5 6 7 8 9

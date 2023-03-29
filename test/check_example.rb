@@ -34,7 +34,6 @@ def doit(source,limit)
   root = parse_line(tokens[0],[])
   ir = to_ir(root,{})
   infer(ir)
-  $step_limit = 10000 + $reductions
   v=make_promises(ir)
   v=inspect_value(ir.type+ir.vec_level,v,ir.vec_level)
   v=take(limit,v.const)

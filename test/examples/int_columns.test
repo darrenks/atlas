@@ -1,9 +1,8 @@
-[flags]
--G
 [prog]
 }+}
 [input]
 1 10 50
 4 20 80
 [stdout]
-11 24
+11
+24

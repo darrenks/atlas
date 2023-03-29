@@ -25,11 +25,10 @@ end
     expected.gsub!(/\.\.\.$/,'')
 
     if truncate
-      stdout, stderr, status = Open3.capture3("./atlas -G -output_limit=#{truncate} test/prog.atl")
+      stdout, stderr, status = Open3.capture3("./atlas -repl_mode test/prog.atl | head -c #{truncate}")
     else
-      stdout, stderr, status = Open3.capture3("./atlas -G test/prog.atl")
+      stdout, stderr, status = Open3.capture3("./atlas -repl_mode test/prog.atl")
     end
-
     stderr=stderr.split("\e[31m").join
     stderr=stderr.split("\e[0m").join
     output = stdout + stderr

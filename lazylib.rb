@@ -1,13 +1,6 @@
-# Set this to default because these get used a bit during parse (e.g. creating a string)
-$step_limit=Float::INFINITY
-$reductions = 0
-
-def run(root,context)
-  output_limit = context["outputLimit"].get_value
-  output_limit = Float::INFINITY if output_limit == 0
+def run(root)
   v = Promise.new{yield(make_promises(root))}
-  print_string(v, output_limit)
-    context["reductions"]=to_ir(AST.new(create_int($reductions),[],Token.new("bof")),context)
+  print_string(v)
 end
 
 def make_promises(node)
@@ -33,8 +26,6 @@ class Promise
     value==[]
   end
   def value
-    raise DynamicError.new "step limit exceeded",nil if $reductions > $step_limit
-    $reductions+=1
     if Proc===@impl
       begin
         raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
@@ -424,25 +415,25 @@ def coerce2s(ta, a, tb)
   end
 end
 
-def to_string(t, value, golf_mode)
-  to_string_h(t,value,t.string_dim, Null, golf_mode)
+def to_string(t, value, repl_mode)
+  to_string_h(t,value,t.string_dim, Null, repl_mode)
 end
 
-def to_string_h(t, value, orig_dim, rhs, golf_mode)
+def to_string_h(t, value, orig_dim, rhs, repl_mode)
   if t == Int
     inspect_value_h(t, value, rhs, 0)
   elsif t == Char
     [value, rhs]
   else # List
-    # print 1d lists on new lines if golf mode
-    dim = golf_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
+    # print 1d lists on new lines if not in repl mode
+    dim = !repl_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
     # print newline separators after every element for better interactive io
     separator1 = dim == 2 ? "\n" : ""
     # but don't do this for separators like space, you would end up with trailing space in output
     separator2 = [""," ",""][dim] || "\n"
 
     concat_map(value,rhs){|v,r,first|
-      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{str_to_lazy_list(separator1, r)}, golf_mode) }
+      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{str_to_lazy_list(separator1, r)}, repl_mode) }
       first ? svalue.value : str_to_lazy_list(separator2, svalue)
     }
   end
@@ -456,13 +447,12 @@ def to_char(i)
   end
 end
 
-def print_string(value, limit)
-  while !value.empty && limit > 0
+def print_string(value)
+  while !value.empty
     c = value.value[0].value
     $last_was_newline = c == 10
     print to_char(c)
     value = value.value[1]
-    limit -= 1
   end
 end
 

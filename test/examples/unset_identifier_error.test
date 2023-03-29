@@ -1,7 +1,4 @@
-[flags]
--G
 [prog]
 asdf
-
-[stderr]
-1:1 (asdf) unset identifier "asdf" (ParseError)
+[output]
+asdf

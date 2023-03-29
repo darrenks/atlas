@@ -3,9 +3,11 @@
 [33m ᐳ [0m
 [33m ᐳ [0m5
 [33m ᐳ [0ma,z@a
-5:3 (z) unset identifier "z" ([31mParseError[0m)
+5:3 (z) unset identifier "z" ([31mWarning[0m)
+?:? infinite loop detected ([31mInfiniteLoopError[0m)
 [33m ᐳ [0ma
-6:1 (a) unset identifier "a" ([31mParseError[0m)
+6:1 (a) unset identifier "a" ([31mWarning[0m)
 [33m ᐳ [0m12
 2
 5
+a

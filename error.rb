@@ -1,5 +1,5 @@
 def warn(msg, from=nil)
-  STDERR.puts to_location(from) + " " + msg + " (Warning)"
+  STDERR.puts to_location(from) + " " + msg + " (\e[31mWarning\e[0m)"
 end
 
 def to_location(from)

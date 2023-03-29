@@ -2,18 +2,10 @@
 
 require_relative "repl.rb"
 
-if ARGV.include?("-g")
-  golf_mode = true
-  ARGV.delete("-g")
-elsif ARGV.include?("-G")
-  golf_mode = false
-  ARGV.delete("-G")
+# only intented for docs test to print things like it was in repl
+if ARGV.include?("-repl_mode")
+  $repl_mode = true
+  ARGV.delete("-repl_mode")
 end
 
-output_limit = nil
-if !(args=ARGV.grep(/^-output_limit\=/)).empty?
-  output_limit=args[0][/\d+/].to_i
-  ARGV.delete(args[0])
-end
-
-repl(nil, output_limit, golf_mode)
+repl
