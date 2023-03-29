@@ -9,6 +9,7 @@ vectorize .
 1,2,3. → <1,2,3>
 
 mod %
+anything mod 0 is 0
 Int Int → Int
 7%3 → 1
 10%5 → 0
@@ -19,13 +20,14 @@ Int Int → Int
 10-%5 → 0
 10-%(5-) → 0
 9-%(5-) → -4
-5%0 → DynamicError
+5%0 → 0
 
 unvec %
 <a> → [a]
 1,2+3% → [4,5]
 
 split0 %
+split, keeping empty results (include at beginning and end)
 Str Str → [Str]
 "a..b" % "." → ["a","","b"]
 " a "%" " → ["","a",""]

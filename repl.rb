@@ -4,8 +4,8 @@ HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil)
   context={}
-  context["lastAns"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
-  last=AST.new(Var,[],Token.new("lastAns"))
+  context["last ans"]=to_ir(AST.new(Ops0['input'],[],Token.new("bof")),context)
+  last=AST.new(Var,[],Token.new("last ans"))
 
   stack=3.downto(0).map{|i|
     AST.new(create_op(
@@ -35,7 +35,7 @@ def repl(input=nil)
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
       all = context.keys + ActualOpsList.filter(&:name).map(&:name) + Commands.keys
-      all.grep(/^#{Regexp.escape(s)}/)
+      all.grep(/^#{Regexp.escape(s)}/).reject{|name|name =~ / /}
     }
   end
 
@@ -72,7 +72,7 @@ def repl(input=nil)
           set(tokens[0], ast, context)
         else
           ir = to_ir(parse_line(tokens, stack, last),context)
-          context["lastAns"]=ir
+          context["last ans"]=ir
           printit(ir)
         end
       }

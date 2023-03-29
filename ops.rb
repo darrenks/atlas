@@ -55,6 +55,7 @@ def create_op(
   type: ,
   type_summary: nil,
   example: nil,
+  example2: nil,
   no_promote: false,
   desc: nil,
   ref_only: false,
@@ -77,6 +78,7 @@ def create_op(
   end
   examples = []
   examples << example if example
+  examples << example2 if example2
 
   if coerce
     f = built_impl
@@ -139,12 +141,17 @@ OpsList = [
    .add_test("1;>* -> 1"),
   create_op(
     name: "div",
+    desc: "0/0 is 0",
     example: '7/3 -> 2',
     sym: "/",
     type: { [Int,Int] => Int },
     impl_with_loc: -> from { -> a,b {
       if b.value==0
-        raise DynamicError.new("div 0", from) # todo maybe too complicated to be worth it same for mod
+        if a.value == 0
+          0
+        else
+          raise DynamicError.new("div 0", from)
+        end
       else
         a.value/b.value
       end
@@ -158,15 +165,16 @@ OpsList = [
    .add_test("10-/(5-) -> 2")
    .add_test("9-/(5-) -> 1")
    .add_test("1/0 -> DynamicError")
-   .add_test("0/0 -> DynamicError"),
+   .add_test("0/0 -> 0"),
   create_op(
     name: "mod",
+    desc: "anything mod 0 is 0",
     example: '7%3 -> 1',
     sym: "%",
     type: { [Int,Int] => Int },
     impl_with_loc: -> from { -> a,b {
       if b.value==0
-        raise DynamicError.new("mod 0",from)
+        0
       else
         a.value % b.value
       end
@@ -179,13 +187,14 @@ OpsList = [
    .add_test("10-%5 -> 0")
    .add_test("10-%(5-) -> 0")
    .add_test("9-%(5-) -> -4")
-   .add_test("5%0 -> DynamicError"),
+   .add_test("5%0 -> 0"),
   create_op(
-    name: "pow",
+    name: "pow", # todo use formula that will always be int
+    desc: "negative exponent will result in a rational, but this behavior is subject to change and not officially supported",
     example: '2^3 -> 8',
     sym: "^",
     type: { [Int,Int] => Int },
-    impl: -> a,b { a.value ** b.value }), # todo use formula that will always be int
+    impl: -> a,b { a.value ** b.value }),
   create_op(
     name: "neg",
     sym: "-",
@@ -196,7 +205,8 @@ OpsList = [
     name: "abs",
     sym: "|",
     type: { Int => Int },
-    example: '2-,3| -> <2,3>',
+    example: '2-| -> 2',
+    example2: '2| -> 2',
     impl: -> a { a.value.abs }),
   "vector",
   create_op(
@@ -217,15 +227,16 @@ OpsList = [
     example: '3:7 -> <3,4,5,6>',
     type: { [Int,Int] => v(Int),
             [Char,Char] => v(Char) },
-    impl: -> a,b { range(a.value, b.value) }
-  ), create_op(
+    impl: -> a,b { range(a.value, b.value) })
+   .add_test("5:3 -> <>"),
+  create_op(
     name: "from",
     sym: ":",
     example: '3: -> <3,4,5,6,7,8...',
     type: { Int => v(Int),
             Char => v(Char) },
     impl: -> a { range_from(a.value) }),
-  "list",
+  "basic list",
   create_op(
     name: "head",
     sym: "[",
@@ -301,7 +312,66 @@ OpsList = [
     type: { A => [A] },
     impl: -> a { repeat(a) }),
   create_op(
+    name: "concat",
+    sym: "_",
+    no_promote: true,
+    example: '"abc","123"_ -> "abc123"',
+    type: { [[A]] => [A] },
+    impl: -> a { concat(a) }),
+  create_op(
+    name: "append",
+    sym: "_",
+    example: '"abc"_"123" -> "abc123"',
+    type: { [[A],[A]] => [A],
+            [Aint,[Achar]] => [Achar],
+            [[Achar],Aint] => [Achar] },
+    type_summary: "[*a] [*a] -> [a]",
+    impl: -> a,b { append(a,b) },
+    coerce: true)
+  .add_test('1_"a" -> "1a"'),
+  create_op(
+    name: "cons",
+    sym: "`",
+    example: '"abc"`\'d -> "dabc"',
+    type: { [[A],A] => [A],
+            [Aint,Achar] => [Achar],
+            [[[Achar]],Aint] => [[Achar]] },
+    type_summary: "[*a] *a -> a",
+    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
+  .add_test('\'a`5 -> ["5","a"]')
+  .add_test('"a"`(5) -> ["5","a"]')
+  .add_test('"a";;`(5;) -> [["5"],["a"]]')
+  .add_test('5`\'a -> "a5"')
+  .add_test('5;`"a" -> ["a","5"]')
+  .add_test('\'b`\'a -> "ab"'),
+create_op(
+    name: "snoc",
+    desc: "rear cons, promote of first arg will happen if equal rank (for easy list construction)",
+    sym: ",",
+    example: '1,2,3 -> [1,2,3]',
+    type: { [[A],A] => [A],
+            [Aint,Achar] => [Achar],
+            [[[Achar]],Aint] => [[Achar]] },
+    type_summary: "[*a] *a -> a",
+    poly_impl: -> ta,tb {-> a,b {
+    append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
+  ).add_test("2,1 -> [2,1]")
+  .add_test('(2,3),1 -> [2,3,1]')
+  .add_test('(2,3),(4,5),1 -> <[2,3,1],[4,5,1]>')
+  .add_test('2,(1,0) -> [[2],[1,0]]')
+  .add_test('(2,3),(1,0) -> [[2,3],[1,0]]')
+  .add_test('(2,3).,1 -> <[2,1],[3,1]>')
+  .add_test('(2,3),(4,5).,1 -> <[2,3,1],[4,5,1]>')
+  .add_test('2,(1,0.) ->  <[2,1],[2,0]>')
+  .add_test('(2,3),(1,0.) -> <[2,3,1],[2,3,0]>')
+  .add_test('\'a,5 -> ["a","5"]')
+  .add_test('5,\'a -> "5a"')
+  .add_test('5,"a" -> ["5","a"]')
+  .add_test('\'b,\'a -> "ba"'),
+  "more list",
+  create_op(
     name: "count",
+    desc: "count the number of times each element has occurred previously",
     sym: "=",
     example: '"abcaab" = -> [0,0,0,1,2,1]',
     type: { [A] => [Int] },
@@ -338,72 +408,15 @@ OpsList = [
   .add_test('"abcde" ~ " 11  " -> ["","abc","d","e"]')
   .add_test('""~() -> [""]'),
   create_op(
-    name: "concat",
-    sym: "_",
-    no_promote: true,
-    example: '"abc","123"_ -> "abc123"',
-    type: { [[A]] => [A] },
-    impl: -> a { concat(a) }),
-      create_op(
-    name: "append",
-    sym: "_",
-    example: '"abc"_"123" -> "abc123"',
-    type: { [[A],[A]] => [A],
-            [Aint,[Achar]] => [Achar],
-            [[Achar],Aint] => [Achar] },
-    type_summary: "[a] [a] -> [a] (coerces)",
-    impl: -> a,b { append(a,b) },
-    coerce: true)
-  .add_test('1_"a" -> "1a"'),
-  create_op(
-    name: "cons",
-    sym: "`",
-    example: '"abc"`\'d -> "dabc"',
-    type: { [[A],A] => [A],
-            [Aint,Achar] => [Achar],
-            [[[Achar]],Aint] => [[Achar]] },
-    type_summary: "[a] a -> a (coerces)",
-    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
-  .add_test('\'a`5 -> ["5","a"]')
-  .add_test('"a"`(5) -> ["5","a"]')
-  .add_test('"a";;`(5;) -> [["5"],["a"]]')
-  .add_test('5`\'a -> "a5"')
-  .add_test('5;`"a" -> ["a","5"]')
-  .add_test('\'b`\'a -> "ab"'),
-create_op(
-    name: "snoc",
-    desc: "rear cons, promote of first arg is allowed for easy list construction",
-    sym: ",",
-    example: '1,2,3 -> [1,2,3]',
-    type: { [[A],A] => [A],
-            [Aint,Achar] => [Achar],
-            [[[Achar]],Aint] => [[Achar]] },
-    type_summary: "[a] a -> a (coerces)",
-    poly_impl: -> ta,tb {-> a,b {
-    append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
-  ).add_test("2,1 -> [2,1]")
-  .add_test('(2,3),1 -> [2,3,1]')
-  .add_test('(2,3),(4,5),1 -> <[2,3,1],[4,5,1]>')
-  .add_test('2,(1,0) -> [[2],[1,0]]')
-  .add_test('(2,3),(1,0) -> [[2,3],[1,0]]')
-  .add_test('(2,3).,1 -> <[2,1],[3,1]>')
-  .add_test('(2,3),(4,5).,1 -> <[2,3,1],[4,5,1]>')
-  .add_test('2,(1,0.) ->  <[2,1],[2,0]>')
-  .add_test('(2,3),(1,0.) -> <[2,3,1],[2,3,0]>')
-  .add_test('\'a,5 -> ["a","5"]')
-  .add_test('5,\'a -> "5a"')
-  .add_test('5,"a" -> ["5","a"]')
-  .add_test('\'b,\'a -> "ba"'),
-  create_op(
     name: "transpose",
     sym: "\\",
-    example: '"abc","123"\\ -> ["a1","b2","c3"]',
+    example: '"abc","1"\\ -> ["a1","b","c"]',
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
   ).add_test('"abc","1234"\ -> ["a1","b2","c3","4"]'),
   create_op(
     name: "catch",
-    desc: "experimental feature, may break faith based circular programs",
+    desc: "truncate a list on first dynamic error (experimental feature, may break faith based circular programs)",
     sym: "?",
     example: '1/(3,2,1,0,1)? -> [0,0,1]',
     type: { [A] => [A] },
@@ -418,10 +431,12 @@ create_op(
   create_op(
     name: "reshape",
     sym: "#",
-    example: '"abcde" # (1,2) -> ["a","bc","de"]',
+    desc: "Take elements in groups of sizes. If second list runs out, last element is repeated",
+    example: '"abcdef"#2 -> ["ab","cd","ef"]',
     type: { [[A],[Int]] => [[A]] },
     impl: -> a,b { reshape(a,b) })
    .add_test('"abc" # 2 -> ["ab","c"]')
+   .add_test('"abcd" # (2,1) -> ["ab","c","d"]')
    .add_test('"" # 2 -> []'),
   "string",
   create_op(
@@ -434,6 +449,7 @@ create_op(
   .add_test('1,2,3*", " -> "1, 2, 3"'),
   create_op(
     name: "split",
+    desc: "split, removing empty results",
     example: '"hi, yo"/", " -> ["hi","yo"]',
     sym: "/",
     type: { [Str,Str] => [Str] },
@@ -443,6 +459,7 @@ create_op(
   .add_test('",a,,b,"/"," -> ["a","b"]'),
   create_op(
     name: "split0",
+    desc: "split, keeping empty results (include at beginning and end)",
     example: '"a..b" % "." -> ["a","","b"]',
     sym: "%",
     type: { [Str,Str] => [Str] },
@@ -458,6 +475,7 @@ create_op(
   create_op(
     name: "eq",
     example: '3=3 -> [3]',
+    example2: '3=0 -> []',
     sym: "=",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } })
@@ -474,38 +492,43 @@ create_op(
   create_op(
     name: "lessThan",
     example: '4<5 -> [5]',
+    example2: '5<4 -> []',
     sym: "<",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [b,Null] : [] } }
   ).add_test("5<4 -> []"),
   create_op(
-    name: "not",
-    sym: "~",
-    type: { A => Int },
-    example: '2,0.~ -> <0,1>',
-    poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }
-  ), create_op(
     name: "greaterThan",
     example: '5>4 -> [4]',
+    example2: '4>5 -> []',
     sym: ">",
     type: { [A,A] => [A] },
     poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [b,Null] : [] } }
   ).add_test("4>5 -> []"),
   create_op(
+    name: "not",
+    sym: "~",
+    type: { A => Int },
+    example: '2~ -> 0',
+    example2: '0~ -> 1',
+    poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }),
+  create_op(
     name: "and",
     sym: "&",
-    example: '1&2,(0&2) -> [2,0]',
+    example: '1&2 -> 2',
+    example2: '0&2 -> 0',
     type: { [A,B] => B },
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
   ).add_test("0&2 -> 0"),
   create_op(
     name: "or",
     sym: "|",
-    example: '1|2,(0|2) -> [1,2]',
+    example: '2|0 -> 2',
+    example2: '0|2 -> 2',
     type: { [A,A] => A,
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
-    type_summary: "a a -> a (coerces)",
+    type_summary: "*a *a -> a",
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb).value : coerce2s(tb,b,ta).value }},
   ).add_test("0|2 -> 2")
    .add_test('1|"b" -> "1"')
@@ -521,8 +544,8 @@ create_op(
     type: v(Str),
     impl: -> { lines(ReadStdin) }),
   create_op(
-    name: "emptyPop",
-    desc: "column of ints from stdin",
+    name: "unmatched }",
+    desc: "next column from stdin",
     sym: "}",
     ref_only: true,
     type: v(Int),
@@ -585,19 +608,19 @@ create_op(
     impl: MacroImpl,
   ),
   create_op(
-    name: "implicitMult",
+    name: "implicit mult",
     sym: " ",
     example: '2 3 -> 6',
     type: { [Int,Int] => Int },
     impl: -> a,b { a.value*b.value }
   ), create_op(
-    name: "implicitAppend",
+    name: "implicit append",
     sym: " ",
     example: '1"a" -> "1a"',
     type: { [[Achar],[Achar]] => [Achar],
             [Aint,[Achar]] => [Achar],
             [[Achar],Aint] => [Achar] },
-    type_summary: "[a] [a] -> [a] (coerces, one must be non int)",
+    type_summary: "[*a] [*a] -> [a] (one must be non int)",
     impl: -> a,b { append(a,b) },
     coerce: true)
   .add_test("'a 'b -> \"ab\"")

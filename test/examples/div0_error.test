@@ -1,5 +1,0 @@
-[prog]
-1/0
-
-[stderr]
-1:2 (/) div 0 (DynamicError)
