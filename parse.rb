@@ -149,15 +149,15 @@ def new_var
 end
 
 def balance_parens(tokens)
-  min=max=cur1=cur2=0
+  min=cur1=cur2=0
   tokens.each{|t|
     (cur1 += 1; cur2 += 1) if t.str == '('
     (cur1 -= 1; cur2 -= 1) if t.str == ')'
-    max = cur2 if cur2 > max
     min = cur1 if cur1 < min
     cur2 = 0 if cur2 < 0
+
   }
-  tokens = [Token.new('(')] * -min + tokens[0..-2] + [Token.new(')')] * max + tokens[-1,1]
+  tokens = [Token.new('(')] * -min + tokens[0..-2] + [Token.new(')')] * cur2 + tokens[-1,1]
   tokens
 end
 

@@ -212,12 +212,6 @@ OpsList = [
     type: { [A] => v(A) },
     impl: -> a { a.value }),
   create_op(
-    name: "repeat",
-    sym: ",",
-    example: '2, -> <2,2,2,2,2...',
-    type: { A => v(A) },
-    impl: -> a { repeat(a) }
-  ), create_op(
     name: "range",
     sym: ":",
     example: '3:7 -> <3,4,5,6>',
@@ -301,9 +295,15 @@ OpsList = [
     type: { A => [A] },
     impl: -> a { [a,Null] }),
   create_op(
+    name: "repeat",
+    sym: ",",
+    example: '2, -> [2,2,2,2,2...',
+    type: { A => [A] },
+    impl: -> a { repeat(a) }),
+  create_op(
     name: "count",
     sym: "=",
-    example: '"abcaab" count -> [0,0,0,1,2,1]',
+    example: '"abcaab" = -> [0,0,0,1,2,1]',
     type: { [A] => [Int] },
     no_promote: true,
     impl: -> a { occurence_count(a) }
@@ -324,7 +324,7 @@ OpsList = [
   ), create_op(
     name: "sortBy",
     sym: "!",
-    example: '"abc" ! (3,1,2) -> "bca"',
+    example: '"abc" ! (3,1,4) -> "bac"',
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
   .add_test('1,2,3 ! ("hi","there") -> [1,2]'),
@@ -411,7 +411,7 @@ create_op(
   create_op(
     name: "reverse",
     sym: "/",
-    example: '"abc" reverse -> "cba"',
+    example: '"abc" / -> "cba"',
     type: { [A] => [A] },
     no_promote: true,
     impl: -> a { reverse(a) }),
