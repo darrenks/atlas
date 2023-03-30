@@ -99,7 +99,7 @@ def get_atom(tokens)
     rb = LBrackets[t.str]
     get_expr(tokens,rb)
   elsif str[0] =~ /[0-9]/
-    AST.new(create_int(str),[],t)
+    AST.new(create_num(str),[],t)
   elsif str[0] == '"'
     AST.new(create_str(str),[],t)
   elsif str[0] == "'"

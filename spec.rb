@@ -5,8 +5,8 @@ B = :b
 # type var of base elem char
 Achar = :a_char
 
-# type var of base elem int
-Aint = :a_int
+# type var of base elem num
+Anum = :a_num
 
 # type spec ================================
 # { from => to } or just "to" if no args

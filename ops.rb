@@ -88,11 +88,11 @@ def create_op(
   Op.new(name,sym,type,type_summary,examples,desc,ref_only,no_promote,built_impl,[])
 end
 
-def int_col(n)
+def num_col(n)
   -> {
     map(lines(ReadStdin).const){|v|
       v=drop(n,Promise.new{split_non_digits(v)})
-      raise DynamicError.new "int col: empty list",nil if v==[]
+      raise DynamicError.new "num col: empty list",nil if v==[]
       v[0].value
     }
   }
@@ -104,16 +104,17 @@ OpsList = [
     name: "add",
     sym: "+",
     example: "1+2 -> 3",
-    type: { [Int,Int] => Int,
-            [Int,Char] => Char,
-            [Char,Int] => Char },
+    type: { [Num,Num] => Num,
+            [Num,Char] => Char,
+            [Char,Num] => Char },
     impl: -> a,b { a.value + b.value })
-   .add_test("'a+1 -> 'b"),
+   .add_test("'a+1 -> 'b")
+   .add_test("'a+1.2 -> 'b"),
   create_op(
     name: "sum",
     sym: "+",
     example: "1,2,3,4+ -> 10",
-    type: { [Int] => Int },
+    type: { [Num] => Num },
     no_promote: true,
     impl: -> a { sum(a) })
    .add_test("1;>+ -> 0"),
@@ -121,22 +122,22 @@ OpsList = [
     name: "sub",
     sym: "-",
     example: '5-3 -> 2',
-    type: { [Int,Int] => Int,
-            [Char,Int] => Char,
-            [Char,Char] => Int },
+    type: { [Num,Num] => Num,
+            [Char,Num] => Char,
+            [Char,Char] => Num },
     impl: -> a,b { a.value - b.value }),
   create_op(
     name: "mult",
     example: '2*3 -> 6',
     sym: "*",
-    type: { [Int,Int] => Int },
+    type: { [Num,Num] => Num },
     impl: -> a,b { a.value * b.value }),
   create_op(
     name: "prod",
     sym: "*",
     example: "1,2,3,4* -> 24",
     no_promote: true,
-    type: { [Int] => Int },
+    type: { [Num] => Num },
     impl: -> a { prod(a) })
    .add_test("1;>* -> 1"),
   create_op(
@@ -144,7 +145,7 @@ OpsList = [
     desc: "0/0 is 0",
     example: '7/3 -> 2',
     sym: "/",
-    type: { [Int,Int] => Int },
+    type: { [Num,Num] => Num },
     impl_with_loc: -> from { -> a,b {
       if b.value==0
         if a.value == 0
@@ -171,7 +172,7 @@ OpsList = [
     desc: "anything mod 0 is 0",
     example: '7%3 -> 1',
     sym: "%",
-    type: { [Int,Int] => Int },
+    type: { [Num,Num] => Num },
     impl_with_loc: -> from { -> a,b {
       if b.value==0
         0
@@ -189,22 +190,22 @@ OpsList = [
    .add_test("9-%(5-) -> -4")
    .add_test("5%0 -> 0"),
   create_op(
-    name: "pow", # todo use formula that will always be int
-    desc: "negative exponent will result in a rational, but this behavior is subject to change and not officially supported",
+    name: "pow", # consider allowing rationals or even imaginary numbers
+    desc: "negative exponent will result in a rational, but this behavior is subject to change and not officially supported, similarly for imaginary numbers",
     example: '2^3 -> 8',
     sym: "^",
-    type: { [Int,Int] => Int },
+    type: { [Num,Num] => Num },
     impl: -> a,b { a.value ** b.value }),
   create_op(
     name: "neg",
     sym: "-",
-    type: { Int => Int },
+    type: { Num => Num },
     example: '2- -> -2',
     impl: -> a { -a.value }
   ), create_op(
     name: "abs",
     sym: "|",
-    type: { Int => Int },
+    type: { Num => Num },
     example: '2-| -> 2',
     example2: '2| -> 2',
     impl: -> a { a.value.abs }),
@@ -225,15 +226,16 @@ OpsList = [
     name: "range",
     sym: ":",
     example: '3:7 -> <3,4,5,6>',
-    type: { [Int,Int] => v(Int),
+    type: { [Num,Num] => v(Num),
             [Char,Char] => v(Char) },
     impl: -> a,b { range(a.value, b.value) })
-   .add_test("5:3 -> <>"),
+   .add_test("5:3 -> <>")
+   .add_test("1.5:5 -> <1.5,2.5,3.5,4.5>"),
   create_op(
     name: "from",
     sym: ":",
     example: '3: -> <3,4,5,6,7,8...',
-    type: { Int => v(Int),
+    type: { Num => v(Num),
             Char => v(Char) },
     impl: -> a { range_from(a.value) }),
   "basic list",
@@ -280,24 +282,26 @@ OpsList = [
     name: "len",
     example: '"asdf"# -> 4',
     sym: "#",
-    type: { [A] => Int },
+    type: { [A] => Num },
     no_promote: true,
     impl: -> a { len(a) }),
   create_op(
     name: "take",
     sym: "[",
     example: '"abcd"[3 -> "abc"',
-    type: { [[A],Int] => [A] },
+    type: { [[A],Num] => [A] },
     impl: -> a,b { take(b.value, a) }
   ).add_test('"abc"[(2-) -> ""')
+   .add_test('"abc"[1.2 -> "a"')
    .add_test('""[2 -> ""'),
   create_op(
     name: "drop",
     sym: "]",
     example: '"abcd"]3 -> "d"',
-    type: { [[A],Int] => [A] },
+    type: { [[A],Num] => [A] },
     impl: -> a,b { drop(b.value, a) }
   ).add_test('"abc"](2-) -> "abc"')
+   .add_test('"abc"]1.2 -> "bc"')
    .add_test('""]2 -> ""'),
   create_op(
     name: "single",
@@ -323,8 +327,8 @@ OpsList = [
     sym: "_",
     example: '"abc"_"123" -> "abc123"',
     type: { [[A],[A]] => [A],
-            [Aint,[Achar]] => [Achar],
-            [[Achar],Aint] => [Achar] },
+            [Anum,[Achar]] => [Achar],
+            [[Achar],Anum] => [Achar] },
     type_summary: "[*a] [*a] -> [a]",
     impl: -> a,b { append(a,b) },
     coerce: true)
@@ -334,8 +338,8 @@ OpsList = [
     sym: "`",
     example: '"abc"`\'d -> "dabc"',
     type: { [[A],A] => [A],
-            [Aint,Achar] => [Achar],
-            [[[Achar]],Aint] => [[Achar]] },
+            [Anum,Achar] => [Achar],
+            [[[Achar]],Anum] => [[Achar]] },
     type_summary: "[*a] *a -> a",
     poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
   .add_test('\'a`5 -> ["5","a"]')
@@ -350,8 +354,8 @@ create_op(
     sym: ",",
     example: '1,2,3 -> [1,2,3]',
     type: { [[A],A] => [A],
-            [Aint,Achar] => [Achar],
-            [[[Achar]],Aint] => [[Achar]] },
+            [Anum,Achar] => [Achar],
+            [[[Achar]],Anum] => [[Achar]] },
     type_summary: "[*a] *a -> a",
     poly_impl: -> ta,tb {-> a,b {
     append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
@@ -374,7 +378,7 @@ create_op(
     desc: "count the number of times each element has occurred previously",
     sym: "=",
     example: '"abcaab" = -> [0,0,0,1,2,1]',
-    type: { [A] => [Int] },
+    type: { [A] => [Num] },
     no_promote: true,
     impl: -> a { occurence_count(a) }
   ).add_test('"ab","a","ab" count -> [0,0,1]'),
@@ -433,10 +437,11 @@ create_op(
     sym: "#",
     desc: "Take elements in groups of sizes. If second list runs out, last element is repeated",
     example: '"abcdef"#2 -> ["ab","cd","ef"]',
-    type: { [[A],[Int]] => [[A]] },
+    type: { [[A],[Num]] => [[A]] },
     impl: -> a,b { reshape(a,b) })
    .add_test('"abc" # 2 -> ["ab","c"]')
    .add_test('"abcd" # (2,1) -> ["ab","c","d"]')
+   .add_test('"."^10#2.5*" " -> ".. ... .. ..."')
    .add_test('"" # 2 -> []'),
   "string",
   create_op(
@@ -444,7 +449,7 @@ create_op(
     example: '"hi","yo"*" " -> "hi yo"',
     sym: "*",
     type: { [[Str],Str] => Str,
-            [[Int],Str] => Str,},
+            [[Num],Str] => Str,},
     poly_impl: -> at,bt { -> a,b { join(coerce2s(at,a,Str+1),b) } })
   .add_test('1,2,3*", " -> "1, 2, 3"'),
   create_op(
@@ -469,8 +474,16 @@ create_op(
     name: "replicate",
     example: '"ab"^3 -> "ababab"',
     sym: "^",
-    type: { [Str,Int] => Str },
-    impl: -> a,b { concat(take(b.value,repeat(a).const).const) }),
+    type: { [Str,Num] => Str },
+    impl: -> a,b {
+      ipart = concat(take(b.value,repeat(a).const).const)
+      if b.value.class == Integer
+        ipart
+      else
+        append(ipart.const, take(b.value%1*len(a), a).const)
+      end
+    })
+   .add_test('"abcd"^2.5 -> "abcdabcdab"'),
   "logic",
   create_op(
     name: "eq",
@@ -508,7 +521,7 @@ create_op(
   create_op(
     name: "not",
     sym: "~",
-    type: { A => Int },
+    type: { A => Num },
     example: '2~ -> 0',
     example2: '0~ -> 1',
     poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }),
@@ -526,8 +539,8 @@ create_op(
     example: '2|0 -> 2',
     example2: '0|2 -> 2',
     type: { [A,A] => A,
-            [Aint,[Achar]] => [Achar],
-            [[Achar],Aint] => [Achar] },
+            [Anum,[Achar]] => [Achar],
+            [[Achar],Anum] => [Achar] },
     type_summary: "*a *a -> a",
     poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? coerce2s(ta,a,tb).value : coerce2s(tb,b,ta).value }},
   ).add_test("0|2 -> 2")
@@ -548,21 +561,21 @@ create_op(
     desc: "next column from stdin",
     sym: "}",
     ref_only: true,
-    type: v(Int),
+    type: v(Num),
     impl: MacroImpl),
   create_op(
     name: "read",
     sym: "`",
-    type: { Str => [Int] },
+    type: { Str => [Num] },
     example: '"1 2 -3"` -> [1,2,-3]',
     impl: -> a { split_non_digits(a) })
-  .add_test('"1 2 -3 4a5 - -6 --7" ` -> [1,2,-3,4,5,-6,7]'),
+  .add_test('"1 2.30 -3 4a5 - -6 --7 .8" ` -> [1,2.3,-3,4,5,-6,7,8]'),
   create_op(
     name: "str",
     sym: "`",
     example: '12` -> "12"',
-    type: { Int => Str },
-    impl: -> a { inspect_value(Int,a,0) }),
+    type: { Num => Str },
+    impl: -> a { inspect_value(Num,a,0) }),
   "special",
   # Macros, type only used to specify number of args
   create_op(
@@ -611,15 +624,15 @@ create_op(
     name: "implicit mult",
     sym: " ",
     example: '2 3 -> 6',
-    type: { [Int,Int] => Int },
+    type: { [Num,Num] => Num },
     impl: -> a,b { a.value*b.value }
   ), create_op(
     name: "implicit append",
     sym: " ",
     example: '1"a" -> "1a"',
     type: { [[Achar],[Achar]] => [Achar],
-            [Aint,[Achar]] => [Achar],
-            [[Achar],Aint] => [Achar] },
+            [Anum,[Achar]] => [Achar],
+            [[Achar],Anum] => [Achar] },
     type_summary: "[*a] [*a] -> [a] (one must be non int)",
     impl: -> a,b { append(a,b) },
     coerce: true)
@@ -685,11 +698,11 @@ UnknownOp = create_op(
 )
 Var = Op.new("var")
 
-def create_int(str)
+def create_num(str)
   create_op(
     name: "data",
-    type: Int,
-    impl: str.to_i
+    type: Num,
+    impl: str[/[.e]/] ? str.to_f : str.to_i
   )
 end
 
@@ -727,7 +740,7 @@ Commands = {
   }],
   "version" => ["see atlas version", nil, -> tokens, stack, last, context {
     raise ParseError.new("usage: version",tokens[0]) if tokens.size > 1
-    puts "Atlas Alpha (Mar 29, 2023)"
+    puts "Atlas Alpha (Mar 30, 2023)"
   }],
   "type" => ["see expression type", "a", -> tokens, stack, last, context {
     raise ParseError.new("usage: type <expression>",tokens[0]) if tokens.size < 2

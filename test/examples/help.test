@@ -10,7 +10,7 @@ vectorize .
 
 mod %
 anything mod 0 is 0
-Int Int → Int
+Num Num → Num
 7%3 → 1
 10%5 → 0
 9%5 → 4
@@ -33,18 +33,19 @@ Str Str → [Str]
 " a "%" " → ["","a",""]
 
 add +
-Int Int → Int
-Int Char → Char
-Char Int → Char
+Num Num → Num
+Num Char → Char
+Char Num → Char
 1+2 → 3
 'a+1 → 'b
+'a+1.2 → 'b
 
 sub -
-Int Int → Int
-Char Int → Char
-Char Char → Int
+Num Num → Num
+Char Num → Char
+Char Char → Num
 5-3 → 2
 
 neg -
-Int → Int
+Num → Num
 2- → -2

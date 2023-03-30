@@ -10,8 +10,8 @@ def repl(input=nil)
   stack=3.downto(0).map{|i|
     AST.new(create_op(
       name: "col#{i}",
-      type: VecOf.new(Int),
-      impl: int_col(i)
+      type: VecOf.new(Num),
+      impl: num_col(i)
     ),[])
   }
 
@@ -80,6 +80,11 @@ def repl(input=nil)
       STDERR.puts e.message
       assignment = false
       context = prev_context
+    # TODO there are some errors that could come from floats like
+    # 0.0^(1.0-)+'a RangeError
+    # converting inf to int FloatDomainError
+    # "asdf"[(1-^(0.5)) NoMethodError (< on complex)
+    # it would be best to catch them higher up for use with truthy
     rescue SignalException => e
       exit if !ARGV.empty? || input # not repl mode
     rescue SystemStackError => e

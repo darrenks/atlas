@@ -90,12 +90,12 @@ class Object
 end
 
 def take(n, a)
-  return [] if n <= 0 || a.empty
+  return [] if n < 1 || a.empty
   [a.value[0], Promise.new{ take(n-1, a.value[1]) }]
 end
 
 def drop(n, a)
-  while n>0 && !a.empty
+  while n>=1 && !a.empty
     n-=1
     a=a.value[1]
   end
@@ -195,12 +195,13 @@ def reverse(a,sofar=[])
   reverse(a.value[1],[a.value[0],sofar.const])
 end
 
-def reshape(a,b)
+def reshape(a,b,s=0)
   raise DynamicError.new("empty list given for lengths of reshape", nil) if b.empty
   return [] if a.empty
-  [Promise.new{take(b.value[0].value,a)},
+  [Promise.new{take((b.value[0].value+s).to_i,a)},
    Promise.new{
-    reshape(drop(b.value[0].value,a).const,b.value[1].empty ? b : b.value[1])
+    c=b.value[0].value+s
+    reshape(drop(c.to_i,a).const,b.value[1].empty ? b : b.value[1], c%1)
    }]
 end
 
@@ -385,7 +386,7 @@ def inspect_value_h(t,value,rhs,zip_level)
        str_to_lazy_list(escape_str_char(v.value),r)
       }
     }]
-  elsif t==Int
+  elsif t==Num
     str_to_lazy_list(value.value.to_s,rhs)
   elsif t==Char
     str_to_lazy_list(inspect_char(value.value),rhs)
@@ -404,10 +405,10 @@ end
 def coerce2s(ta, a, tb)
   return a if ta==tb || tb.is_unknown || ta.is_unknown #??
   case [ta.base_elem,tb.base_elem]
-  when [:int,:char]
+  when [:num,:char]
     raise if ta.dim+1 != tb.dim
     return Promise.new{zipn(ta.dim,[a],->av{str_to_lazy_list(av.value.to_s)})}
-  when [:char,:int]
+  when [:char,:num]
     raise if ta.dim != tb.dim+1
     return a
   else
@@ -420,7 +421,7 @@ def to_string(t, value, repl_mode)
 end
 
 def to_string_h(t, value, orig_dim, rhs, repl_mode)
-  if t == Int
+  if t == Num
     inspect_value_h(t, value, rhs, 0)
   elsif t == Char
     [value, rhs]
@@ -460,7 +461,7 @@ def is_digit(i)
   i>=48 && i<58
 end
 
-def read_int(s)
+def read_num(s)
   multiplier=1
   until s.empty || is_digit(s.value[0].value)
     if s.value[0].value == ?-.ord
@@ -477,6 +478,19 @@ def read_int(s)
     v = v*10+s.value[0].value-48
     s = s.value[1]
   end
+
+  # find decimal pointer and numbers after
+  if found_int && !s.empty && s.value[0].value == ?..ord && !s.value[1].empty && is_digit(s.value[1].value[0].value)
+    decimals = "0."
+    s = s.value[1]
+    until s.empty || !is_digit(s.value[0].value)
+      found_int = true
+      decimals << s.value[0].value.chr
+      s = s.value[1]
+    end
+    v += decimals.to_f
+  end
+
   [multiplier * v, found_int, s]
 end
 
@@ -500,7 +514,7 @@ end
 # string promise -> [int] value
 def split_non_digits(s)
   return [] if s.empty
-  v,found,s2=read_int(s)
+  v,found,s2=read_num(s)
   return [] if !found
   [v.const,Promise.new{split_non_digits(s2)}]
 end
@@ -539,7 +553,7 @@ def to_eager_str(v)
 end
 
 def truthy(type, value)
-  if type == Int
+  if type == Num
     value.value > 0
   elsif type == Char
     !!to_char(value.value)[/\S/]

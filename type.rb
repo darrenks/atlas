@@ -1,5 +1,5 @@
 Inf = 2**61 # for max_pos_dim
-Type = Struct.new(:dim,:base_elem) # base is :int, :char, or :a
+Type = Struct.new(:dim,:base_elem) # base is :num, :char, or :a
 # :a means unknown type, it could be any type with dim >= 0
 TypeWithVecLevel = Struct.new(:type,:vec_level)
 
@@ -32,12 +32,12 @@ class Type
   def default_value
     return [] if dim > 0
     return 32 if is_char
-    return 0 if base_elem == :int
+    return 0 if base_elem == :num
     raise DynamicError.new("access of the unknown type",nil)
   end
 end
 
-Int = Type.new(0,:int)
+Num = Type.new(0,:num)
 Char = Type.new(0,:char)
 Str = Type.new(1,:char)
 Unknown = Type.new(0,:a)
