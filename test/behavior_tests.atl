@@ -276,3 +276,14 @@ a%2&(3*a+1)|(a/2)`8@a~(a=.~%)[ -> [8,4,2,1]
 1,2+0# -> 2
 -- test will not unvectorize after vec op
 1,2.# -> AtlasTypeError
+
+-- test roman numerals
+M -> 1000
+D -> 500
+C -> 100
+L -> 50
+X -> 10
+V -> 5
+I -> 1
+XI -> 11
+IX -> 9

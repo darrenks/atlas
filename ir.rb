@@ -63,7 +63,12 @@ def check_missing(node,context,been)
     name = node.from.token.str
     if !context.include? name
       warn("unset identifier %p" % name, node.from.token) if $repl_mode
-      if name.size>1
+      if (numeral = to_roman_numeral(name))
+        return IR.new(create_op(
+          name: "data",
+          type: Int,
+          impl: numeral),[],node.from)
+      elsif name.size>1
         return IR.new(create_op(
           name: "data",
           type: Str,
