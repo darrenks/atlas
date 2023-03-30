@@ -17,6 +17,12 @@ def repl(input=nil)
 
   line_no = 1
 
+  { "N" => "'\n",
+    "S" => "' ",
+  }.each{|name,val|
+    context[name]=to_ir(AST.new(create_char(val),[],Token.new("bof")),context)
+  }
+
   if input
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
@@ -51,7 +57,7 @@ def repl(input=nil)
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
           ir = to_ir(ast,context)
-          printit(ir)
+          printit(ir,context)
         end
         break
       end
@@ -73,7 +79,7 @@ def repl(input=nil)
         else
           ir = to_ir(parse_line(tokens, stack, last),context)
           context["last ans"]=ir
-          printit(ir)
+          printit(ir,context)
         end
       }
     rescue AtlasError => e
@@ -100,8 +106,11 @@ def repl(input=nil)
   end # until
 end
 
-def printit(ir)
-    infer(ir)
-    run(ir) {|v| to_string(ir.type+ir.vec_level,v,$repl_mode) }
-    puts unless $last_was_newline
+def printit(ir,context)
+  n=context['N'].get_str_value || "\n"
+  s=context['S'].get_str_value || " "
+
+  infer(ir)
+  run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode,n,s) }
+  print n unless $last_was_newline
 end

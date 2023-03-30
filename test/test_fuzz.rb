@@ -6,7 +6,7 @@ symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
 
 #symbols = "~!!@@$()-=[]';?:"
 numbers = "0123"
-letters = "abC"
+letters = "abCNS"
 spaces = " \n\n\n\n" # twice as likely
 
 # Just the interesting characters to focus on testing parse

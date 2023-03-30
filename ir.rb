@@ -28,6 +28,32 @@ class IR < Struct.new(
     self.last_error ||= AtlasTypeError.new msg,self
     UnknownV0
   end
+  def get_str_value # for getting vars value
+    begin
+      infer(self)
+      val = make_promises(self).value
+    rescue # failsafe, we still want atlas to work if it gets set to something invalid
+      return nil
+    end
+    case self.type
+    when Num
+      return nil if self.vec_level != 0
+      val.to_s
+    when Char
+      if self.vec_level == 0
+        val.chr
+      elsif self.vec_level == 1
+        to_eager_str(val.const)
+      else
+        return nil
+      end
+    when Str
+      return nil if self.vec_level != 0
+      to_eager_str(val.const)
+    else
+      nil
+    end
+  end
 end
 
 # creates an IR from an AST, replacing vars
