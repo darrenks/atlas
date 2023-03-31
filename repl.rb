@@ -93,6 +93,7 @@ def repl(input=nil)
     # it would be best to catch them higher up for use with truthy
     rescue SignalException => e
       exit if !ARGV.empty? || input # not repl mode
+      puts
     rescue SystemStackError => e
       STDERR.puts DynamicError.new("stack overflow error", nil).message
       assignment = false

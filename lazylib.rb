@@ -31,23 +31,18 @@ class Promise
         raise InfiniteLoopError.new "infinite loop detected",self,nil if @calculating # todo fix from location
         @calculating=true
         @impl=@impl[]
+      rescue DynamicError => e
+        @impl = e
       ensure
         # not really needed since new promises are created rather than reused
         @calculating=false
       end
       raise DynamicError.new "infinite loop was assumed to be non empty, but was empty",nil if expect_non_empty && @impl == []
     end
+    raise @impl if DynamicError===@impl
     @impl
   end
   alias by value
-  def expand
-    return if @expanded
-    value
-    @expanded = true
-    if Array===@impl
-      @impl.each(&:expand)
-    end
-  end
 end
 
 class By
@@ -64,10 +59,6 @@ class By
   def value
     @value
   end
-  def expand
-    @value.expand
-    @by_value.expand
-  end
 end
 
 # Use this to avoid creating promises that are pointless because the value is constant or it will immediately be computed after construction.
@@ -76,12 +67,6 @@ class Const < Struct.new(:value)
     value==[]
   end
   alias by value
-
-  def expand
-    if Array===@impl
-      @impl.each(&:expand)
-    end
-  end
 end
 class Object
   def const
@@ -243,10 +228,10 @@ def map(a,&b)
   a.empty ? [] : [Promise.new{b[a.value[0]]}, Promise.new{map(a.value[1],&b)}]
 end
 
+# todo rm
 def atlas_catch(a)
   begin
     return [] if a.empty
-#     a.value[0].expand
     a.value[0].value
   rescue AtlasError => e
     return []
@@ -554,11 +539,15 @@ def to_eager_str(v)
 end
 
 def truthy(type, value)
-  if type == Num
-    value.value > 0
-  elsif type == Char
-    !!to_char(value.value)[/\S/]
-  else # List
-    !value.empty
+  begin
+    if type == Num
+      value.value > 0
+    elsif type == Char
+      !!to_char(value.value)[/\S/]
+    else # List
+      !value.empty
+    end
+  rescue AtlasError => e # dynamic and inf loop
+    return false
   end
 end

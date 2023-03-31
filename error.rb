@@ -39,7 +39,7 @@ end
 class DynamicError < AtlasError
 end
 
-class InfiniteLoopError < DynamicError
+class InfiniteLoopError < AtlasError
   attr_reader :source
   def initialize(message,source,token)
     @source = source # no longer needed, cleanup

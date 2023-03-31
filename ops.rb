@@ -740,7 +740,7 @@ Commands = {
   }],
   "version" => ["see atlas version", nil, -> tokens, stack, last, context {
     raise ParseError.new("usage: version",tokens[0]) if tokens.size > 1
-    puts "Atlas Alpha (Mar 30, 2023)"
+    puts "Atlas Alpha (Mar 31, 2023)"
   }],
   "type" => ["see expression type", "a", -> tokens, stack, last, context {
     raise ParseError.new("usage: type <expression>",tokens[0]) if tokens.size < 2
