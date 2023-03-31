@@ -9,8 +9,8 @@ def escape_str_char(char)
   return "\\\\" if char == "\\".ord
   return "\\\"" if char == "\"".ord
   return "%c" % char if char >= " ".ord && char <= "~".ord # all ascii printables
-  return "\\x0%s" % char.to_s(16) if char < 16 && char >= 0
-  return "\\x%s" % (char%256).to_s(16) if char < 256 && char >= -2
+  return "\\x0%s" % char.to_i.to_s(16) if char < 16 && char >= 0
+  return "\\x%s" % (char%256).to_i.to_s(16) if char < 256 && char >= -2
   return to_char(char) # most unicodes are printable, just print em
 end
 

@@ -25,7 +25,7 @@ class Promise
   alias old_value value
   def value
     $reductions += 1
-    raise DynamicError.new("step limit exceeded", nil) if $reductions > STEP_LIMIT
+    raise AtlasError.new("step limit exceeded", nil) if $reductions > STEP_LIMIT
     old_value
   end
 end
@@ -33,7 +33,6 @@ end
 4.upto(8){|program_size|
   n.times{
     program = program_size.times.map{all[(rand*all.size).to_i]}*""
-    program = '\!"as"!'
     program_io=StringIO.new(program)
     begin
       puts program

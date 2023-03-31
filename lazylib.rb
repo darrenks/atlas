@@ -42,23 +42,6 @@ class Promise
     raise @impl if DynamicError===@impl
     @impl
   end
-  alias by value
-end
-
-class By
-  def initialize(value,by_value)
-    @value=value
-    @by_value=by_value
-  end
-  def by
-    @by_value
-  end
-  def empty
-    @value == []
-  end
-  def value
-    @value
-  end
 end
 
 # Use this to avoid creating promises that are pointless because the value is constant or it will immediately be computed after construction.
@@ -66,7 +49,6 @@ class Const < Struct.new(:value)
   def empty
     value==[]
   end
-  alias by value
 end
 class Object
   def const
@@ -112,32 +94,37 @@ def filter(a,b,b_elem_type)
 end
 
 def sortby(a,b,t)
-  sort(toby(a,b),t)
+  fromby(sort(toby(a,b),t,true))
 end
 
 def toby(a,b)
   return Null if a.empty || b.empty
-  Promise.new{ [By.new(a.value[0].value, b.value[0].value), toby(a.value[1], b.value[1])] }
+  Promise.new{ [[a.value[0], b.value[0]], toby(a.value[1], b.value[1])] }
+end
+
+def fromby(a)
+  return [] if a == []
+  [Promise.new{a[0][0].value}, Promise.new{fromby(a[1].value)}]
 end
 
 # It would be very interesting and useful to design a more lazy sorting algorithm
 # so that you can select ith element in O(n) total time after sorting a list.
-def sort(a,t)
+def sort(a,t,by=false)
   return [] if a.empty
   return a.value if a.value[1].empty
   n=len(a)
   left=take(n/2, a).const
   right=drop(n/2, a).const
-  merge(sort(left,t),sort(right,t),t)
+  merge(sort(left,t,by),sort(right,t,by),t,by)
 end
 
-def merge(a,b,t)
+def merge(a,b,t,by)
   return b if a==[]
   return a if b==[]
-  if spaceship(a[0].by.const, b[0].by.const,t) <= 0
-    [a[0], Promise.new{merge(a[1].value,b,t)}]
+  if (by ? spaceship(a[0][1], b[0][1], t) : spaceship(a[0], b[0],t)) <= 0
+    [a[0], Promise.new{merge(a[1].value,b,t,by)}]
   else
-    [b[0], Promise.new{merge(a,b[1].value,t)}]
+    [b[0], Promise.new{merge(a,b[1].value,t,by)}]
   end
 end
 
@@ -517,12 +504,14 @@ def to_eager_str(v)
   to_eager_list(v).map{|i|to_char i}.join
 end
 
+FalseChars = {0=>1,9=>1,10=>1,11=>1,12=>1,13=>1,32=>1}
+
 def truthy(type, value)
   begin
     if type == Num
       value.value > 0
     elsif type == Char
-      !!to_char(value.value)[/\S/]
+      !FalseChars.include?(value.value)
     else # List
       !value.empty
     end
