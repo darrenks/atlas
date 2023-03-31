@@ -96,6 +96,7 @@ puts "unset id".td
 puts "".td("code"),"Str".td("code")
 puts 'Hello → "Hello"'.td("code")
 puts "</tr>"
-puts '</table>
-*a coerces
-</body></html>'
+puts "</table>
+<br>*a coerces
+<br>version: #$version
+</body></html>"

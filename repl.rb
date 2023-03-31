@@ -28,7 +28,7 @@ def repl(input=nil)
   elsif !ARGV.empty?
     input_fn = lambda { gets(nil) }
   else
-    $repl_mode = true
+    $repl_mode = true if $repl_mode.nil?
     if File.exist? HistFile
       Readline::HISTORY.push *File.read(HistFile).split("\n")
     end

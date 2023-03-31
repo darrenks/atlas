@@ -72,6 +72,8 @@ For operations that are flexible about the rank they apply to such as `head` (wh
     ax
     abc
 
+That's really all there is to it. There are a few other tricks and a decent number of operators (around 50 most of which are very simple and familiar), but this tutorial only needs a handful to show off the cool ideas.
+
 ## Circular Programming Intro
 
 Let's look at the first example I ever saw of circular programming. It was the Haskell program:

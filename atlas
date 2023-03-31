@@ -3,9 +3,10 @@
 require_relative "repl.rb"
 
 # only intented for docs test to print things like it was in repl
-if ARGV.include?("-repl_mode")
+if ARGV.delete("-repl_mode")
   $repl_mode = true
-  ARGV.delete("-repl_mode")
+elsif ARGV.delete("-no_repl_mode")
+  $repl_mode = false
 end
 
 repl
