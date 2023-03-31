@@ -12,7 +12,7 @@ spaces = " \n\n\n\n" # twice as likely
 # Just the interesting characters to focus on testing parse
 # all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
 
-all = (symbols+numbers+letters+spaces).chars+['"ab12"','p','print','help','ops','version','type']
+all = (symbols+numbers+letters+spaces).chars+['"ab12"','p','print','help','ops','version','type','1.2']
 
 ReadStdin = Promise.new{ str_to_lazy_list("ab12") }
 
@@ -33,6 +33,7 @@ end
 4.upto(8){|program_size|
   n.times{
     program = program_size.times.map{all[(rand*all.size).to_i]}*""
+    program = '\!"as"!'
     program_io=StringIO.new(program)
     begin
       puts program

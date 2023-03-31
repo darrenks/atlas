@@ -125,21 +125,16 @@ end
 def sort(a,t)
   return [] if a.empty
   return a.value if a.value[1].empty
-  evens,odds=partition(a)
-  merge(sort(evens,t),sort(odds,t),t)
-end
-
-# This is not lazy at all, but should be ok since used by sort which consumes it right away
-def partition(a)
-  return [Null,Null] if a.empty
-  evens,odds=partition(a.value[1])
-  [[a.value[0],odds].const,evens]
+  n=len(a)
+  left=take(n/2, a).const
+  right=drop(n/2, a).const
+  merge(sort(left,t),sort(right,t),t)
 end
 
 def merge(a,b,t)
   return b if a==[]
   return a if b==[]
-  if spaceship(a[0], b[0],t) < 0
+  if spaceship(a[0].by.const, b[0].by.const,t) <= 0
     [a[0], Promise.new{merge(a[1].value,b,t)}]
   else
     [b[0], Promise.new{merge(a,b[1].value,t)}]
@@ -313,11 +308,11 @@ def spaceship(a,b,t)
     return 0 if a.empty && b.empty
     return -1 if a.empty
     return 1 if b.empty
-    s0 = spaceship(a.by[0],b.by[0],t-1)
+    s0 = spaceship(a.value[0],b.value[0],t-1)
     return s0 if s0 != 0
-    return spaceship(a.by[1],b.by[1],t)
+    return spaceship(a.value[1],b.value[1],t)
   else
-    a.by<=>b.by
+    a.value<=>b.value
   end
 end
 

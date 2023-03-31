@@ -397,6 +397,7 @@ create_op(
     poly_impl: -> at { -> a { filter(a,a,at-1) }}
   ), create_op(
     name: "sort",
+    desc: "O(n log n) sort - not optimized for lazy O(n) min/max yet todo",
     sym: "!",
     example: '"atlas" ! -> "aalst"',
     type: { [A] => [A] },
@@ -404,11 +405,13 @@ create_op(
     poly_impl: -> at { -> a { sort(a,at-1) }}
   ), create_op(
     name: "sortBy",
+    desc: "stable O(n log n) sort - not optimized for lazy O(n) min/max yet todo",
     sym: "!",
     example: '"abc" ! (3,1,4) -> "bac"',
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
-  .add_test('1,2,3 ! ("hi","there") -> [1,2]'),
+  .add_test('1,2,3 ! ("hi","there") -> [1,2]')
+  .add_test('"abcdef" ! "aaaaaa" -> "abcdef"'),
   create_op(
     name: "chunkWhile",
     desc: "chunk while second arg is truthy",
@@ -617,7 +620,7 @@ create_op(
     example: '2*3@+4 -> 14',
     type: {:unused => :unused},
     type_summary: "op (after)",
-    impl: MacroImpl,
+    impl_with_loc: ->from{raise ParseError.new("apply needs a right hand side if used on a binary op",from)}, # this can occur from something like 13@@
   ),
   create_op(
     name: "implicit mult",
