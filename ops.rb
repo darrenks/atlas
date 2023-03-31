@@ -104,11 +104,11 @@ OpsList = [
     name: "add",
     sym: "+",
     example: "1+2 -> 3",
+    example2: "'a+1 -> 'b",
     type: { [Num,Num] => Num,
             [Num,Char] => Char,
             [Char,Num] => Char },
     impl: -> a,b { a.value + b.value })
-   .add_test("'a+1 -> 'b")
    .add_test("'a+1.2 -> 'b"),
   create_op(
     name: "sum",
@@ -122,6 +122,7 @@ OpsList = [
     name: "sub",
     sym: "-",
     example: '5-3 -> 2',
+    example2: "'b-'a -> 1",
     type: { [Num,Num] => Num,
             [Char,Num] => Char,
             [Char,Char] => Num },
@@ -389,6 +390,12 @@ create_op(
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}
   ), create_op(
+    name: "filterSelf",
+    sym: "?",
+    example: '"a b"? -> "ab"',
+    type: { [A] => [A] },
+    poly_impl: -> at { -> a { filter(a,a,at-1) }}
+  ), create_op(
     name: "sort",
     sym: "!",
     example: '"atlas" ! -> "aalst"',
@@ -412,19 +419,18 @@ create_op(
   .add_test('"abcde" ~ " 11  " -> ["","abc","d","e"]')
   .add_test('""~() -> [""]'),
   create_op(
+    name: "chunkSelf",
+    sym: "~",
+    example: '"a bc d" ~ -> ["a"," bc"," d"]',
+    type: { [A] => [[A]] },
+    poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
+  create_op(
     name: "transpose",
     sym: "\\",
     example: '"abc","1"\\ -> ["a1","b","c"]',
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
   ).add_test('"abc","1234"\ -> ["a1","b2","c3","4"]'),
-  create_op(
-    name: "catch",
-    desc: "truncate a list on first dynamic error (experimental feature, may break faith based circular programs)",
-    sym: "?",
-    example: '1/(3,2,1,0,1)? -> [0,0,1]',
-    type: { [A] => [A] },
-    impl: -> a { atlas_catch(a) }),
   create_op(
     name: "reverse",
     sym: "/",
@@ -454,22 +460,14 @@ create_op(
   .add_test('1,2,3*", " -> "1, 2, 3"'),
   create_op(
     name: "split",
-    desc: "split, removing empty results",
+    desc: "split, keeping empty results (include at beginning and end)",
     example: '"hi, yo"/", " -> ["hi","yo"]',
     sym: "/",
     type: { [Str,Str] => [Str] },
     impl: -> a,b { split(a,b) })
   .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
   .add_test('"ab",*" "/"b "[2 -> ["a","a"]') # test laziness
-  .add_test('",a,,b,"/"," -> ["a","b"]'),
-  create_op(
-    name: "split0",
-    desc: "split, keeping empty results (include at beginning and end)",
-    example: '"a..b" % "." -> ["a","","b"]',
-    sym: "%",
-    type: { [Str,Str] => [Str] },
-    impl: -> a,b { splith(a,b) })
-  .add_test('" a "%" " -> ["","a",""]'),
+  .add_test('",a,,b,"/"," -> ["","a","","b",""]'),
   create_op(
     name: "replicate",
     example: '"ab"^3 -> "ababab"',
@@ -486,7 +484,7 @@ create_op(
    .add_test('"abcd"^2.5 -> "abcdabcdab"'),
   "logic",
   create_op(
-    name: "eq",
+    name: "equalTo",
     example: '3=3 -> [3]',
     example2: '3=0 -> []',
     sym: "=",
@@ -520,10 +518,10 @@ create_op(
   ).add_test("4>5 -> []"),
   create_op(
     name: "not",
-    sym: "~",
+    sym: "^",
     type: { A => Num },
-    example: '2~ -> 0',
-    example2: '0~ -> 1',
+    example: '2^ -> 0',
+    example2: '0^ -> 1',
     poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }),
   create_op(
     name: "and",
@@ -576,7 +574,7 @@ create_op(
     example: '12` -> "12"',
     type: { Num => Str },
     impl: -> a { inspect_value(Num,a,0) }),
-  "special",
+  "syntactic sugar",
   # Macros, type only used to specify number of args
   create_op(
     name: "let",
@@ -609,15 +607,16 @@ create_op(
     desc: "reverse order of previous op's args",
     example: '2-\\5 -> 3',
     ref_only: true,
-    type: { :"(a b->c)" => :"(b a->c)" },
+    type: :unused,
+    type_summary: "op₂ (before)",
     impl: MacroImpl,
   ), create_op(
     name: "apply",
     sym: "@",
     desc: "increase precedence, apply next op before previous op",
     example: '2*3@+4 -> 14',
-    type: { :"(a b->c)" => :"(a b->c)",
-            :"(a->b)" => :"(a->b)" },
+    type: {:unused => :unused},
+    type_summary: "op (after)",
     impl: MacroImpl,
   ),
   create_op(

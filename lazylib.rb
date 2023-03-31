@@ -196,17 +196,12 @@ def join(a,b)
   }
 end
 
-def split(a,b)
-  s=splith(a,b).const
-  filter(s,s,Str)
-end
-
-def splith(a,b) # fyi could be lazier since we know we return a list always
+def split(a,b) # fyi could be lazier since we know we return a list always
   return [Null,Null] if a.empty
   if (remainder=starts_with(a,b))
-    [Null,Promise.new{splith(remainder,b)}]
+    [Null,Promise.new{split(remainder,b)}]
   else
-    rhs=Promise.new{splith(a.value[1],b)}
+    rhs=Promise.new{split(a.value[1],b)}
     [Promise.new{[a.value[0],Promise.new{rhs.value[0].value}]},Promise.new{rhs.value[1].value}]
   end
 end
@@ -226,17 +221,6 @@ end
 # value -> (value -> Promise) -> value
 def map(a,&b)
   a.empty ? [] : [Promise.new{b[a.value[0]]}, Promise.new{map(a.value[1],&b)}]
-end
-
-# todo rm
-def atlas_catch(a)
-  begin
-    return [] if a.empty
-    a.value[0].value
-  rescue AtlasError => e
-    return []
-  end
-  [a.value[0],Promise.new{atlas_catch(a.value[1])}]
 end
 
 # value -> value

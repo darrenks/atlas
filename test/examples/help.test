@@ -1,13 +1,7 @@
 [prog]
-help .
-help %
-help add
+help mod
 help -
 [stdout]
-vectorize .
-[a] → <a>
-1,2,3. → <1,2,3>
-
 mod %
 anything mod 0 is 0
 Num Num → Num
@@ -22,29 +16,12 @@ Num Num → Num
 9-%(5-) → -4
 5%0 → 0
 
-unvec %
-<a> → [a]
-1,2+3% → [4,5]
-
-split0 %
-split, keeping empty results (include at beginning and end)
-Str Str → [Str]
-"a..b" % "." → ["a","","b"]
-" a "%" " → ["","a",""]
-
-add +
-Num Num → Num
-Num Char → Char
-Char Num → Char
-1+2 → 3
-'a+1 → 'b
-'a+1.2 → 'b
-
 sub -
 Num Num → Num
 Char Num → Char
 Char Char → Num
 5-3 → 2
+'b-'a → 1
 
 neg -
 Num → Num

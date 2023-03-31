@@ -269,7 +269,7 @@ a;@a -> AtlasTypeError
 (1@"") -> "1"
 
 -- test laziness of chunk while using collatz conjecture problem
-a%2&(3*a+1)|(a/2)`8@a~(a=.~%)[ -> [8,4,2,1]
+a%2&(3*a+1)|(a/2)`8@a~(a=.^%)[ -> [8,4,2,1]
 
 5@λ*λ -> 25
 
