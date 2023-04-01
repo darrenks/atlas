@@ -1,10 +1,12 @@
-# Atlas
+This information is also available at [golfscript.com/atlas](http://www.golfscript.com/atlas) along with the quickref. If linking to Atlas please link to the site rather than github.
+
+------
 
 Atlas is an [esolang](https://esolangs.org/) that was created to show off the awesome synergy between circular programming and vectorization. It is purely functional but has no functions and little need for them. It has APL like syntax and vectorization without forcing you to use symbols or weird characters. It isn't intended to be good at [code golf](https://en.wikipedia.org/wiki/Code_golf), yet it is actually more succinct than Golfscript and J / K for the average code golf problem - despite its emphasis on simplicity and similar character restraints.
 
 Currently Atlas is in Alpha. It is very usable and probably has all the important features it will ever have. But it may experience breaking changes and minor improvements. The current interpreter is slow and limited in stack depth (although fine for most toy problems). There is nothing preventing it from being compiled and stackless, it could be as fast as Haskell.
 
-This page will show off some of the cool things about Atlas and some circular programming tricks that I have not seen anywhere else - which are applicable to other lazy languages like Haskell. For complete information about the language see the [docs folder](docs/).
+This main page will show off some of the cool things about Atlas and some circular programming tricks that I have not seen anywhere else - which are applicable to other lazy languages like Haskell. For complete information about the language check out the other pages.
 
 You can run code by downloading the Atlas source and saving your Atlas code to a file then running:
 
@@ -26,11 +28,11 @@ Atlas is like a calculator, all it has are values to which you can apply operato
     ──────────────────────────────────
     3
 
-Syntax is also like a calculator, left to right.
+Syntax is also like a calculator, left to right with no precedence.
 
-    2*3+4
+    4+2*3
     ──────────────────────────────────
-    10
+    18
 
 1-arg operators go on the right.
 
@@ -122,7 +124,7 @@ Before we go deeper, I'd like to mention that circular programming seems to refe
 
 Generating streams that depend on past values of a sequence is probably the most common use of circular programming, but what else can it do?
 
-We can use it to calculate the scanl of a list and any operation! Suppose we had the list `1,2 3,4` and we wanted to calculate the prefix sums. Of it (e.g. `1,3,6,10`).
+We can use it to calculate the scanl of a list and any operation! Suppose we had the list `1,2,3,4` and we wanted to calculate the prefix sums. Of it (e.g. `1,3,6,10`).
 
 We can do that like this:
 
