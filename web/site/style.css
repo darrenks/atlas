@@ -1,10 +1,41 @@
 body {
-	max-width: 900px;
+	max-width: 10in;
 	margin: 0 auto !important;
-	float: none !important;
    color: #C8D1D9;
 	background-color: #0E1016;
    line-height: 1.5;
+	font-family: Verdana;
+}
+
+.navbar {
+	font-weight: bold;
+	width: 100%;
+/* 	font-size: 2.0vw; */
+/* 	font-size: 100%px; */
+   overflow: hidden;
+   background-color: #343940;
+   border-radius: 4px;
+}
+
+.navbar a {
+   float: bottom;
+   padding: 14px 16px;
+   text-decoration: none;
+}
+
+.navbar a.active {
+   background-color: #4E93E2;
+   color: #343940;
+}
+
+.navbar a:hover {
+   background-color: #C8D1D9;
+   color: #343940;
+   text-decoration: none;
+}
+
+#atlas {
+/* 	font-size: 1.7vw; */
 }
 
 a {
@@ -37,41 +68,4 @@ div.prog code {
 	background-color: #171A22;
 	padding: 20px;
    line-height: 1.2;
-}
-
-#navbar * {
-	font-weight: bold;
-	font-size: 16px;
-}
-
-#navbar ul {
-	padding: 0;
-	margin: 0;
-	display:table;
-	width:100%;
-	background-color: #171A22;
-	border-radius: 8px;
-}
-
-#navbar li {
-	display: table-cell;
-	padding: 5px;
-	text-align: center;
-}
-
-#atlas * {
-	font-size: 28px;
-}
-
-* {
-	font-family: Verdana;
-}
-
-table {
-	border-collapse: collapse;
-}
-
-table, th, td {
-	border: 1px solid black;
-	padding: 1px 8px;
 }
