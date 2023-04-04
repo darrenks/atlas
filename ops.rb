@@ -386,16 +386,16 @@ create_op(
   create_op(
     name: "filter",
     sym: "?",
-    example: '"abcd" ? (0,1,1,0) -> "bc"',
-    type: { [[A],[B]] => [A] },
-    poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}
-  ), create_op(
-    name: "filterSelf",
-    sym: "?",
     example: '"a b"? -> "ab"',
     type: { [A] => [A] },
-    poly_impl: -> at { -> a { filter(a,a,at-1) }}
-  ), create_op(
+    poly_impl: -> at { -> a { filter(a,a,at-1) }}),
+  create_op(
+    name: "filterBy",
+    sym: "?",
+    example: '"abcd" ? (0,1,1,0) -> "bc"',
+    type: { [[A],[B]] => [A] },
+    poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}),
+  create_op(
     name: "sort",
     desc: "O(n log n) sort - not optimized for lazy O(n) min/max yet todo",
     sym: "!",
@@ -413,7 +413,16 @@ create_op(
   .add_test('1,2,3 ! ("hi","there") -> [1,2]')
   .add_test('"abcdef" ! "aaaaaa" -> "abcdef"'),
   create_op(
-    name: "chunkWhile",
+    name: "while",
+    desc: "take elements while they are truthy",
+    sym: "&",
+    example: '"ab cd" & -> "ab"',
+    type: { [A] => [A] },
+    poly_impl: -> at { -> a { chunk_while(a,a,at-1)[0].value } })
+  .add_test('" " & -> ""')
+  .add_test('"" & -> ""'),
+  create_op(
+    name: "chunkBy",
     desc: "chunk while second arg is truthy",
     sym: "~",
     example: '"abcd" ~ "11 1" -> ["ab","cd"]',
@@ -421,12 +430,6 @@ create_op(
     poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
   .add_test('"abcde" ~ " 11  " -> ["","abc","d","e"]')
   .add_test('""~() -> [""]'),
-  create_op(
-    name: "chunkSelf",
-    sym: "~",
-    example: '"a bc d" ~ -> ["a"," bc"," d"]',
-    type: { [A] => [[A]] },
-    poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
   create_op(
     name: "transpose",
     sym: "\\",
@@ -521,10 +524,10 @@ create_op(
   ).add_test("4>5 -> []"),
   create_op(
     name: "not",
-    sym: "^",
+    sym: "~",
     type: { A => Num },
-    example: '2^ -> 0',
-    example2: '0^ -> 1',
+    example: '2~ -> 0',
+    example2: '0~ -> 1',
     poly_impl: -> ta { -> a { truthy(ta,a) ? 0 : 1 } }),
   create_op(
     name: "and",

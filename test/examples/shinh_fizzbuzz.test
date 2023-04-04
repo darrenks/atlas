@@ -1,6 +1,6 @@
 [prog]
 -- http://golf.shinh.org/p.rb?FizzBuzz
-Fizz,Buzz^(1:101{,%3@,5^)_|}
+Fizz,Buzz^(1:101{,%3@,5~)_|}
 [stdout]
 1
 2
