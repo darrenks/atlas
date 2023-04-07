@@ -19,9 +19,11 @@ Num Num → Num
 sub -
 Num Num → Num
 Char Num → Char
+Num Char → Char
 Char Char → Num
 5-3 → 2
 'b-'a → 1
+1-'b → 'a
 
 neg -
 Num → Num

@@ -125,8 +125,10 @@ OpsList = [
     example2: "'b-'a -> 1",
     type: { [Num,Num] => Num,
             [Char,Num] => Char,
+            [Num,Char] => Char,
             [Char,Char] => Num },
-    impl: -> a,b { a.value - b.value }),
+    poly_impl: ->at,bt { flipif bt.is_char && !at.is_char, -> a,b { a.value - b.value }})
+   .add_test("1-'b -> 'a"),
   create_op(
     name: "mult",
     example: '2*3 -> 6',
@@ -296,19 +298,23 @@ OpsList = [
     name: "take",
     sym: "[",
     example: '"abcd"[3 -> "abc"',
-    type: { [[A],Num] => [A] },
-    impl: -> a,b { take(b.value, a) }
+    type: { [[A],Num] => [A],
+            [Num,[Achar]] => [A] },
+    poly_impl: ->at,bt { flipif bt.is_char, -> a,b { take(b.value, a) }}
   ).add_test('"abc"[(2-) -> ""')
    .add_test('"abc"[1.2 -> "a"')
+   .add_test('1["abc" -> "a"')
    .add_test('""[2 -> ""'),
   create_op(
     name: "drop",
     sym: "]",
     example: '"abcd"]3 -> "d"',
-    type: { [[A],Num] => [A] },
-    impl: -> a,b { drop(b.value, a) }
+    type: { [[A],Num] => [A],
+            [Num,[Achar]] => [A] },
+    poly_impl: ->at,bt { flipif bt.is_char, -> a,b { drop(b.value, a) }}
   ).add_test('"abc"](2-) -> "abc"')
    .add_test('"abc"]1.2 -> "bc"')
+   .add_test('1]"abc" -> "bc"')
    .add_test('""]2 -> ""'),
   create_op(
     name: "single",
@@ -447,11 +453,13 @@ create_op(
     sym: "#",
     desc: "Take elements in groups of sizes. If second list runs out, last element is repeated",
     example: '"abcdef"#2 -> ["ab","cd","ef"]',
-    type: { [[A],[Num]] => [[A]] },
-    impl: -> a,b { reshape(a,b) })
+    type: { [[A],[Num]] => [[A]],
+            [[Num],[Achar]] => [[A]] },
+    poly_impl: ->at,bt { flipif bt.is_char, -> a,b { reshape(a,b) }})
    .add_test('"abc" # 2 -> ["ab","c"]')
    .add_test('"abcd" # (2,1) -> ["ab","c","d"]')
    .add_test('"."^10#2.5*" " -> ".. ... .. ..."')
+   .add_test('2#"abcd" -> ["ab","cd"]')
    .add_test('"" # 2 -> []'),
   "string",
   create_op(
@@ -476,15 +484,17 @@ create_op(
     name: "replicate",
     example: '"ab"^3 -> "ababab"',
     sym: "^",
-    type: { [Str,Num] => Str },
-    impl: -> a,b {
+    type: { [Str,Num] => Str,
+            [Num,Str] => Str },
+    poly_impl: -> ta,tb { flipif !ta.is_char, -> a,b {
       ipart = concat(take(b.value,repeat(a).const).const)
       if b.value.class == Integer
         ipart
       else
         append(ipart.const, take(b.value%1*len(a), a).const)
       end
-    })
+    }})
+   .add_test('2^"ab" -> "abab"')
    .add_test('"abcd"^2.5 -> "abcdabcdab"'),
   create_op(
     name: "ord",
@@ -655,6 +665,14 @@ Ops0 = {}
 Ops1 = {}
 Ops2 = {}
 AllOps = {}
+
+def flipif(cond,impl)
+  if cond
+    -> a,b { impl[b,a] }
+  else
+    impl
+  end
+end
 
 def addOp(table,op)
   if (existing=table[op.sym])
