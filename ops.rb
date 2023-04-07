@@ -385,14 +385,8 @@ create_op(
   ).add_test('"ab","a","ab" count -> [0,0,1]'),
   create_op(
     name: "filter",
-    sym: "?",
-    example: '"a b"? -> "ab"',
-    type: { [A] => [A] },
-    poly_impl: -> at { -> a { filter(a,a,at-1) }}),
-  create_op(
-    name: "filterBy",
-    sym: "?",
-    example: '"abcd" ? (0,1,1,0) -> "bc"',
+    sym: "~",
+    example: '"abcd" ~ (0,1,1,0) -> "bc"',
     type: { [[A],[B]] => [A] },
     poly_impl: -> at,bt { -> a,b { filter(a,b,bt-1) }}),
   create_op(
@@ -412,24 +406,22 @@ create_op(
     poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
   .add_test('1,2,3 ! ("hi","there") -> [1,2]')
   .add_test('"abcdef" ! "aaaaaa" -> "abcdef"'),
-  create_op(
-    name: "while",
-    desc: "take elements while they are truthy",
-    sym: "&",
-    example: '"ab cd" & -> "ab"',
-    type: { [A] => [A] },
-    poly_impl: -> at { -> a { chunk_while(a,a,at-1)[0].value } })
-  .add_test('" " & -> ""')
-  .add_test('"" & -> ""'),
+#   create_op(
+#     name: "chunk",
+#     desc: "chunk while second arg is truthy",
+#     sym: "?",
+#     example: '"12 3" -> ["12","3"]',
+#     type: { [A] => [[A]] },
+#     poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
   create_op(
     name: "chunkBy",
     desc: "chunk while second arg is truthy",
-    sym: "~",
-    example: '"abcd" ~ "11 1" -> ["ab","cd"]',
+    sym: "?",
+    example: '"abcd" ? "11 1" -> ["ab","cd"]',
     type: { [[A],[B]] => [[A]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
-  .add_test('"abcde" ~ " 11  " -> ["","abc","d","e"]')
-  .add_test('""~() -> [""]'),
+  .add_test('"abcde" ? " 11  " -> ["","abc","d","e"]')
+  .add_test('""?() -> [""]'),
   create_op(
     name: "transpose",
     sym: "\\",
