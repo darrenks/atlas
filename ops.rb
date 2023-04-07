@@ -399,7 +399,7 @@ create_op(
     name: "filter",
     sym: "~",
     example: '0,1,1,0 ~ "abcd" -> "bc"',
-    type: { [[A],[B]] => [B] },
+    type: { [v(A),[B]] => [B] },
     poly_impl: -> at,bt { -> a,b { filter(b,a,at-1) }}),
   create_op(
     name: "sort",
@@ -414,7 +414,7 @@ create_op(
     desc: "stable O(n log n) sort - not optimized for lazy O(n) min/max yet todo",
     sym: "!",
     example: '3,1,4 ! "abc" -> "bac"',
-    type: { [[A],[B]] => [B] },
+    type: { [v(A),[B]] => [B] },
     poly_impl: -> at,bt { -> a,b { sortby(b,a,at-1) }})
   .add_test('"hi","there" ! (1,2,3) -> [1,2]')
   .add_test('"aaaaaa" ! "abcdef" -> "abcdef"'),
@@ -430,7 +430,7 @@ create_op(
     desc: "chunk while second arg is truthy",
     sym: "?",
     example: '"11 1" ? "abcd" -> ["ab","d"]',
-    type: { [[A],[B]] => [[B]] },
+    type: { [v(A),[B]] => [[B]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(b,a,at-1) } })
   .add_test('" 11  " ? "abcde" -> ["","bc","",""]')
   .add_test('()?"" -> [""]'),
