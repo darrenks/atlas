@@ -210,6 +210,12 @@ OpsList = [
     example: '2-| -> 2',
     example2: '2| -> 2',
     impl: -> a { a.value.abs }),
+  create_op(
+    name: "floor",
+    sym: "&",
+    type: { Num => Num },
+    example: '1.3& -> 1',
+    impl: -> a { a.value.floor }),
   "vector",
   create_op(
     name: "unvec",
@@ -480,6 +486,12 @@ create_op(
       end
     })
    .add_test('"abcd"^2.5 -> "abcdabcdab"'),
+  create_op(
+    name: "ord",
+    example: "'a& -> 97",
+    sym: "&",
+    type: { Char => Num },
+    impl: -> a { a.value.ord }),
   "logic",
   create_op(
     name: "equalTo",
