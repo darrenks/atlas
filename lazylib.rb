@@ -151,7 +151,7 @@ def chunk_while(a,b,t)
       if b0true.value
         rhs.value[1].value
       else
-        [Promise.new{[a.value[0],rhs.value[0]]},rhs.value[1]]
+        rhs.value
       end
     }
   ]

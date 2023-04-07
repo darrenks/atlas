@@ -406,21 +406,21 @@ create_op(
     poly_impl: -> at,bt { -> a,b { sortby(a,b,bt-1) }})
   .add_test('1,2,3 ! ("hi","there") -> [1,2]')
   .add_test('"abcdef" ! "aaaaaa" -> "abcdef"'),
-#   create_op(
-#     name: "chunk",
-#     desc: "chunk while second arg is truthy",
-#     sym: "?",
-#     example: '"12 3" -> ["12","3"]',
-#     type: { [A] => [[A]] },
-#     poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
+  create_op(
+    name: "chunk",
+    desc: "chunk while truthy",
+    sym: "?",
+    example: '"12 3"? -> ["12","3"]',
+    type: { [A] => [[A]] },
+    poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
   create_op(
     name: "chunkBy",
     desc: "chunk while second arg is truthy",
     sym: "?",
-    example: '"abcd" ? "11 1" -> ["ab","cd"]',
+    example: '"abcd" ? "11 1" -> ["ab","d"]',
     type: { [[A],[B]] => [[A]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(a,b,bt-1) } })
-  .add_test('"abcde" ? " 11  " -> ["","abc","d","e"]')
+  .add_test('"abcde" ? " 11  " -> ["","bc","",""]')
   .add_test('""?() -> [""]'),
   create_op(
     name: "transpose",
