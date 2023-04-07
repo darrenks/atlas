@@ -26,7 +26,7 @@ def repl(input=nil)
   if input
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
-    input_fn = lambda { gets(nil) }
+    input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift, :encoding => 'iso-8859-1') }
   else
     $repl_mode = true if $repl_mode.nil?
     if File.exist? HistFile
@@ -51,8 +51,9 @@ def repl(input=nil)
   stop = false
   until stop
     prev_context = context.dup
-    line=input_fn.call
     begin
+      line=nil
+      line=input_fn.call
       if line==nil # eof
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
@@ -93,6 +94,7 @@ def repl(input=nil)
     # it would be best to catch them higher up for use with truthy
     rescue SignalException => e
       exit if !ARGV.empty? || input # not repl mode
+      STDERR.print "CTRL-D to exit" if !line
       puts
     rescue SystemStackError => e
       STDERR.puts DynamicError.new("stack overflow error", nil).message
@@ -108,10 +110,9 @@ def repl(input=nil)
 end
 
 def printit(ir,context)
-  n=context['N'].get_str_value || "\n"
-  s=context['S'].get_str_value || " "
+  n=context['N'].get_str_value || [10.const,Null]
+  s=context['S'].get_str_value || [32.const,Null]
 
   infer(ir)
   run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode,n,s) }
-  print n unless $last_was_newline
 end

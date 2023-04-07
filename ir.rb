@@ -38,18 +38,18 @@ class IR < Struct.new(
     case self.type
     when Num
       return nil if self.vec_level != 0
-      val.to_s
+      str_to_lazy_list(val.to_s)
     when Char
       if self.vec_level == 0
-        val.chr
+        [val.const, Null]
       elsif self.vec_level == 1
-        to_eager_str(val.const)
+        val
       else
         return nil
       end
     when Str
       return nil if self.vec_level != 0
-      to_eager_str(val.const)
+      val
     else
       nil
     end

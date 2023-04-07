@@ -10,7 +10,7 @@
 "\x02\x20\xaa".; -> <"\x02"," ","\xaa">
 
 -- test utf8 encoding chars
-"├───╯".; -> <"├","─","─","─","╯">
+"├───╯".; -> <"\{9500}","\{9472}","\{9472}","\{9472}","\{9583}">
 
 -- test char and escapes
 'a -> 'a
@@ -236,7 +236,7 @@ a@a;# -> 1
 -- infinite type
 a;@a -> AtlasTypeError
 
-'a-1000 -> DynamicError
+'a-1000 -> '\{-903}
 
 -- test unbalanced ) for use with circular programming/nil
 ) -> []

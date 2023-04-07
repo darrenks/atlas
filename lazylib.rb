@@ -1,6 +1,6 @@
-def run(root,n="\n",s=" ")
+def run(root,n=[10.const,Null],s=[32.const,Null])
   v = Promise.new{yield(make_promises(root), n, s)}
-  print_string(v,n)
+  print_string(v)
 end
 
 def make_promises(node)
@@ -368,7 +368,8 @@ def coerce2s(ta, a, tb)
 end
 
 def to_string(t, value, repl_mode, n, s)
-  to_string_h(t,value,t.string_dim, Null, repl_mode, n, s)
+  added_newline = t.string_dim + (repl_mode ? 0 : 1) < 2 && !value.empty ? n.const : Null
+  to_string_h(t,value,t.string_dim, added_newline, repl_mode, n, s)
 end
 
 def to_string_h(t, value, orig_dim, rhs, repl_mode, n, s)
@@ -380,31 +381,20 @@ def to_string_h(t, value, orig_dim, rhs, repl_mode, n, s)
     # print 1d lists on new lines if not in repl mode
     dim = !repl_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
     # print newline separators after every element for better interactive io
-    separator1 = dim == 2 ? n : ""
+    separator1 = dim == 2 ? n : []
     # but don't do this for separators like space, you would end up with trailing space in output
-    separator2 = ["",s,""][dim] || n
+    separator2 = [[],s,[]][dim] || n
 
     concat_map(value,rhs){|v,r,first|
-      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{str_to_lazy_list(separator1, r)}, repl_mode, n, s) }
-      first ? svalue.value : str_to_lazy_list(separator2, svalue)
+      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{append(separator1.const, r)}, repl_mode, n, s) }
+      first ? svalue.value : append(separator2.const, svalue)
     }
   end
 end
 
-def to_char(i)
-  begin
-    "%c" % i
-  rescue ArgumentError
-    raise DynamicError.new "invalid character with ord value: %d" % i, nil
-  end
-end
-
-def print_string(value,n)
-  nord = n.ord
+def print_string(value)
   while !value.empty
-    c = value.value[0].value
-    $last_was_newline = c == nord
-    print to_char(c)
+    putc value.value[0].value
     value = value.value[1]
   end
 end
@@ -501,7 +491,7 @@ def to_eager_list(v)
 end
 
 def to_eager_str(v)
-  to_eager_list(v).map{|i|to_char i}.join
+  to_eager_list(v).map{|i|(i.to_i%256).chr}.join
 end
 
 FalseChars = {0=>1,9=>1,10=>1,11=>1,12=>1,13=>1,32=>1}

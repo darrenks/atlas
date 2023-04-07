@@ -5,5 +5,5 @@
 
 [stdout]
 ├───╯
-[stderr]
-?:? invalid character with ord value: -903 (DynamicError)
+y
+

@@ -491,7 +491,7 @@ create_op(
     example: "'a& -> 97",
     sym: "&",
     type: { Char => Num },
-    impl: -> a { a.value.ord }),
+    impl: -> a { a.value }),
   "logic",
   create_op(
     name: "equalTo",
@@ -767,7 +767,6 @@ Commands = {
     ast = parse_line(tokens, stack, last)
     ir=infer(to_ir(ast,context))
     run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false,n,s) }
-    puts unless $last_was_newline
   }],
 
 }
