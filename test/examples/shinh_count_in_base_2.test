@@ -1,6 +1,6 @@
 [prog]
 -- http://golf.shinh.org/p.rb?Count+in+Base+2
-a:%~(/2`1@:101[9)@%2/
+/2`1@:101[9)%2~ a:@%/
 [stdout]
 a
 b
