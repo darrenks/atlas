@@ -64,7 +64,7 @@ def possible_types(node, fn_type)
   vec_levels = vec_levels.zip(fn_type.specs,0..).map{|vec_level,spec,i|
     if spec.vec_of
       if vec_level == 0
-        return node.type_error "vec level is 0, cannot lower" if node.op.name == "unvec" || arg_types[i].dim == 0
+        return node.type_error "vec level is 0, cannot lower" if node.op.name == "unvec"
         arg_types[i]-=1 # auto vec
         0
       else

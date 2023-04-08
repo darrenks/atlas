@@ -247,6 +247,12 @@ OpsList = [
     type: { Num => v(Num),
             Char => v(Char) },
     impl: -> a { range_from(a.value) }),
+  create_op(
+    name: "consDefault",
+    sym: "^",
+    example: '2,3^ -> <0,2,3>',
+    type: { v(A) => v(A) },
+    poly_impl: -> at { d=(at-1).default_value.const; -> a { [d,a] }}),
   "basic list",
   create_op(
     name: "head",
