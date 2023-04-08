@@ -303,6 +303,23 @@ def spaceship(a,b,t)
   end
 end
 
+def to_base(a,b,sign)
+  return [] if a==0
+  digit = a%b*sign
+  [digit.const, Promise.new{to_base((a-digit*sign)/b,b,sign)}]
+end
+
+def from_base(a,b)
+  mult=1
+  x=0
+  until a.empty
+    x+=a.value[0].value*mult
+    mult*=b
+    a=a.value[1]
+  end
+  x
+end
+
 def len(a)
   return 0 if a.empty
   return 1+len(a.value[1])

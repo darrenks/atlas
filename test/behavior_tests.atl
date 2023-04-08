@@ -216,7 +216,7 @@ a`0+1@a=10#&a|(b%>+1)@b[ -> 19
 1 (2-) -> -2
 
 -- Test unary op not used as binary op
-2;4 -> <8>
+2 . 4 -> <8>
 'a{\'b -> "ba"
 
 -- implicit value is circular program
