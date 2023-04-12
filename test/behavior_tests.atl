@@ -219,6 +219,9 @@ a`0+1@a=10#&a|(b%>+1)@b[ -> 19
 2 . 4 -> <8>
 'a{\'b -> "ba"
 
+-- Test @ can be applied to { (it is unmodifiable for flip)
+1+2@{,} -> [3,2]
+
 -- implicit value is circular program
 (+1`0)[5 -> [0,1,2,3,4]
 +(1,2,3,4)`0 -> [0,1,3,6,10]
