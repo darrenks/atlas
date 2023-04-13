@@ -305,6 +305,7 @@ end
 
 def to_base(a,b,sign)
   return [] if a==0
+  raise DynamicError.new "base 0", nil if b==0
   digit = a%b*sign
   [digit.const, Promise.new{to_base((a-digit*sign)/b,b,sign)}]
 end
