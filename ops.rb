@@ -780,7 +780,7 @@ end
 
 Commands = {
   "help" => ["see op's info", "op", -> tokens, stack, last, context {
-    raise ParseError.new("usage: help <op>",tokens[0]) if tokens.size < 2
+    raise ParseError.new("usage: help <op>, see golfscript.com/atlas for tutorial",tokens[0]) if tokens.size != 2
     relevant = ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}
     if !relevant.empty?
       relevant.each(&:help)
@@ -788,28 +788,21 @@ Commands = {
       puts "no such op: #{tokens[0].str}"
     end
   }],
-  "ops" => ["see all ops' info", nil, -> tokens, stack, last, context {
-    raise ParseError.new("usage: ops",tokens[0]) if tokens.size > 1
-    ActualOpsList.each{|op|op.help(false)}
-  }],
   "version" => ["see atlas version", nil, -> tokens, stack, last, context {
-    raise ParseError.new("usage: version",tokens[0]) if tokens.size > 1
+    raise ParseError.new("usage: version",tokens[0]) if tokens.size != 1
     puts $version
   }],
   "type" => ["see expression type", "a", -> tokens, stack, last, context {
-    raise ParseError.new("usage: type <expression>",tokens[0]) if tokens.size < 2
-    p infer(to_ir(parse_line(tokens, stack, last),context)).type_with_vec_level
+    p infer(to_ir(tokens.size<2 ? last : parse_line(tokens, stack, last),context)).type_with_vec_level
   }],
   "p" => ["pretty print value", "a", -> tokens, stack, last, context {
-    raise ParseError.new("usage: p <expression>",tokens[0]) if tokens.size < 2
-    ast = parse_line(tokens, stack, last)
+    ast = tokens.size<2 ? last : parse_line(tokens, stack, last)
     ir=infer(to_ir(ast,context))
     run(ir) {|v,n,s| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
     puts
   }],
   "print" => ["print value (implicit)", "a", -> tokens, stack, last, context {
-    raise ParseError.new("usage: p <expression>",tokens[0]) if tokens.size < 2
-    ast = parse_line(tokens, stack, last)
+    ast = tokens.size<2 ? last : parse_line(tokens, stack, last)
     ir=infer(to_ir(ast,context))
     run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false,n,s) }
   }],
