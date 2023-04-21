@@ -286,7 +286,7 @@ TODO more complex example but more readable than my bf interpreter
 
 Just in case there was any doubt that the language is Turing Complete, I'll use these principles to implement a brianfuck interpreter:
 
-'\0+("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.":v2](0‿(0,‿(v5[(0‿(v1=='> then v6+1 else (v1=='< then v6-1 else v6)):v6)!@(v1=='+ then v4+1 else (v1=='- then v4-1 else v4)!;!@(v5](v6+1)))):v5]v6![:v4 then 0 else 1*(v1=='[!#) then v3+(1+(0‿(v2=='[ then v8+1 else (v2=='] then v8-1 else v8)):v8]v3![:v7!,!!==(v8](v3+1)) then 0‿(v9+(1,)):v9!;, else ($,,)!_![)) else (v4!&(v1==']) then v7-1!,!!==(v8[v3) then v9!;, else ($,,)!_!] else (v3+1))):v3)![:v1=='. then v4!; else ($,)_)
+    '\0+("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.":v2](0‿(0,‿(v5[(0‿(v1=='> then v6+1 else (v1=='< then v6-1 else v6)):v6)!@(v1=='+ then v4+1 else (v1=='- then v4-1 else v4)!;!@(v5](v6+1)))):v5]v6![:v4 then 0 else 1*(v1=='[!#) then v3+(1+(0‿(v2=='[ then v8+1 else (v2=='] then v8-1 else v8)):v8]v3![:v7!,!!==(v8](v3+1)) then 0‿(v9+(1,)):v9!;, else ($,,)!_![)) else (v4!&(v1==']) then v7-1!,!!==(v8[v3) then v9!;, else ($,,)!_!] else (v3+1))):v3)![:v1=='. then v4!; else ($,)_)
 
 
     source="++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."

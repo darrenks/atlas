@@ -1,10 +1,15 @@
 body {
-	max-width: 10in;
+	max-width: 900px;
 	margin: 0 auto !important;
    color: #C8D1D9;
 	background-color: #0E1016;
    line-height: 1.5;
 	font-family: Verdana;
+}
+
+#content {
+   padding-left: 10px;
+   padding-right: 10px;
 }
 
 .navbar {
@@ -14,13 +19,14 @@ body {
 /* 	font-size: 100%px; */
    overflow: hidden;
    background-color: #343940;
-   border-radius: 4px;
 }
 
 .navbar a {
-   float: bottom;
-   padding: 14px 16px;
+   float: left; /* todo that fix for chrome only works if this is set to bottom but then it ignores the other properties here */
+   padding: 6px;
+   margin: 2px;
    text-decoration: none;
+   border-radius: 4px;
 }
 
 .navbar a.active {
@@ -35,7 +41,7 @@ body {
 }
 
 #atlas {
-/* 	font-size: 1.7vw; */
+/* 	font-size: 20px; */
 }
 
 a {
