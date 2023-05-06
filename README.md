@@ -5,7 +5,7 @@ This information is also available at [golfscript.com/atlas](http://www.golfscri
 Atlas is an esoteric programming language designed to show off the synergy between laziness and vectorization which give a concise way to do _circular programming_ - a powerful but largely unsung technique, likely because there is no parallel in imperative languages. Atlas attempts to teach these techniques by being simple and fun to use for code golf.
 
 ## Latest news:
-None [(see all)](happenings.html)
+None [(see all)](docs/happenings.md)
 
 ## Features
 
@@ -57,7 +57,7 @@ This also works with binary ops, repeating a non-vector arg as needed:
     5 7 9
     3 4 5
 
-You can always explicitly do these things but as you gain more experience it may be worth better understanding when it can be left implicit. For more on vectorization, check the [vectorization doc](vectorization.html).
+You can always explicitly do these things but as you gain more experience it may be worth better understanding when it can be left implicit. For more on vectorization, check the [vectorization doc](docs/vectorization.md).
 
 ### Laziness
 
@@ -123,7 +123,7 @@ We can see that `x+a` computes the next prefix sum if the previous values of `a`
 
 A scan by any function can be computed this way, a fold would just be taking the last element of the result.
 
-Experienced functional programmers may notice this is a scanl/foldl. There are some cases where a foldr would be more useful because it may terminate a "loop" early, for example if you wanted to check if all elements of a list are truthy but stop as soon as you find a falsey element. Interestingly, a foldr is possible too, check out the [doc on circular programming](circular.html) to see how that works.
+Experienced functional programmers may notice this is a scanl/foldl. There are some cases where a foldr would be more useful because it may terminate a "loop" early, for example if you wanted to check if all elements of a list are truthy but stop as soon as you find a falsey element. Interestingly, a foldr is possible too, check out the [doc on circular programming](docs/circular.md) to see how that works.
 
 ## Beyond
 

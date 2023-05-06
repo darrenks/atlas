@@ -10,7 +10,7 @@ def convertMd(filename)
   # remove github readme warning
   md = md.lines.to_a[4..-1].join if basefile == "index"
 
-  File.open('t.md','w'){|f|f<<md}
+  File.open('t.md','w'){|f|f<<md.gsub(/(\[.*\])\((docs\/)*((.+)\.md)\)/,'\1(\4.html)')}
   markdown = `markdown.pl < t.md`
   `rm t.md`
 

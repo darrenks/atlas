@@ -1,7 +1,5 @@
 # Syntax
 
-See the [readme](../README.md) for syntax basics.
-
 Atlas uses infix syntax for all operations. It's precedence is left to right. Atlas tries to compromise between simplicity, familiarity, and conciseness. Sticking to math like precedence would be more familiar, but is actually quite complicated and inconsistent. Similar reasoning as APL is also used here in that there are too many ops to keep track of the precedence of each. It's actually very easy to get used to the lack of op specific precedence.
 
 All ops have a symbol version and named version. This is so that code can be written in a legible way (even to newcomers) but you can also make it short if you want to. I have no idea why APL and variants don't do this. Even the named versions are still written infix. For example:

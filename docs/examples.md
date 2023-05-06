@@ -59,7 +59,7 @@ And we get:
 
 ## Brainfuck
 
-A brainfuck interpreter seems like it would be very difficult to create in Atlas because it is the epitome of imperative and Atlas has no ability to do anything imperatively. None-the-less it can be done by using the techniques described in [the circular doc](circular.html) to simulate state over time.
+A brainfuck interpreter seems like it would be very difficult to create in Atlas because it is the epitome of imperative and Atlas has no ability to do anything imperatively. None-the-less it can be done by using the techniques described in [the circular doc](circular.md) to simulate state over time.
 
 We will just worry about calculating the next state from the current state and let circular programming do the rest for us.
 
