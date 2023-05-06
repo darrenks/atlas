@@ -575,10 +575,10 @@ create_op(
     name: "and",
     sym: "&",
     example: '1&2 -> 2',
-    example2: '0&2 -> 0',
+    example2: '1-&2 -> -1',
     type: { [A,B] => B },
-    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : tb.default_value }}
-  ).add_test("0&2 -> 0"),
+    poly_impl: ->ta,tb { -> a,b { truthy(ta,a) ? b.value : (ta==tb ? a.value : tb.default_value) }}
+  ),
   create_op(
     name: "or",
     sym: "|",
