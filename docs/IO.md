@@ -37,4 +37,5 @@ To get ints just use the `read` op (`&`) on `$`.
 
 ## Shorthand
 
-There is currently a shorthand for getting a column of ints from stdin and that is to use an unmatched `}`. This feels a bit hacky so I may remove it, but it is highly useful for the repetitive task of parsing input.
+There is currently a shorthand for getting a column of ints from stdin and that is to use an unmatched `}`. This feels a bit hacky, but it is highly useful for the repetitive task of parsing input.
+

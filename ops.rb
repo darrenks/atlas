@@ -17,21 +17,21 @@ class Op < Struct.new(
   def narg
     type ? type[0].specs.size : 0
   end
-  def help(show_everything=true)
-    puts "#{name} #{sym}"
-    puts desc if desc
+  def help(out=STDOUT)
+    out.puts "#{name} #{sym}"
+    out.puts desc if desc
     if type_summary
-      puts type_summary
+      out.puts type_summary
     else
       type.each{|t|
-        puts t.inspect.gsub('->','→').gsub('[Char]','Str')
+        out.puts t.inspect.gsub('->','→').gsub('[Char]','Str')
       }
     end
-    (examples+tests*(show_everything ? 1 : 0)).each{|example|
-      puts example.gsub('->','→')
+    (examples+tests).each{|example|
+      out.puts example.gsub('->','→')
     }
     misc = []
-    puts
+    out.puts
   end
   def add_test(s)
     tests<<s
@@ -455,7 +455,7 @@ create_op(
     poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
   create_op(
     name: "chunkBy",
-    desc: "chunk while second arg is truthy",
+    desc: "chunk while first arg is truthy",
     sym: "?",
     example: '"11 1" ? "abcd" -> ["ab","d"]',
     type: { [v(A),[B]] => [[B]] },

@@ -24,10 +24,11 @@ end
     truncate = expected =~ /\.\.\.$/
     expected.gsub!(/\.\.\.$/,'')
 
+    cmd = "{ ./atlas -repl_mode test/prog.atl 2>&1 1>&3 | grep -v Warning 1>&2; } 3>&1"
     if truncate
-      stdout, stderr, status = Open3.capture3("./atlas -repl_mode test/prog.atl | head -c #{truncate}")
+      stdout, stderr, status = Open3.capture3("#{cmd} | head -c #{truncate}")
     else
-      stdout, stderr, status = Open3.capture3("./atlas -repl_mode test/prog.atl")
+      stdout, stderr, status = Open3.capture3(cmd)
     end
     stderr=stderr.split("\e[31m").join
     stderr=stderr.split("\e[0m").join

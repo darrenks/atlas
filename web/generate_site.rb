@@ -1,5 +1,5 @@
 allFiles = Dir['docs/*.md']
-Basenames = allFiles.map{|f| f.sub(/\.md$/,'').sub('docs/','') }
+Basenames = allFiles.map{|f| f.sub(/\.md$/,'').sub('docs/','') } - ["try_it","examples","happenings"]
 
 
 def convertMd(filename)
@@ -18,9 +18,11 @@ def convertMd(filename)
 
   navbar = '<div class="navbar">
    <a'+(basefile=="index"?' class="active"':'')+' id="atlas" href="index.html">Atlas</a>
-   <a '+(is_doc ?' class="active"':'')+' href="io.html">Docs</a>
+   <a '+(is_doc ?' class="active"':'')+' href="circular.html">Docs</a>
+   <a href="happenings.html">Happenings</a>
+   <a href="examples.html">Examples</a>
    <a href="quickref.html">Quick Ref</a>
-   <a href="https://replit.com/@darrenks/Atlas">Repl</a>
+   <a href="try_it.html">Try it!</a>
    <a href="https://github.com/darrenks/atlas">Source</a>
    <span style="
    visibility: hidden;
@@ -28,10 +30,10 @@ def convertMd(filename)
     position: absolute;
     top: -10000px;
     left: -10000px;
-    "><!-- create an extra non anchor hidden element due to chrome bug on mobile -->testasdf</span>
+    "><!-- create an extra non anchor hidden element due to chrome bug on mobile -->test</span>
 </div>
 <div '+(is_doc ? '' : 'style="display:none" ')+'class="navbar" id="docs_menu">'+
-   Basenames.map{|n|
+   Basenames.sort_by(&:downcase).map{|n|
      "<a #{'class="active"' if basefile == n} href=\"#{n}.html\">#{n.split('_').map{|word|word[0].upcase+word[1..-1]}*" "}</a>"
    }*"\n"+'</div>'
 
@@ -39,9 +41,10 @@ def convertMd(filename)
   markdown.gsub!("<pre>",'<div class="prog">')
   markdown.gsub!("</pre>",'</div>')
 
-  markdown.gsub!(/────+/,'<hr>')
+  markdown.gsub!(/────+\n/,'<hr>')
 
   title = markdown[/<h1>(.*?)<\/h1>/,1]
+  title = "Atlas" if filename == "README.md"
 
   markdown.gsub!(/<(h[1-3])>(.*?)<\/\1>/){"<#$1 id=\"#{$2.downcase.tr'^a-z0-9',''}\">#$2</#$1>"}
 

@@ -8,4 +8,5 @@ ruby test/test_docs.rb
 sh test/test_repl.sh
 ruby test/update_date.rb
 ruby web/quickref.rb > web/site/quickref.html
+ruby web/op_notes.rb
 ruby web/generate_site.rb
