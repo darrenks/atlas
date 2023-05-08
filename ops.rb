@@ -218,28 +218,6 @@ OpsList = [
     type: { Num => Num },
     example: '1.3& -> 1',
     impl: -> a { a.value.floor }),
-  create_op(
-    name: "toBase",
-    sym: ";",
-    type: { [Num,Num] => [Num],
-            [Num,Char] => Str },
-    example: '6;2 -> [0,1,1]',
-    impl: -> a,b { to_base(a.value.abs,b.value,a.value<=>0) })
-   .add_test('3,3.;2 -> <[1,1],[1,1]>')
-   .add_test('6;(2-) -> [0,-1,-1,-1]')
-   .add_test('6-;2 -> [0,-1,-1]')
-   .add_test('5.5;2 -> [1.5,0.0,1.0]')
-   .add_test('5.5-;2 -> [-1.5,-0.0,-1.0]'),
-  create_op(
-    name: "fromBase",
-    sym: ";",
-    type: { [[Num],Num] => Num,
-            [Str,Num] => Num },
-    example: '0,1,1;2 -> 6',
-    impl: -> a,b { from_base(a,b.value) })
-   .add_test('0,1,1,1-%;(2-) -> 6')
-   .add_test('0,1,1-%;2 -> -6')
-   .add_test('1.5,0.0,1.0;2 -> 5.5'),
   "vector",
   create_op(
     name: "unvec",
@@ -708,8 +686,9 @@ def addOp(table,op)
     op.type.each{|s|combined_type[s.orig_key]=s.orig_val}
     existing.type.each{|s|combined_type[s.orig_key]=s.orig_val}
     combined_impl = -> arg_types,from {
-      best_match = match_type(existing.type + op.type, arg_types)
-      if existing.type.include? best_match
+      if existing.type.any?{|fn_type|
+            check_base_elem_constraints(fn_type.specs, arg_types)
+          }
         existing.impl[arg_types,from]
       else
         op.impl[arg_types,from]

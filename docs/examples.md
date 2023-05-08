@@ -134,7 +134,7 @@ This code can be tested by changing `s` and the initial state to see if it behav
     ──────────────────────────────────
     Hello World!
 
-The last two lines collect the output, chunk it while the code that remains is not empty, concat possible outputs, and turn them from numbers into characters.
+The last line collect the output, chunk it while the code that remains is not empty, concat possible outputs, and turn them from numbers into characters.
 
 ### Golfed
 
