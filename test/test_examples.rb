@@ -9,7 +9,7 @@ def failit(filename,test, reason)
 end
 
 tests = Dir["test/examples/*.test"]
-section_regex = /^\[.*?\]\n/i
+section_regex = /^\{.*?\}\n/i
 tests.each{|test_filename|
   test = File.read(test_filename)
   sections = test.scan(section_regex)

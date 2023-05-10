@@ -1,6 +1,11 @@
 class Token<Struct.new(:str,:char_no,:line_no)
   def name
-    str[/^#{ApplyRx}?(.*?)#{FlipRx}?$/m,1]
+    return "%" if str == "%" # todo what about @%, etc
+    str[/^#{ApplyRx}?%*(.*?)#{FlipRx}?$/m,1]
+  end
+  def vec_mod
+    return 0 if str == "%"
+    str[/^#{ApplyRx}?(%*)(.*?)#{FlipRx}?$/m,1].size
   end
   def is_name
     !(OtherRx=~str) && !AllOps[str]
@@ -27,7 +32,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-zA-Z][a-zA-Z0-9]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
-OpRx = /@\{|#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
+OpRx = /@\{|%*#{IdRx}|#{ApplyRx}?%*#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/

@@ -287,7 +287,7 @@ end
 
 # value -> value -> value
 def spaceship(a,b,t)
-  if Array === t.base
+  if t.rank > 0
     return 0 if a.empty && b.empty
     return -1 if a.empty
     return 1 if b.empty
@@ -351,12 +351,6 @@ def inspect_value_h(t,value,rhs)
        str_to_lazy_list(escape_str_char(v.value),r)
       }
     }]
-  elsif t==Type.new(1,:char)
-    ['"'.ord.const, Promise.new{
-      concat_map(value,Promise.new{str_to_lazy_list('".',rhs)}){|v,r,first|
-       str_to_lazy_list(escape_str_char(v.value),r)
-      }
-    }]
   elsif t==Num
     str_to_lazy_list(value.value.to_s,rhs)
   elsif t==Char
@@ -375,7 +369,7 @@ end
 # convert a from int to str if tb == str and ta == int, but possibly vectorized
 def coerce2s(ta, a, tb)
   return a if ta==tb || tb.is_unknown || ta.is_unknown #??
-  case [ta.base_elem,tb.base_elem]
+  case [ta.base,tb.base]
   when [:num,:char]
     raise if ta.rank+1 != tb.rank
     return Promise.new{zipn(ta.rank,[a],->av{str_to_lazy_list(av.value.to_s)})}

@@ -56,16 +56,29 @@ def calc_type(node)
   node.type = possible_types(node,fn_types[0])
 end
 
+def snoc_type(node)
+  a,b = node.args.map(&:type)
+  if a.rank > b.rank
+    t=a.dup
+  else
+    t=b+1
+  end
+  node.zip_level = 0
+  node.rep_levels = [0,0]
+  node.promote_levels = [t.rank-a.rank,t.rank-b.rank-1]
+  t
+end
+
 def possible_types(node, fn_type)
+  return snoc_type(node) if node.op.name == "snoc"
   arg_types = node.args.map(&:type)
   vars = solve_type_vars(arg_types, fn_type.specs)
 #   deficits = rank_deficits(arg_types, fn_type.specs, vars)
-  t = spec_to_type(fn_type.ret, vars).dup
 
   arg_zip_levels = arg_types.zip(fn_type.specs).map{|arg,spec|arg.rank - spec.extra_rank}
   promote_levels = arg_zip_levels.map{|z|
     if z < 0
-      raise"NO promote todo" if node.op.no_promote
+      return node.type_error "rank too low, cannot promote" if node.op.no_promote
       -z
     else
       0
@@ -75,6 +88,10 @@ def possible_types(node, fn_type)
 
   zip_level = arg_zip_levels.max || 0
   rep_levels = arg_zip_levels.map{|z|zip_level - z}
+  zip_level -= node.from.token.vec_mod
+  return node.type_error "rank too low, cannot promote" if zip_level < 0
+  vars.each{|k,v|vars[k]+=node.from.token.vec_mod}
+  t = spec_to_type(fn_type.ret, vars).dup
 
 #     return node.type_error "rank too high for arg #{i+1}" if rep_levels[i] > zip_level
   node.zip_level = zip_level
@@ -101,7 +118,7 @@ def solve_type_vars(arg_types, specs)
   var_uses.each{|name,uses|
     base_elems = uses.map(&:base).uniq
     base_elem = if base_elems == [Unknown.base]
-      Unknown.base_elem
+      Unknown.base
     else
       base_elems -= [Unknown.base]
       base_elems[0]
@@ -113,6 +130,7 @@ def solve_type_vars(arg_types, specs)
 end
 
 def rank_deficits(arg_types, specs, vars)
+  # todo remove?
   arg_types.zip(specs).map{|arg,spec|
     spec_dim = case spec
       when VarTypeSpec

@@ -30,7 +30,7 @@ class Type
     return self.base == rhs.base
   end
   def default_value
-    return [] if dim > 0
+    return [] if rank > 0
     return 32 if is_char
     return 0 if base == :num
     raise DynamicError.new("access of the unknown type",nil)
