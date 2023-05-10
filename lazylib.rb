@@ -291,7 +291,7 @@ def spaceship(a,b,t)
     return 0 if a.empty && b.empty
     return -1 if a.empty
     return 1 if b.empty
-    s0 = spaceship(a.value[0],b.value[0],t.box_elem)
+    s0 = spaceship(a.value[0],b.value[0],t-1)
     return s0 if s0 != 0
     return spaceship(a.value[1],b.value[1],t)
   else
@@ -362,8 +362,8 @@ def inspect_value_h(t,value,rhs)
   elsif t==Char
     str_to_lazy_list(inspect_char(value.value),rhs)
   else #List
-    [(t.rank>0?"<":"[").ord.const, Promise.new{
-      concat_map(value,Promise.new{str_to_lazy_list((t.rank>0?">":"]"),rhs)}){|v,r,first|
+    ["[".ord.const, Promise.new{
+      concat_map(value,Promise.new{str_to_lazy_list("]",rhs)}){|v,r,first|
         first ?
           inspect_value_h(t-1,v,r) :
           [','.ord.const,Promise.new{inspect_value_h(t-1,v,r)}]
@@ -398,8 +398,6 @@ def to_string_h(t, value, orig_dim, rhs, repl_mode, n, s)
   elsif t == Char
     [value, rhs]
   else # List
-    t = t.unbox_all
-
     # print 1d lists on new lines if not in repl mode
     dim = !repl_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
     # print newline separators after every element for better interactive io

@@ -220,18 +220,6 @@ OpsList = [
     impl: -> a { a.value.floor }),
   "vector",
   create_op(
-    name: "unvec",
-    sym: "%",
-    example: '1,2+3% -> [4,5]',
-    type: { [A] => b(A) },
-    impl: -> a { a.value },
-  ), create_op(
-    name: "vectorize",
-    sym: ".",
-    example: '1,2,3. -> <1,2,3>',
-    type: { b(A) => [A] },
-    impl: -> a { a.value }),
-  create_op(
     name: "range",
     sym: ":",
     example: '3:7 -> <3,4,5,6>',

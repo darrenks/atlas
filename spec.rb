@@ -21,12 +21,6 @@ class FnType < Struct.new(:specs,:ret,:orig_key,:orig_val)
   end
 end
 
-class BoxOf < Struct.new(:of)
-end
-def b(a)
-  BoxOf.new(a)
-end
-
 def create_specs(raw_spec)
   case raw_spec
   when Hash
@@ -43,7 +37,7 @@ def create_specs(raw_spec)
           end).map{|a_raw_arg| parse_raw_arg_spec(a_raw_arg) }
         FnType.new(specs,ret,raw_arg,ret)
       }
-  when Type, Array, BoxOf, Symbol
+  when Type, Array, Symbol
     [FnType.new([],raw_spec,[],raw_spec)]
   else
     raise "unknown fn type format"
@@ -57,10 +51,6 @@ def parse_raw_arg_spec(raw,list_nest_depth=0)
   when Array
     raise if raw.size != 1
     parse_raw_arg_spec(raw[0],list_nest_depth+1)
-  when BoxOf
-    r=parse_raw_arg_spec(raw.of)
-    r.box_of=true
-    r
   when Type
     ExactTypeSpec.new(Type.new(raw.rank+list_nest_depth, raw.base))
   else
@@ -88,11 +78,9 @@ end
 class VarTypeSpec
   attr_reader :var_name
   attr_reader :extra_dims
-  attr_accessor :box_of
   def initialize(var_sym, extra_dims) # e.g. [[a]] is .new(:a, 2)
     @var_name,@var_constraint = name_and_constraint(var_sym)
     @extra_dims = extra_dims
-    @box_of = false
   end
   def check_base_elem(uses,type)
     if @var_constraint
@@ -103,7 +91,7 @@ class VarTypeSpec
   end
   def inspect
     constraint = @var_constraint ? " (#{@var_constraint})" : ""
-    "<"*extra_dims+(box_of ? "[" : "")+var_name.to_s+(box_of ? ">" : "")+constraint+">"*extra_dims
+    "["*extra_dims+var_name.to_s+constraint+"]"*extra_dims
   end
   def extra_rank
     extra_dims
@@ -126,10 +114,6 @@ def spec_to_type(spec, vars)
     name,constraint=name_and_constraint(spec)
     t=vars[name]
     t.base = constraint.to_sym if constraint
-    t
-  when BoxOf
-    t = spec_to_type(spec.of,vars)
-    t.base = [t.base]
     t
   else
     unknown

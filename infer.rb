@@ -19,7 +19,7 @@ def infer(root)
     if node.type != prev_type && !node.last_error
       node.type_updates = (node.type_updates || 0) + 1
       if node.type_updates > 100
-        if node.type.unbox_all.rank < 20
+        if node.type.rank < 20
           raise "congratulations you have found a program that does not find a fixed point for its type, please report this discovery - I am not sure if it possible and would like to know"
         end
         raise AtlasTypeError.new "cannot construct the infinite type" ,node
@@ -90,10 +90,6 @@ def solve_type_vars(arg_types, specs)
   arg_types.zip(specs) { |arg,spec|
     case spec
     when VarTypeSpec
-      if spec.box_of # todo error check or auto
-        arg = arg.dup
-        arg.base = arg.base[0]
-      end
       (var_uses[spec.var_name]||=[]) << arg - spec.extra_dims
     when ExactTypeSpec
     else
