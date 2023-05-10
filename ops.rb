@@ -223,20 +223,20 @@ OpsList = [
     name: "unvec",
     sym: "%",
     example: '1,2+3% -> [4,5]',
-    type: { v(A) => [A] },
+    type: { [A] => b(A) },
     impl: -> a { a.value },
   ), create_op(
     name: "vectorize",
     sym: ".",
     example: '1,2,3. -> <1,2,3>',
-    type: { [A] => v(A) },
+    type: { b(A) => [A] },
     impl: -> a { a.value }),
   create_op(
     name: "range",
     sym: ":",
     example: '3:7 -> <3,4,5,6>',
-    type: { [Num,Num] => v(Num),
-            [Char,Char] => v(Char) },
+    type: { [Num,Num] => [Num],
+            [Char,Char] => [Char] },
     impl: -> a,b { range(a.value, b.value) })
    .add_test("5:3 -> <>")
    .add_test("1.5:5 -> <1.5,2.5,3.5,4.5>"),
@@ -244,14 +244,14 @@ OpsList = [
     name: "from",
     sym: ":",
     example: '3: -> <3,4,5,6,7,8...',
-    type: { Num => v(Num),
-            Char => v(Char) },
+    type: { Num => [Num],
+            Char => [Char] },
     impl: -> a { range_from(a.value) }),
   create_op(
     name: "consDefault",
     sym: "^",
     example: '2,3^ -> <0,2,3>',
-    type: { v(A) => v(A) },
+    type: { [A] => [A] },
     poly_impl: -> at { d=(at-1).default_value.const; -> a { [d,a] }}),
   "basic list",
   create_op(
@@ -405,7 +405,7 @@ create_op(
     name: "filter",
     sym: "~",
     example: '0,1,1,0 ~ "abcd" -> "bc"',
-    type: { [v(A),[B]] => [B] },
+    type: { [[A],[B]] => [B] },
     poly_impl: -> at,bt { -> a,b { filter(b,a,at-1) }}),
   create_op(
     name: "sort",
@@ -420,7 +420,7 @@ create_op(
     desc: "stable O(n log n) sort - not optimized for lazy O(n) min/max yet todo",
     sym: "!",
     example: '3,1,4 ! "abc" -> "bac"',
-    type: { [v(A),[B]] => [B] },
+    type: { [[A],[B]] => [B] },
     poly_impl: -> at,bt { -> a,b { sortby(b,a,at-1) }})
   .add_test('"hi","there" ! (1,2,3) -> [1,2]')
   .add_test('"aaaaaa" ! "abcdef" -> "abcdef"'),
@@ -436,7 +436,7 @@ create_op(
     desc: "chunk while first arg is truthy",
     sym: "?",
     example: '"11 1" ? "abcd" -> ["ab","d"]',
-    type: { [v(A),[B]] => [[B]] },
+    type: { [[A],[B]] => [[B]] },
     poly_impl: -> at,bt { -> a,b { chunk_while(b,a,at-1) } })
   .add_test('" 11  " ? "abcde" -> ["","bc","",""]')
   .add_test('()?"" -> [""]'),
@@ -578,14 +578,14 @@ create_op(
     name: "input",
     desc: "all lines of stdin",
     sym: "$",
-    type: v(Str),
+    type: [Str],
     impl: -> { lines(ReadStdin) }),
   create_op(
     name: "unmatched }",
     desc: "next column from stdin",
     sym: "}",
     ref_only: true,
-    type: v(Num),
+    type: [Num],
     impl: MacroImpl),
   create_op(
     name: "read",
@@ -772,18 +772,18 @@ Commands = {
     puts $version
   }],
   "type" => ["see expression type", "a", -> tokens, stack, last, context {
-    p infer(to_ir(tokens.size<2 ? last : parse_line(tokens, stack, last),context)).type_with_vec_level
+    p infer(to_ir(tokens.size<2 ? last : parse_line(tokens, stack, last),context)).type
   }],
   "p" => ["pretty print value", "a", -> tokens, stack, last, context {
     ast = tokens.size<2 ? last : parse_line(tokens, stack, last)
     ir=infer(to_ir(ast,context))
-    run(ir) {|v,n,s| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
+    run(ir) {|v,n,s| inspect_value(ir.type,v) }
     puts
   }],
   "print" => ["print value (implicit)", "a", -> tokens, stack, last, context {
     ast = tokens.size<2 ? last : parse_line(tokens, stack, last)
     ir=infer(to_ir(ast,context))
-    run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false,n,s) }
+    run(ir) {|v,n,s| to_string(ir.type,v,false,n,s) }
   }],
 
 }
