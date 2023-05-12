@@ -1,7 +1,7 @@
-[prog]
+{prog}
 -- http://golf.shinh.org/p.rb?Stop+five+after+nonzero
 %[(}~5@:[
-[input]
+{stdin}
 0
 0
 0
@@ -18,7 +18,7 @@
 0
 142
 0
-[output]
+{output}
 0
 0
 0

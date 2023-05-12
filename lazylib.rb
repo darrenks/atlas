@@ -5,14 +5,15 @@ end
 
 def make_promises(node)
   return node.promise if node.promise
-  arg_types = node.args.zip(0..).map{|a,i|a.type - node.zip_level + node.rep_levels[i] + node.promote_levels[i]}
+  arg_types = node.args.zip(0..).map{|a,i|a.type - node.zip_level + node.deficits[i]}
   args = nil
   node.promise = Promise.new {
     zipn(node.zip_level, args, node.op.impl[arg_types, node])
   }
   args = node.args.zip(0..).map{|arg,i|
-    promoted = promoten(node.promote_levels[i], make_promises(arg))
-    repn(node.rep_levels[i], promoted)
+    # todo, what about when both promoted and repped? think
+    promoted = promoten(node.deficits[i]-node.zip_level, make_promises(arg))
+    repn([node.zip_level,node.deficits[i]].min,promoted)
   }
   node.promise
 end

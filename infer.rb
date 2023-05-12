@@ -56,66 +56,59 @@ def calc_type(node)
   node.type = possible_types(node,fn_types[0])
 end
 
-def snoc_type(node)
-  a,b = node.args.map(&:type)
-  if a.rank > b.rank
-    t=a.dup
-  else
-    t=b+1
-  end
-  node.zip_level = 0
-  node.rep_levels = [0,0]
-  node.promote_levels = [t.rank-a.rank,t.rank-b.rank-1]
-  t
-end
-
 def possible_types(node, fn_type)
-  return snoc_type(node) if node.op.name == "snoc"
   arg_types = node.args.map(&:type)
-  vars = solve_type_vars(arg_types, fn_type.specs)
-#   deficits = rank_deficits(arg_types, fn_type.specs, vars)
+  vars,zip_level = solve_type_vars(arg_types, fn_type.specs, node)
+  arg_types = arg_types.map{|type| type - zip_level }
+  deficits = rank_deficits(arg_types, fn_type.specs, vars)
+  return node.type_error "cannot unvectorize op" if zip_level < 0 ||  deficits.any?{|d| d < 0}
 
-  arg_zip_levels = arg_types.zip(fn_type.specs).map{|arg,spec|arg.rank - spec.extra_rank}
-  promote_levels = arg_zip_levels.map{|z|
-    if z < 0
-      return node.type_error "rank too low, cannot promote" if node.op.no_promote
-      -z
-    else
-      0
-    end
-  }
-  arg_zip_levels.map!{|z|[z,0].max}
+  return node.type_error "rank too low, cannot promote" if node.op.no_promote && deficits.any?{|d| d > zip_level }
 
-  zip_level = arg_zip_levels.max || 0
-  rep_levels = arg_zip_levels.map{|z|zip_level - z}
-  zip_level -= node.from.token.vec_mod
-  return node.type_error "rank too low, cannot promote" if zip_level < 0
-  vars.each{|k,v|vars[k]+=node.from.token.vec_mod}
-  t = spec_to_type(fn_type.ret, vars).dup
-
-#     return node.type_error "rank too high for arg #{i+1}" if rep_levels[i] > zip_level
   node.zip_level = zip_level
-  node.rep_levels = rep_levels
-  node.promote_levels = promote_levels
-  t.rank += zip_level
-  t
+  node.deficits = deficits
+
+#   p spec_to_type(fn_type.ret, vars) + zip_level if node.op.name == "add"
+  return spec_to_type(fn_type.ret, vars) + zip_level
 end
 
-def solve_type_vars(arg_types, specs)
-  var_uses = {}
+def solve_type_vars(arg_types, specs, node)
+  var_use = {}
+  zip_level = 0
+  max_zip_level = Inf
 
   arg_types.zip(specs) { |arg,spec|
     case spec
     when VarTypeSpec
-      (var_uses[spec.var_name]||=[]) << arg - spec.extra_dims
+      excess = arg - spec.extra_dims
+      (var_use[spec.var_name]||=[]) << excess
+      max_zip_level = [max_zip_level, excess.max_vec_level].min
     when ExactTypeSpec
+      zip_level = [zip_level,arg.rank-spec.type.rank].max
     else
       error
     end
   }
 
-  vars = {}
-  var_uses.each{|name,uses|
+  zip_level = [zip_level,case var_use.size
+    when 0
+      0
+    when 1
+      var_use.values[0].map(&:rank).max
+    else
+      # don't cause extra replication for other arg
+      var_use.values.map{|u|u.map(&:rank).max}.sort[-1]
+    end].max
+
+ #  if node.op.name == "snoc" || node.op.name == "single"
+#     zip_level = node.vec_mod
+#   else
+#     zip_level = [zip_level, max_zip_level].min
+    zip_level -= node.vec_mod
+#   end
+
+  var_ans = {}
+  var_use.each{|name,uses|
     base_elems = uses.map(&:base).uniq
     base_elem = if base_elems == [Unknown.base]
       Unknown.base
@@ -124,26 +117,26 @@ def solve_type_vars(arg_types, specs)
       base_elems[0]
     end
 
-    vars[name] = Type.new(0, base_elem)
+    var_ans[name] = Type.new([uses.map(&:rank).max - zip_level,0].max, base_elem)
   }
-  vars
+
+  [var_ans,zip_level]
 end
 
 def rank_deficits(arg_types, specs, vars)
-  # todo remove?
   arg_types.zip(specs).map{|arg,spec|
     spec_dim = case spec
       when VarTypeSpec
         vars[spec.var_name].max_pos_dim + spec.extra_dims
       when ExactTypeSpec
-        spec.type.dim
+        spec.type.rank
       else
         error
       end
     if arg.is_unknown
-      [spec_dim - arg.dim, 0].min
+      [spec_dim - arg.rank, 0].min
     else
-      spec_dim - arg.dim
+      spec_dim - arg.rank
     end
   }
 end

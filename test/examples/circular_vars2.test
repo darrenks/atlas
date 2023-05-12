@@ -1,11 +1,11 @@
-[prog]
+{prog}
 a=b+(5@b)
 b
 a
 d=d
 c=c
-[stdout]
+{stdout}
 5
 10
-[stderr]
+{stderr}
 5:3 (c) cannot use value of the unknown type (TypeError)

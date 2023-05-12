@@ -1,5 +1,5 @@
-[prog]
+{prog}
 //
   '
-[stderr]
+{stderr}
 2:3 (') empty char

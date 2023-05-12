@@ -409,7 +409,7 @@ create_op(
     example: '3,1,4 ! "abc" -> "bac"',
     type: { [[A],[B]] => [B] },
     poly_impl: -> at,bt { -> a,b { sortby(b,a,at-1) }})
-#   .add_test('"hi","there" ! (1,2,3) -> [1,2]')
+  .add_test('"hi","there" ! (1,2,3) -> [1,2]')
   .add_test('"aaaaaa" ! "abcdef" -> "abcdef"'),
   create_op(
     name: "chunk",
@@ -471,7 +471,7 @@ create_op(
     type: { [Str,Str] => [Str] },
     impl: -> a,b { split(a,b) })
   .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
-#   .add_test('"ab",*" "/"b "[2 -> ["a","a"]') # test laziness
+  .add_test('"ab"%,*" "/"b "%[2 -> ["a","a"]') # test laziness
   .add_test('",a,,b,"/"," -> ["","a","","b",""]'),
   create_op(
     name: "replicate",

@@ -3,10 +3,6 @@ class Token<Struct.new(:str,:char_no,:line_no)
     return "%" if str == "%" # todo what about @%, etc
     str[/^#{ApplyRx}?%*(.*?)#{FlipRx}?$/m,1]
   end
-  def vec_mod
-    return 0 if str == "%"
-    str[/^#{ApplyRx}?(%*)(.*?)#{FlipRx}?$/m,1].size
-  end
   def is_name
     !(OtherRx=~str) && !AllOps[str]
   end

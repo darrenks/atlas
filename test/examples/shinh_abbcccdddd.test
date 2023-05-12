@@ -1,9 +1,9 @@
-[prog]
+{prog}
 -- http://golf.shinh.org/p.rb?abbcccdddd
-^]($%[.{^}@-'`{)@#_\})
-[input]
+%^]($_{\^}@-'`{)@#_\})
+{stdin}
 thequickbrownfoxjumpsoverthelazydog
-[output]
+{output}
 tttttttttttttttttttt
 hhhhhhhhtttttttttttt
 eeeeehhhtttttttttttt

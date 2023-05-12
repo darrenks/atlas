@@ -15,7 +15,10 @@ class Type
     Type.new(rank+zip_level, base)
   end
   def max_pos_dim
-    is_unknown ? Inf : dim
+    is_unknown ? Inf : rank
+  end
+  def max_vec_level
+    is_unknown ? rank : Inf
   end
   def string_dim # dim but string = 0
     rank + (is_char ? -1 : 0)

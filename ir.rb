@@ -9,8 +9,7 @@ class IR < Struct.new(
     :id,
     :in_q,
     :used_by,
-    :rep_levels,
-    :promote_levels,
+    :deficits,
     :last_error,
     :type_updates, # for detecting inf type
     )
@@ -18,6 +17,13 @@ class IR < Struct.new(
     super(*args)
     self.id = $ir_node_count += 1
   end
+  def vec_mod
+    return 0 if !from.token
+    str = from.token.str
+    return 0 if str == "%"
+    str[/^#{ApplyRx}?(%*)(.*?)#{FlipRx}?$/m,1].size
+  end
+
   def type_error(msg)
     self.last_error ||= AtlasTypeError.new msg,self
     Unknown
@@ -29,11 +35,11 @@ class IR < Struct.new(
     rescue # failsafe, we still want atlas to work if it gets set to something invalid
       return nil
     end
-    case self.type
-    when Num
+    case self.type.base
+    when Num.base
       return nil if self.type.rank != 0
       str_to_lazy_list(val.to_s)
-    when Char
+    when Char.base
       if self.type.rank == 0
         [val.const, Null]
       elsif self.type.rank == 1

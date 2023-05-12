@@ -1,5 +1,5 @@
-[prog]
+{prog}
 (1+()) + (2+())
-[stderr]
+{stderr}
 1:3 (+) op is not definied for arg types: Num,[a] (TypeError)
 1:12 (+) op is not definied for arg types: Num,[a] (TypeError)

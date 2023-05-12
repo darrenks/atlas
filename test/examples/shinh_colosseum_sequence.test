@@ -1,8 +1,11 @@
-[prog]
+{prog}
 -- http://golf.shinh.org/p.rb?Colosseum+Sequence
-abcdcbcdec-a{%@x,+}]\x[]\x[_>
-1
-[stdout]
+-- abcdcbcdec-a{@x,+}]\x[]\x[_>
+-- 1
+-- tails:
+abcdcbcdac-a{,+}%4|2_>,1
+
+{stdout}
 1
 2
 3

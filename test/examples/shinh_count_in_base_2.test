@@ -1,7 +1,7 @@
-[prog]
+{prog}
 -- http://golf.shinh.org/p.rb?Count+in+Base+2
-/2`1@:101[9)%2~ a:@%/
-[stdout]
+/2`1@:101[9)%2~a:@%,/
+{stdout}
 a
 b
 ba

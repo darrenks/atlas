@@ -1,6 +1,6 @@
-[prog]
-();,(),(). type
+{prog}
+();,(),() type
 1,2 p
-[output]
+{output}
 [[a]]
 [1,2]

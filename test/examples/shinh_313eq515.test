@@ -1,10 +1,10 @@
-[prog]
+{prog}
 -- http://golf.shinh.org/p.rb?313+equals+151
-/' {.=%=]~}
-[input]
+/' {=%=]~}
+{stdin}
 MLACTAOW4 T9F7ZFPNU
 NYXKOOEAM HQ0P77AFM
 5V1BU1RXM 6LY7ANX57
-[stdout]
+{stdout}
 MLACTAOW4 T9F7ZFPNU
 NYXKOOEAM HQ0P77AFM

@@ -1,9 +1,9 @@
-[prog]
+{prog}
 "├───╯"
 
 'a-1000
 
-[stdout]
+{stdout}
 ├───╯
 y
 

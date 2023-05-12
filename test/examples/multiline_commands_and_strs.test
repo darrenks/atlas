@@ -1,4 +1,4 @@
-[prog]
+{prog}
 1+
 --asdf
 
@@ -9,8 +9,8 @@ cd"p
 
 
 5
-[stdout]
+{stdout}
 3
 "ab\ncd"
-[stderr]
+{stderr}
 7:2 (/) div 0 (DynamicError)
