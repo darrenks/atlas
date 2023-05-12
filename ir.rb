@@ -20,8 +20,8 @@ class IR < Struct.new(
   def vec_mod
     return 0 if !from.token
     str = from.token.str
-    return 0 if str == "%"
-    str[/^#{ApplyRx}?(%*)(.*?)#{FlipRx}?$/m,1].size
+    return 0 if str[NumRx]
+    str[/^#{ApplyRx}?(\.*)(.*?)#{FlipRx}?$/m,1].size
   end
 
   def type_error(msg)

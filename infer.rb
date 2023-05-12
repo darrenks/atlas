@@ -68,21 +68,17 @@ def possible_types(node, fn_type)
   node.zip_level = zip_level
   node.deficits = deficits
 
-#   p spec_to_type(fn_type.ret, vars) + zip_level if node.op.name == "add"
   return spec_to_type(fn_type.ret, vars) + zip_level
 end
 
 def solve_type_vars(arg_types, specs, node)
   var_use = {}
   zip_level = 0
-  max_zip_level = Inf
 
   arg_types.zip(specs) { |arg,spec|
     case spec
     when VarTypeSpec
-      excess = arg - spec.extra_dims
-      (var_use[spec.var_name]||=[]) << excess
-      max_zip_level = [max_zip_level, excess.max_vec_level].min
+      (var_use[spec.var_name]||=[]) << arg - spec.extra_dims
     when ExactTypeSpec
       zip_level = [zip_level,arg.rank-spec.type.rank].max
     else
@@ -90,22 +86,9 @@ def solve_type_vars(arg_types, specs, node)
     end
   }
 
-  zip_level = [zip_level,case var_use.size
-    when 0
-      0
-    when 1
-      var_use.values[0].map(&:rank).max
-    else
-      # don't cause extra replication for other arg
-      var_use.values.map{|u|u.map(&:rank).max}.sort[-1]
-    end].max
-
- #  if node.op.name == "snoc" || node.op.name == "single"
-#     zip_level = node.vec_mod
-#   else
-#     zip_level = [zip_level, max_zip_level].min
-    zip_level -= node.vec_mod
-#   end
+  max_excess = var_use.map{|k,u|[k,u.map(&:rank).max]}.to_h
+  zip_level = [zip_level,max_excess.values.min||0].max
+  zip_level -= node.vec_mod
 
   var_ans = {}
   var_use.each{|name,uses|
@@ -117,7 +100,7 @@ def solve_type_vars(arg_types, specs, node)
       base_elems[0]
     end
 
-    var_ans[name] = Type.new([uses.map(&:rank).max - zip_level,0].max, base_elem)
+    var_ans[name] = Type.new([max_excess[name] - zip_level,0].max, base_elem)
   }
 
   [var_ans,zip_level]

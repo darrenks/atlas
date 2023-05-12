@@ -1,6 +1,5 @@
 require "readline"
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
-HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil)
   context={}
@@ -28,13 +27,14 @@ def repl(input=nil)
   elsif !ARGV.empty?
     input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift, :encoding => 'iso-8859-1') }
   else
+    hist_file = Dir.home + "/.atlas_history"
     $repl_mode = true if $repl_mode.nil?
-    if File.exist? HistFile
-      Readline::HISTORY.push *File.read(HistFile).split("\n")
+    if File.exist? hist_file
+      Readline::HISTORY.push *File.read(hist_file).split("\n")
     end
     input_fn = lambda {
       line = Readline.readline("\e[33m ᐳ \e[0m", true)
-      File.open(HistFile,'a'){|f|f.puts line} unless !line || line.empty?
+      File.open(hist_file,'a'){|f|f.puts line} unless !line || line.empty?
       line
     }
     Readline.completion_append_character = " "

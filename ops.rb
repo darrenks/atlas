@@ -303,7 +303,7 @@ OpsList = [
     name: "concat",
     sym: "_",
     no_promote: true,
-    example: '"abc","123"_ -> "abc123"',
+    example: '"abc".,"123"_ -> "abc123"',
     type: { [[A]] => [A] },
     impl: -> a { concat(a) }),
   create_op(
@@ -328,13 +328,12 @@ OpsList = [
     poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
   .add_test('\'a`5 -> ["5","a"]')
   .add_test('"a"`(5) -> ["5","a"]')
-  .add_test('"a"%;%;%`(5;) -> [["5"],["a"]]')
+  .add_test('"a".;.;.`(5;) -> [["5"],["a"]]')
   .add_test('5`\'a -> "a5"')
-  .add_test('5;%`"a" -> ["a","5"]')
+  .add_test('5;.`"a" -> ["a","5"]')
   .add_test('\'b`\'a -> "ab"'),
 create_op(
     name: "snoc",
-    desc: "unvectorized",
     sym: ",",
     example: '1,2,3 -> [1,2,3]',
     type: { [[A],A] => [A],
@@ -345,9 +344,9 @@ create_op(
     append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
   ).add_test("2,1 -> [2,1]")
   .add_test('(2,3),1 -> [2,3,1]')
-  .add_test('(2,3),(4,5),1 -> [[2,3],[4,5],[1]]')
-  .add_test('2,(1,0) -> [[2],[1,0]]')
-  .add_test('(2,3),(1,0) -> [[2,3],[1,0]]')
+  .add_test('(2,3).,(4,5).,1 -> [[2,3],[4,5],[1]]')
+  .add_test('2.,(1,0) -> [[2],[1,0]]')
+  .add_test('(2,3).,(1,0) -> [[2,3],[1,0]]')
 #   .add_test('(2,3).,1 -> <[2,1],[3,1]>')
 #   .add_test('(2,3),(4,5).,1 -> <[2,3,1],[4,5,1]>')
 #   .add_test('2,(1,0.) ->  <[2,1],[2,0]>')
@@ -387,7 +386,7 @@ create_op(
     type: { [A] => [Num] },
     no_promote: true,
     impl: -> a { occurence_count(a) }
-  ).add_test('"ab","a","ab" %count -> [0,0,1]'),
+  ).add_test('"ab".,"a".,"ab" .count -> [0,0,1]'),
   create_op(
     name: "filter",
     sym: "~",
@@ -409,7 +408,7 @@ create_op(
     example: '3,1,4 ! "abc" -> "bac"',
     type: { [[A],[B]] => [B] },
     poly_impl: -> at,bt { -> a,b { sortby(b,a,at-1) }})
-  .add_test('"hi","there" ! (1,2,3) -> [1,2]')
+  .add_test('"hi".,"there" ! (1,2,3) -> [1,2]')
   .add_test('"aaaaaa" ! "abcdef" -> "abcdef"'),
   create_op(
     name: "chunk",
@@ -430,10 +429,10 @@ create_op(
   create_op(
     name: "transpose",
     sym: "\\",
-    example: '"abc","1"\\ -> ["a1","b","c"]',
+    example: '"abc".,"1"\\ -> ["a1","b","c"]',
     type: { [[A]] => [[A]] },
     impl: -> a { transpose(a) },
-  ).add_test('"abc","1234"\ -> ["a1","b2","c3","4"]'),
+  ).add_test('"abc".,"1234"\ -> ["a1","b2","c3","4"]'),
   create_op(
     name: "reverse",
     sym: "/",
@@ -457,7 +456,7 @@ create_op(
   "string",
   create_op(
     name: "join",
-    example: '"hi","yo"*" " -> "hi yo"',
+    example: '"hi".,"yo"*" " -> "hi yo"',
     sym: "*",
     type: { [[Str],Str] => Str,
             [[Num],Str] => Str,},
@@ -471,7 +470,7 @@ create_op(
     type: { [Str,Str] => [Str] },
     impl: -> a,b { split(a,b) })
   .add_test('"abcbcde"/"bcd" -> ["abc","e"]')
-  .add_test('"ab"%,*" "/"b "%[2 -> ["a","a"]') # test laziness
+  .add_test('"ab".,*" "/"b ".[2 -> ["a","a"]') # test laziness
   .add_test('",a,,b,"/"," -> ["","a","","b",""]'),
   create_op(
     name: "replicate",
@@ -508,8 +507,8 @@ create_op(
   .add_test("1=1 -> [1]")
   .add_test('\'a=\'a -> "a"')
   .add_test("'d=100 -> AtlasTypeError")
-  .add_test('"abc"%="abc" -> ["abc"]')
-  .add_test('"abc"%="abd" -> []')
+  .add_test('"abc".="abc" -> ["abc"]')
+  .add_test('"abc".="abd" -> []')
   .add_test('"abc"=\'a -> ["a","",""]')
   .add_test('"abc"="a" -> ["a"]')
   .add_test('"abc"="abd" -> ["a","b",""]'),
@@ -649,8 +648,8 @@ create_op(
     impl: -> a,b { append(a,b) },
     coerce: true)
   .add_test("'a 'b -> \"ab\"")
-  .add_test('"ab","cd" "e" -> ["abe","cde"]')
-#   .add_test('("ab"%;) ("e"%;) -> ["ab","e"]'),
+  .add_test('"ab".,"cd" "e" -> ["abe","cde"]')
+#   .add_test('("ab".;) ("e".;) -> ["ab","e"]'),
 ]
 ActualOpsList = OpsList.reject{|o|String===o}
 
