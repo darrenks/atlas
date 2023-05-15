@@ -1,7 +1,7 @@
-{prog}
+[prog]
 a=5
 a=3
 a
 
-{stdout}
+[stdout]
 3

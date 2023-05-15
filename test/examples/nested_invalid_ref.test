@@ -1,6 +1,6 @@
-{prog}
+[prog]
 a=b
 a
-{output}
+[output]
 b
 

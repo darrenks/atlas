@@ -21,6 +21,12 @@ class FnType < Struct.new(:specs,:ret,:orig_key,:orig_val)
   end
 end
 
+class VecOf < Struct.new(:of)
+end
+def v(a)
+  VecOf.new(a)
+end
+
 def create_specs(raw_spec)
   case raw_spec
   when Hash
@@ -37,7 +43,7 @@ def create_specs(raw_spec)
           end).map{|a_raw_arg| parse_raw_arg_spec(a_raw_arg) }
         FnType.new(specs,ret,raw_arg,ret)
       }
-  when Type, Array, Symbol
+  when Type, Array, VecOf, Symbol
     [FnType.new([],raw_spec,[],raw_spec)]
   else
     raise "unknown fn type format"
@@ -51,8 +57,12 @@ def parse_raw_arg_spec(raw,list_nest_depth=0)
   when Array
     raise if raw.size != 1
     parse_raw_arg_spec(raw[0],list_nest_depth+1)
+  when VecOf
+    r=parse_raw_arg_spec(raw.of)
+    r.vec_of=true
+    r
   when Type
-    ExactTypeSpec.new(Type.new(raw.rank+list_nest_depth, raw.base))
+    ExactTypeSpec.new(Type.new(raw.dim+list_nest_depth, raw.base_elem))
   else
     p raw
     error
@@ -61,6 +71,7 @@ end
 
 class ExactTypeSpec
   attr_reader :type
+  attr_accessor :vec_of
   def initialize(rtype)
     @type = rtype
   end
@@ -68,33 +79,29 @@ class ExactTypeSpec
     t.can_base_be(@type)
   end
   def inspect
-    type.inspect
-  end
-  def extra_rank
-    type.rank
+    (vec_of ? "<" : "")+type.inspect+(vec_of ? ">" : "")
   end
 end
 
 class VarTypeSpec
   attr_reader :var_name
   attr_reader :extra_dims
+  attr_accessor :vec_of
   def initialize(var_sym, extra_dims) # e.g. [[a]] is .new(:a, 2)
     @var_name,@var_constraint = name_and_constraint(var_sym)
     @extra_dims = extra_dims
+    @vec_of = false
   end
   def check_base_elem(uses,type)
     if @var_constraint
-      @var_constraint == type.base.to_s
+      @var_constraint == type.base_elem.to_s
     else
-      type.base == Unknown.base || (uses[var_name]||=type.base) == type.base
+      type.base_elem == Unknown.base_elem || (uses[var_name]||=type.base_elem) == type.base_elem
     end
   end
   def inspect
     constraint = @var_constraint ? " (#{@var_constraint})" : ""
-    "["*extra_dims+var_name.to_s+constraint+"]"*extra_dims
-  end
-  def extra_rank
-    extra_dims
+    (vec_of ? "<" : "")+"["*extra_dims+var_name.to_s+constraint+"]"*extra_dims+(vec_of ? ">" : "")
   end
 end
 
@@ -106,15 +113,18 @@ end
 def spec_to_type(spec, vars)
   case spec
   when Type
-    spec
+    TypeWithVecLevel.new(spec,0)
   when Array
     raise "cannot return multiple values for now" if spec.size != 1
-    spec_to_type(spec[0], vars) + 1
+    TypeWithVecLevel.new(spec_to_type(spec[0], vars).type + 1, 0)
   when Symbol
     name,constraint=name_and_constraint(spec)
-    t=vars[name]
-    t.base = constraint.to_sym if constraint
+    t=TypeWithVecLevel.new(vars[name],0)
+    t.type.base_elem = constraint.to_sym if constraint
     t
+  when VecOf
+    t=spec_to_type(spec.of, vars)
+    TypeWithVecLevel.new(t.type, t.vec_level+1)
   else
     unknown
   end

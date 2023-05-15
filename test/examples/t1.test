@@ -1,14 +1,14 @@
-{stdin}
+[input]
 hi
 
-{prog}
+[prog]
 1+$
 "line2"
 1/0
 "line3"
 
-{stdout}
+[stdout]
 ij
 line2
-{stderr}
+[stderr]
 3:2 (/) div 0 (DynamicError)

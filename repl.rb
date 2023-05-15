@@ -1,5 +1,6 @@
 require "readline"
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
+HistFile = Dir.home + "/.atlas_history"
 
 def repl(input=nil)
   context={}
@@ -9,7 +10,7 @@ def repl(input=nil)
   stack=3.downto(0).map{|i|
     AST.new(create_op(
       name: "col#{i}",
-      type: Num+1,
+      type: VecOf.new(Num),
       impl: num_col(i)
     ),[])
   }
@@ -27,14 +28,13 @@ def repl(input=nil)
   elsif !ARGV.empty?
     input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift, :encoding => 'iso-8859-1') }
   else
-    hist_file = Dir.home + "/.atlas_history"
     $repl_mode = true if $repl_mode.nil?
-    if File.exist? hist_file
-      Readline::HISTORY.push *File.read(hist_file).split("\n")
+    if File.exist? HistFile
+      Readline::HISTORY.push *File.read(HistFile).split("\n")
     end
     input_fn = lambda {
       line = Readline.readline("\e[33m ᐳ \e[0m", true)
-      File.open(hist_file,'a'){|f|f.puts line} unless !line || line.empty?
+      File.open(HistFile,'a'){|f|f.puts line} unless !line || line.empty?
       line
     }
     Readline.completion_append_character = " "
@@ -114,5 +114,5 @@ def printit(ir,context)
   s=context['S'].get_str_value || [32.const,Null]
 
   infer(ir)
-  run(ir,n,s) {|v,n,s| to_string(ir.type,v,$repl_mode,n,s) }
+  run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode,n,s) }
 end

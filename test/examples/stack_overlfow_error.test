@@ -1,4 +1,4 @@
-{prog}
+[prog]
 `1)!]
-{stderr}
+[stderr]
 stack overflow
