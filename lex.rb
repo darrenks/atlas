@@ -9,7 +9,6 @@ end
 
 AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.to_a
 UnmodableSymbols='()\'"{}$'.chars.to_a # these cannot have op modifiers
-UnmodableSymbolsRx=/#{}/
 FlipModifier="\\"
 FlipRx=Regexp.escape FlipModifier
 ApplyModifier="@"
@@ -27,7 +26,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-zA-Z][a-zA-Z0-9]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
-OpRx = /@\{|#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
+OpRx = /#{ApplyRx}\{|#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/

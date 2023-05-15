@@ -255,7 +255,7 @@ end
 
 def repeat(a)
   ret = [a]
-  ret << Promise.new{ret}
+  ret << ret.const
   ret
 end
 
