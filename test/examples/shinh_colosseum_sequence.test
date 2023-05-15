@@ -3,8 +3,7 @@
 -- abcdcbcdec-a{@x,+}]\x[]\x[_>
 -- 1
 -- tails:
-abcdcbcdac-a{,+}%4|2_>,1
-
+abcdcbcdac-a{.,+}%4|2_>,1
 {stdout}
 1
 2

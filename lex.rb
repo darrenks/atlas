@@ -1,6 +1,7 @@
 class Token<Struct.new(:str,:char_no,:line_no)
   def name
     return "%" if str == "%" # todo what about @%, etc
+    return "\\" if str =~ /\.+\\/
     str[/^#{ApplyRx}?\.*(.*?)#{FlipRx}?$/m,1]
   end
   def is_name
@@ -23,7 +24,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-zA-Z][a-zA-Z0-9]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
-OpRx = /@\{|\.*#{IdRx}|#{ApplyRx}?\.*#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
+OpRx = /@\{|\.*\\|\.*#{IdRx}|#{ApplyRx}?\.*#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/
@@ -50,6 +51,7 @@ def lex(code,line_no=1) # returns a list of lines which are a list of tokens
   	end
   }
   tokens[-1]<<Token.new(:EOL,char_no,line_no)
+  tokens.map{|line|p line.map(&:str)}
   [tokens,line_no+1]
 end
 

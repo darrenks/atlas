@@ -7,13 +7,16 @@ def make_promises(node)
   return node.promise if node.promise
   arg_types = node.args.zip(0..).map{|a,i|a.type - node.zip_level + node.deficits[i]}
   args = nil
+  z = node.zip_level
   node.promise = Promise.new {
-    zipn(node.zip_level, args, node.op.impl[arg_types, node])
+    zipn(z, args, node.op.impl[arg_types, node])
   }
-  args = node.args.zip(0..).map{|arg,i|
-    promoted = promoten(node.deficits[i]-node.zip_level, make_promises(arg))
-    repn([node.zip_level,node.deficits[i]].min,promoted)
+
+  args = node.args.zip(node.deficits).map{|arg,d|
+    promoted = promoten(0, d-z, make_promises(arg))
+    repn(z-[z,d].min, [z,d].min, promoted)
   }
+
   node.promise
 end
 
@@ -258,20 +261,22 @@ def repeat(a)
   ret << ret.const
   ret
 end
-
-def repn(n,a)
+def repn(vec_level,n,a)
   if n<=0
     a
   else
-    repeat(repn(n-1,a)).const
+    Promise.new{zipn(vec_level,[a],-> av {
+      repeat(repn(0,n-1,av))
+    })}
   end
 end
-
-def promoten(n,a)
+def promoten(vec_level,n,a)
   if n<=0
     a
   else
-    [promoten(n-1,a),Null].const
+    Promise.new{zipn(vec_level,[a],-> av {
+      [promoten(0,n-1,av),Null]
+    })}
   end
 end
 
