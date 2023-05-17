@@ -95,7 +95,7 @@ v1`'-@v1 -> "-------------...
 'c tail -> AtlasTypeError
 
 "def";,"xzy".`"abc" -> <"adef","bxzy">
-"def","xzy"..;`"abc" -> <<"ad","be","cf">,<"ax","bz","cy">>
+"def","xzy"..;`"abc"@, -> <<"ad","be","cf">,<"ax","bz","cy">>
 
 -- coercion tests
 'a | "asdf" -> <'a,'a,'a,'a>

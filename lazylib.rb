@@ -12,7 +12,7 @@ def make_promises(node)
   }
   args = node.args.zip(0..).map{|arg,i|
     promoted = promoten(arg.vec_level, node.promote_levels[i], make_promises(arg))
-    repn(arg.vec_level, node.rep_levels[i], promoted)
+    repn([node.zip_level-node.rep_levels[i],arg.vec_level].min, node.rep_levels[i], promoted)
   }
   node.promise
 end
