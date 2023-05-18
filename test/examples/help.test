@@ -1,7 +1,7 @@
-[prog]
+{prog}
 help mod
 help -
-[stdout]
+{stdout}
 mod %
 anything mod 0 is 0
 Num Num → Num

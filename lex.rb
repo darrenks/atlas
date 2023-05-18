@@ -1,6 +1,8 @@
 class Token<Struct.new(:str,:char_no,:line_no)
   def name
-    str[/^#{ApplyRx}?(.*?)#{FlipRx}?$/m,1]
+    return "%" if str == "%" # todo what about @%, etc
+    return "\\" if str =~ /\.+\\/
+    str[/^#{ApplyRx}?\.*(.*?)#{FlipRx}?$/m,1]
   end
   def is_name
     !(OtherRx=~str) && !AllOps[str]
@@ -8,16 +10,12 @@ class Token<Struct.new(:str,:char_no,:line_no)
 end
 
 AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.to_a
-UnmodableSymbols='()\'"{}$'.chars.to_a # these cannot have op modifiers
+UnmodableSymbols='()\'"{}$.'.chars.to_a # these cannot have op modifiers
 FlipModifier="\\"
 FlipRx=Regexp.escape FlipModifier
 ApplyModifier="@"
 ApplyRx=Regexp.escape ApplyModifier
 ModableSymbols=AllSymbols-UnmodableSymbols-[FlipModifier,ApplyModifier]
-
-
-
-# todo gsub \r\n -> \n and \t -> 8x" " and \r -> \n
 
 NumRx = /([0-9]+([.][0-9]+)?(e-?[0-9]+)?)|([.][0-9]+(e-?[0-9]+)?)/
 CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
@@ -26,7 +24,7 @@ AtomRx = /#{CharRx}|#{NumRx}|#{StrRx}/
 # if change, then change auto complete chars
 IdRx = /[a-zA-Z][a-zA-Z0-9]*/
 SymRx = /#{ModableSymbols.map{|c|Regexp.escape c}*'|'}/
-OpRx = /#{ApplyRx}\{|#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
+OpRx = /@\{|\.*\\|\.*#{IdRx}|#{ApplyRx}?\.*#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{1,2}/
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/
@@ -53,6 +51,7 @@ def lex(code,line_no=1) # returns a list of lines which are a list of tokens
   	end
   }
   tokens[-1]<<Token.new(:EOL,char_no,line_no)
+#   tokens.map{|line|p line.map(&:str)}
   [tokens,line_no+1]
 end
 

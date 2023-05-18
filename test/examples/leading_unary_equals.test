@@ -1,7 +1,7 @@
-[prog]
+{prog}
 a=1,2,3,3
 a=+1
-[stdout]
+{stdout}
 1
 1
 1

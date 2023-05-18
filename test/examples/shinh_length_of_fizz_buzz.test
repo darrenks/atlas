@@ -1,7 +1,7 @@
-[prog]
+{prog}
 -- http://golf.shinh.org/p.rb?Length+of+FizzBuzz
 1:101@i%3~+(i%5~)*4|i`@#
-[stdout]
+{stdout}
 1
 1
 4

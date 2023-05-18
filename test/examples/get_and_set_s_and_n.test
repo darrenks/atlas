@@ -1,7 +1,7 @@
-[prog]
+{prog}
 N p
 S=", "
-1,2,3;
-[output]
+1,2,3.;
+{output}
 '\n
 1, 2, 3

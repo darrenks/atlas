@@ -9,16 +9,19 @@ def failit(filename,test, reason)
 end
 
 tests = Dir["test/examples/*.test"]
-section_regex = /^\[.*?\]\n/i
+section_regex = /^\{.*?\}\n/i
 tests.each{|test_filename|
   test = File.read(test_filename)
   sections = test.scan(section_regex)
   datum = test.split(section_regex)[1..-1]
   prog = nil
   args = ""
+  defer = false
   expected_stderr = input = expected_stdout = ""
   sections.zip(datum){|section,data|
     case section.chomp[1...-1].downcase
+    when "defer"
+      defer=true
     when "input","stdin"
       input = data.strip
     when "stdout","output"
@@ -33,6 +36,7 @@ tests.each{|test_filename|
       raise "unknown section %p" % section
     end
   }
+  next if defer
   raise "invalid test #{test_filename}" if expected_stdout=="" && expected_stderr==""
 
   File.write("test/input", input)

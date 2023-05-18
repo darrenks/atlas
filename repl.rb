@@ -9,7 +9,7 @@ def repl(input=nil)
   stack=3.downto(0).map{|i|
     AST.new(create_op(
       name: "col#{i}",
-      type: VecOf.new(Num),
+      type: Num+1,
       impl: num_col(i)
     ),[])
   }
@@ -114,5 +114,5 @@ def printit(ir,context)
   s=context['S'].get_str_value || [32.const,Null]
 
   infer(ir)
-  run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode,n,s) }
+  run(ir,n,s) {|v,n,s| to_string(ir.type,v,$repl_mode,n,s) }
 end

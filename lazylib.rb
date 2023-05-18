@@ -5,15 +5,18 @@ end
 
 def make_promises(node)
   return node.promise if node.promise
-  arg_types = node.args.zip(0..).map{|a,i|a.type + a.vec_level - node.zip_level + node.rep_levels[i] + node.promote_levels[i]}
+  arg_types = node.args.zip(0..).map{|a,i|a.type - node.zip_level + node.deficits[i]}
   args = nil
+  z = node.zip_level
   node.promise = Promise.new {
-    zipn(node.zip_level, args, node.op.impl[arg_types, node])
+    zipn(z, args, node.op.impl[arg_types, node])
   }
-  args = node.args.zip(0..).map{|arg,i|
-    promoted = promoten(arg.vec_level, node.promote_levels[i], make_promises(arg))
-    repn([node.zip_level-node.rep_levels[i],arg.vec_level].min, node.rep_levels[i], promoted)
+
+  args = node.args.zip(node.deficits).map{|arg,d|
+    promoted = promoten(0, d-z, make_promises(arg))
+    repn(0, [z,d].min, promoted)
   }
+
   node.promise
 end
 
@@ -258,7 +261,6 @@ def repeat(a)
   ret << ret.const
   ret
 end
-
 def repn(vec_level,n,a)
   if n<=0
     a
@@ -268,7 +270,6 @@ def repn(vec_level,n,a)
     })}
   end
 end
-
 def promoten(vec_level,n,a)
   if n<=0
     a
@@ -291,7 +292,7 @@ end
 
 # value -> value -> value
 def spaceship(a,b,t)
-  if t.dim>0
+  if t.rank > 0
     return 0 if a.empty && b.empty
     return -1 if a.empty
     return 1 if b.empty
@@ -344,12 +345,12 @@ def concat(a)
   concat_map(a,Null){|i,r,first|append(i,r)}
 end
 
-def inspect_value(t,value,zip_level)
-  inspect_value_h(t,value,Null,zip_level)
+def inspect_value(t,value)
+  inspect_value_h(t,value,Null)
 end
 
-def inspect_value_h(t,value,rhs,zip_level)
-  if t==Str && zip_level <= 0
+def inspect_value_h(t,value,rhs)
+  if t==Str
     ['"'.ord.const, Promise.new{
       concat_map(value,Promise.new{str_to_lazy_list('"',rhs)}){|v,r,first|
        str_to_lazy_list(escape_str_char(v.value),r)
@@ -360,11 +361,11 @@ def inspect_value_h(t,value,rhs,zip_level)
   elsif t==Char
     str_to_lazy_list(inspect_char(value.value),rhs)
   else #List
-    [(zip_level>0?"<":"[").ord.const, Promise.new{
-      concat_map(value,Promise.new{str_to_lazy_list((zip_level>0?">":"]"),rhs)}){|v,r,first|
+    ["[".ord.const, Promise.new{
+      concat_map(value,Promise.new{str_to_lazy_list("]",rhs)}){|v,r,first|
         first ?
-          inspect_value_h(t-1,v,r,zip_level-1) :
-          [','.ord.const,Promise.new{inspect_value_h(t-1,v,r,zip_level-1)}]
+          inspect_value_h(t-1,v,r) :
+          [','.ord.const,Promise.new{inspect_value_h(t-1,v,r)}]
       }
     }]
   end
@@ -373,12 +374,12 @@ end
 # convert a from int to str if tb == str and ta == int, but possibly vectorized
 def coerce2s(ta, a, tb)
   return a if ta==tb || tb.is_unknown || ta.is_unknown #??
-  case [ta.base_elem,tb.base_elem]
+  case [ta.base,tb.base]
   when [:num,:char]
-    raise if ta.dim+1 != tb.dim
-    return Promise.new{zipn(ta.dim,[a],->av{str_to_lazy_list(av.value.to_s)})}
+    raise if ta.rank+1 != tb.rank
+    return Promise.new{zipn(ta.rank,[a],->av{str_to_lazy_list(av.value.to_s)})}
   when [:char,:num]
-    raise if ta.dim != tb.dim+1
+    raise if ta.rank != tb.rank+1
     return a
   else
     raise "coerce of %p %p not supported"%[ta,tb]
@@ -392,7 +393,7 @@ end
 
 def to_string_h(t, value, orig_dim, rhs, repl_mode, n, s)
   if t == Num
-    inspect_value_h(t, value, rhs, 0)
+    inspect_value_h(t, value, rhs)
   elsif t == Char
     [value, rhs]
   else # List

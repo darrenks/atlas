@@ -3,14 +3,13 @@ class IR < Struct.new(
     :op,                  # these set during construction
     :args,
     :from,
-    :type_with_vec_level, # this and rest calculted in infer
+    :type, # this and rest calculted in infer
     :zip_level,
     :promise,
     :id,
     :in_q,
     :used_by,
-    :rep_levels,
-    :promote_levels,
+    :deficits,
     :last_error,
     :type_updates, # for detecting inf type
     )
@@ -18,15 +17,16 @@ class IR < Struct.new(
     super(*args)
     self.id = $ir_node_count += 1
   end
-  def type
-    type_with_vec_level.type
+  def vec_mod
+    return 0 if !from.token
+    str = from.token.str
+    return 0 if str[NumRx]
+    str[/^#{ApplyRx}?(\.*)(.*?)#{FlipRx}?$/m,1].size
   end
-  def vec_level
-    type_with_vec_level.vec_level
-  end
+
   def type_error(msg)
     self.last_error ||= AtlasTypeError.new msg,self
-    UnknownV0
+    Unknown
   end
   def get_str_value # for getting vars value
     begin
@@ -35,20 +35,20 @@ class IR < Struct.new(
     rescue # failsafe, we still want atlas to work if it gets set to something invalid
       return nil
     end
-    case self.type
-    when Num
-      return nil if self.vec_level != 0
+    case self.type.base
+    when Num.base
+      return nil if self.type.rank != 0
       str_to_lazy_list(val.to_s)
-    when Char
-      if self.vec_level == 0
+    when Char.base
+      if self.type.rank == 0
         [val.const, Null]
-      elsif self.vec_level == 1
+      elsif self.type.rank == 1
         val
       else
         return nil
       end
     when Str
-      return nil if self.vec_level != 0
+      return nil if self.type.rank != 0
       val
     else
       nil

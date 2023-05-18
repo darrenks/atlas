@@ -1,5 +1,5 @@
-[prog]
+{prog}
 'a + 'b
 
-[stderr]
+{stderr}
 1:4 (+) op is not definied for arg types: Char,Char (TypeError)
