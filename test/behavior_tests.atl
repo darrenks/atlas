@@ -27,11 +27,11 @@
 '--2 -> '+
 
 -- Test implicit op
-1+1 3 -> 6
-(1+1)3 -> 6
-1,2"b" -> <"1b","2b">
-"abc"+0"123" -> "abc123"
-("a","c")"d" -> <"ad","cd">
+1+1 3 -> [2,3]
+(1+1)3 -> [2,3]
+1,2"b" -> ["1","2","b"]
+"abc"+0"123" -> ["a","b","c","123"]
+("a","c")"d" -> ["a","c","d"]
 
 -- Test replication in auto vectorization
 "abc","def","xyz"[(1,2,3) -> <["abc"],["abc","def"],["abc","def","xyz"]>
@@ -49,8 +49,8 @@
 "123".` -> <[1],[2],[3]>
 
 -- not escaped since not needed
-'\" --" -> "\\ --"
-'\'f -> "\\f"
+'\_" --" -> "\\ --"
+'\_'f -> "\\f"
 
 1+() -> AtlasTypeError
 ()%2 -> AtlasTypeError
@@ -154,7 +154,7 @@ v1`0+(1+v2%`1@v2)%@v1 -> [1,3,6,10,15...
 "abc",__"123" -> "abcabcabc...
 "123".;`"abc" -> <"a1","b2","c3">
 "a","b"._("1","2") -> <"a1","b2">
-'a "b" -> "ab"
+'a "b" -> ["a","b"]
 
 "asdf"< -> "asd"
 "abc","123".< -> <"ab","12">
@@ -213,10 +213,10 @@ a`0+1@a=10#&a|(b%>+1)@b[ -> 19
 5% -> AtlasTypeError
 
 -- Test parse uses previous token correct
-1 (2-) -> -2
+1 (2-) -> [1,-2]
 
 -- Test unary op not used as binary op
-2 . 4 -> <8>
+2 . 4 -> <[2,4]>
 'a{\'b -> "ba"
 
 -- Test @ can be applied to { (it is unmodifiable for flip)
@@ -250,15 +250,15 @@ a;@a -> AtlasTypeError
 2*3@+4 -> 14
 2*3-@+4 -> 2
 
-1+2@3 -> 7
+1+2@3 -> <3,4>
 1+5@@a+a -> 11
 
 -- test apply with implicit circular
 `1@-)[3 -> [-1,-1,-1]
 
 -- test flip
-1\2 -> 2
-"a"\"b" -> "ba"
+1\2 -> [2,1]
+"a"\"b" -> ["b","a"]
 1`\(2,3) -> [1,2,3]
 1-\-2 -> <<-3>>
 1,2\\ -> [[1,2]]
@@ -269,7 +269,7 @@ a;@a -> AtlasTypeError
 -- this would be type A which should not be possible to construct
 ""&a@a -> DynamicError
 
-(1@"") -> "1"
+(1@"") -> ["1",""]
 
 -- test laziness of chunk while using collatz conjecture problem
 a%2&(3*a+1)|(a/2)`8@a=.~%?a[ -> [8,4,2,1]

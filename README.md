@@ -2,7 +2,7 @@ This information is also available at [golfscript.com/atlas](http://www.golfscri
 
 ------
 
-Atlas is an esoteric programming language designed to show off the synergy between laziness and vectorization which give a concise way to do _circular programming_ - a powerful but largely unsung technique, likely because there is no parallel in imperative languages. Atlas attempts to teach these techniques by being simple and fun to use for code golf.
+Atlas is an esoteric programming language designed to show off the synergy between laziness and vectorization which allow for concise _circular programming_ - an unsung but powerful technique - nothing else is even needed!
 
 ## Latest news:
 None [(see all)](docs/happenings.md)
@@ -10,14 +10,14 @@ None [(see all)](docs/happenings.md)
 ## Features
 
 -   Purely functional
--   Lazy list is the only data structure
--   Each op can be represented by one of the 32 ASCII symbols (e.g. `#` `$`, etc.) and also by name.
--   No control structures or way to create functions.
--   Statically typed - but no need or way to specify type.
--   Minimal basis rivaling the SK calculus possible.
--   Simple parse and execution strategy
--   Concise despite the simplicity
--   Relaxations of standard rules, like parens needing to be matched
+-   Lazy lists are the only data structure
+-   Each op can be represented by one of the 32 ASCII symbols (e.g. `#` `$`, etc.) and also by name
+-   No control structures or way to create functions
+-   Statically typed - but no need or way to specify type
+-   Minimal basis rivaling the SK calculus possible
+-   Left to right infix notation
+-   Concise despite simplicity
+-   Not practical
 
 ## Example
 
@@ -26,6 +26,8 @@ This page is intended to give you an overview of the main ideas while being easy
     1:101{,%3@,5~^Fizz@,Buzz_|}
     ──────────────────────────────────
     1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
+
+And no, those brackets are not a block but their own instructions (push, pop).
 
 ## Intro
 

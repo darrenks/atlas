@@ -616,7 +616,7 @@ create_op(
     sym: "{",
     type: { A => A },
     impl: MacroImpl)
-  .add_test('2{3+} -> 8'),
+  .add_test('2{3+} -> <4,5>'),
   create_op(
     name: "pop",
     desc: "pop last push arg from a lexical stack",
@@ -645,25 +645,6 @@ create_op(
     type_summary: "op (after)",
     impl_with_loc: ->from{raise ParseError.new("apply needs a right hand side if used on a binary op",from)}, # this can occur from something like 13@@
   ),
-  create_op(
-    name: "implicit mult",
-    sym: " ",
-    example: '2 3 -> 6',
-    type: { [Num,Num] => Num },
-    impl: -> a,b { a.value*b.value }
-  ), create_op(
-    name: "implicit append",
-    sym: " ",
-    example: '1"a" -> "1a"',
-    type: { [[Achar],[Achar]] => [Achar],
-            [Anum,[Achar]] => [Achar],
-            [[Achar],Anum] => [Achar] },
-    type_summary: "[*a] [*a] -> [a] (one must be non int)",
-    impl: -> a,b { append(a,b) },
-    coerce: true)
-  .add_test("'a 'b -> \"ab\"")
-  .add_test('"ab","cd" "e" -> <"abe","cde">')
-  .add_test('("ab";) ("e";) -> ["ab","e"]'),
 ]
 ActualOpsList = OpsList.reject{|o|String===o}
 
@@ -719,7 +700,8 @@ ActualOpsList.each{|op|
   raise "name conflict #{op.name}" if AllOps.include? op.name
   AllOps[op.name] = AllOps[op.sym] = op
 }
-AllOps[""]=Ops2[""]=Ops2[" "] # allow @ to flip the implicit op (todo pointless for multiplication)
+ImplicitOp = Ops2["snoc"]
+AllOps[""]=Ops2[""]=ImplicitOp # allow @ to flip the implicit op (todo pointless for multiplication)
 EmptyOp = create_op(
   name: "empty",
   type: Empty,

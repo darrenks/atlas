@@ -101,7 +101,7 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
     c2
     "memory"
     ml2/_m2_mr2[40*" "
-    ml2#^"  ""^"
+    ml2#^"  "_"^"
     "b"
     b2 p
     ──────────────────────────────────

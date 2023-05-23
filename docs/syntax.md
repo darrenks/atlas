@@ -27,24 +27,24 @@ Since all ops are overloaded as both unary and binary operators if there are mul
 
 The `+` was a binary op, and the `-` and `|` are unary.
 
-Two expressions in a row without an explicit operation do an implicit op. For numbers this multiplies, and for strings it appends. You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
+Two expressions in a row without an explicit operation do an implicit op. This uses the `snoc` operator.  You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
 
-    1+2 3*4
+    1+1 3*4
     -- Is parsed as:
-    ((1+2) 3)*4
-    -- And does an implict multiplication
+    ((1+1) 3)*4
+    -- And does a snoc
     ──────────────────────────────────
-    36
-    36
+    8 12
+    8 12
 
-If you want to use the implicit op following a unary op, it would look like you were trying to just do a binary op instead. To overcome this just be explicit and use `*` or `_`.
+If you want to use the implicit op following a unary op, it would look like you were trying to just do a binary op instead. To overcome this just be explicit and use `,`.
 
-    2-*3
+    2-,3
     -- or you could use parenthesis
     (2-)3
     ──────────────────────────────────
-    -6
-    -6
+    -2 3
+    -2 3
 
 In addition to assignment, `=` is also used to test equality, it is only used as assignment if first on a line and the left hand side is an identifier.
 
@@ -101,8 +101,8 @@ Both of these modifiers can be used on the implicit op.
     "hi"\"there"
     2+3@5
     ──────────────────────────────────
-    therehi
-    17
+    there hi
+    5 7
 
 `{` and `}` may seem special syntactically, but they are not. `{` is a unary op that "pushes" on to a stack (that only exists at parse time) so that the next `}` (which is just an atom) can access the same value. It is equivalent to using assignment or `@`, but shorter when a value is reused only once. It has a nice appearance in that visually matching brackets will tell you which one corresponds to which.
 

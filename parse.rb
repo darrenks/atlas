@@ -21,14 +21,14 @@ def get_expr(tokens,delimiter,implicit_value=nil)
           # would register as a modifier to implicit op, override this
           nodes << AST.new(Ops2[ApplyModifier], [], lastop) << atom
         elsif !Ops2[lastop.name]&&Ops1[lastop.name] # the symbol can only be used as unary, do that plus implicit
-          nodes << make_op1(lastop) << AST.new(Ops2[" "],[],t) << atom
+          nodes << make_op1(lastop) << AST.new(ImplicitOp,[],t) << atom
         else
           nodes << make_op2(lastop) << atom
         end
       elsif nodes.empty? #first atom
         nodes << atom
       else # implict op
-        nodes << AST.new(Ops2[" "],[],t) << atom
+        nodes << AST.new(ImplicitOp,[],t) << atom
       end
       lastop = nil
     else # not an atom
