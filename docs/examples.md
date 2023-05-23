@@ -50,10 +50,11 @@ Now to golf it.
 -   `101` can be replaced by `CI` the roman numeral
 -   The `r` is only used twice, so we can push a copy with `{` and get it with `}`
 -   The quotes around `"Fizz"` and `"Buzz"` can be removed since unset identifiers default to their string value.
+-   The `,` can be removed in `3@,5` since it is implicit. It can't between Fizz and Buzz because it would think we want to assign to the identifier Buzz.
 
 And we get:
 
-    1:CI{,%3@,5~^Fizz@,Buzz_|}
+    1:CI{,%3@5~^Fizz@,Buzz_|}
     ──────────────────────────────────
     1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
 

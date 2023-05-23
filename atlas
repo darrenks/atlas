@@ -3,6 +3,10 @@
 require_relative "repl.rb"
 
 # only intended for docs test to print things like it was in repl
+if ARGV.delete("-doc_mode")
+  $doc_mode = true
+end
+
 if ARGV.delete("-repl_mode")
   $repl_mode = true
 elsif ARGV.delete("-no_repl_mode")

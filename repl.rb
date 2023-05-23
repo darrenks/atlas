@@ -114,5 +114,6 @@ def printit(ir,context)
   s=context['S'].get_str_value || [32.const,Null]
 
   infer(ir)
-  run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode,n,s) }
+  p ir.type if $repl_mode
+  run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode,n,s) }
 end
