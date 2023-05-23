@@ -46,14 +46,27 @@ def infer(root)
   root
 end
 
+# finds best matching type for a spec (multiple would be possible if overloading by rank)
+def match_type(types, arg_types)
+  fn_types = types.select{|fn_type|
+    check_base_elem_constraints(fn_type.specs, arg_types)
+  }
+  return nil if fn_types.empty?
+  if fn_types.size > 1
+    fn_types.sort_by!{|fn_type|
+      fn_type.specs.zip(arg_types).map{|spec,type|
+        (spec.type.dim-type.dim).abs # only handles specs of exact type, but that is all there should be if overloading this way.
+      }
+    }
+  end
+  return fn_types[0]
+end
+
 def calc_type(node)
   node.last_error = nil
-  fn_types = node.op.type.select{|fn_type|
-    check_base_elem_constraints(fn_type.specs, node.args.map(&:type))
-  }
-  return node.type_error "op is #{fn_types.size==0?'not definied':'ambiguous'} for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',' if fn_types.size != 1
-
-  node.type_with_vec_level = possible_types(node,fn_types[0])
+  fn_type = match_type(node.op.type, node.args.map(&:type))
+  return node.type_error "op is not definied for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',' if !fn_type
+  node.type_with_vec_level = possible_types(node,fn_type)
 end
 
 def possible_types(node, fn_type)
