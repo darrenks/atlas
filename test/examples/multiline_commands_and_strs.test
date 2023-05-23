@@ -1,8 +1,4 @@
 [prog]
-1+
---asdf
-
-   2
 "ab
 cd"p
 1/0
@@ -10,7 +6,6 @@ cd"p
 
 5
 [stdout]
-3
 "ab\ncd"
 [stderr]
-7:2 (/) div 0 (DynamicError)
+3:2 (/) div 0 (DynamicError)

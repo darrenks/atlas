@@ -12,13 +12,6 @@ You can think of it like an OO languages `a.add(5)` if that helps.
 
 Atlas is actually a just a REPL calculator and so if you have multiple lines it is just treated as multiple expressions that are all printed.
 
-You can still have multiline expressions so long as you indent the extra lines.
-
-    1*2
-      +4
-    ──────────────────────────────────
-    6
-
 Single line comments are done with `--`. I recommend setting your syntax highlighting to be Haskell for `.atl` files for an easy keyboard shortcut. If you wanted to negate then subtract, just add then negate instead.
 
     1+1--this is ignored

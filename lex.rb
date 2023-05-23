@@ -30,7 +30,7 @@ OpRx = /#{ApplyRx}\{|#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 EmptyLineRx = /\n[ \t]*#{CommentRx}?/
-IgnoreRx = /#{CommentRx}|#{EmptyLineRx}*\n[ \t]+| /
+IgnoreRx = /#{CommentRx}|[ \t]+/
 
 def lex(code,line_no=1) # returns a list of lines which are a list of tokens
 	tokens = [[]]
