@@ -161,11 +161,11 @@ def balance_parens(tokens)
   tokens
 end
 
-# this handles roman numerals in standard form as well as things like IM = 999
+# this handles roman numerals in standard form
 # a gimmick to provide a nice way of reprsenting some common numbers in few characters
 RN = {"I"=>1,"V"=>5,"X"=>10,"L"=>50,"C"=>100,"D"=>500,"M"=>1000}
 def to_roman_numeral(s)
-  return nil if s.chars.any?{|c|!RN[c]}
+  return nil if s.chars.any?{|c|!RN[c]} || !(s =~ /^M{0,3}(CM|CD|D?C?{3})(XC|XL|L?X?{3})(IX|IV|V?I?{3})$/)
   sum=0
   s.length.times{|i|
     v=RN[s[i]]
