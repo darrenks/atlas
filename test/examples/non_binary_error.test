@@ -1,4 +1,4 @@
-{prog}
+[prog]
 1 add
-{stderr}
+[stderr]
 1:3 (add) op not defined for unary operations (ParseError)

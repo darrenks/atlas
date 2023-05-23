@@ -1,5 +1,5 @@
-{prog}
+[prog]
 '
 p
-{stdout}
+[stdout]
 '\n

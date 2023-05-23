@@ -35,7 +35,7 @@ def doit(source,limit)
   ir = to_ir(root,{})
   infer(ir)
   v=make_promises(ir)
-  v=inspect_value(ir.type,v)
+  v=inspect_value(ir.type+ir.vec_level,v,ir.vec_level)
   v=take(limit,v.const)
 
   [to_eager_str(v.const),ir.type.inspect]

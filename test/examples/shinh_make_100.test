@@ -1,9 +1,9 @@
-{prog}
+[prog]
 -- http://golf.shinh.org/p.rb?make+100+ver2
-`@a+,-a-100|~a
-{stdin}
+`@a+-a-100|~a
+[input]
 12 32 97 13 43
 27 10 12 5 73
-{output}
+[output]
 12 32 13 43
 10 12 5 73
