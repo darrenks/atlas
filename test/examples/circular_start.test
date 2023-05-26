@@ -1,6 +1,6 @@
 [prog]
 -- this test that the unbalanced ) causes a circular program rather than the leading , affecting last result
-,0>+"1,2,3,4"@`)
+%,0>+"1,2,3,4"@`)
 [stdout]
 10
 9

@@ -90,43 +90,61 @@ def possible_types(node, fn_type)
   nargs = arg_types.size
   vars = solve_type_vars(arg_types, fn_type.specs)
   deficits = rank_deficits(arg_types, fn_type.specs, vars)
-  t = spec_to_type(fn_type.ret, vars)
   rep_levels = [0]*nargs
   promote_levels = [0]*nargs
 
-  if node.op.name == "snoc" && deficits[1]<0 #&& arg_types[0] == arg_types[1]
-    deficits[1] += 1
-    promote_levels[0] += 1
-    t = TypeWithVecLevel.new(t.type+1,t.vec_level)
+  # auto promote both if equal
+  if node.op.name == "build" && deficits[1]==0 && deficits[0]==0
+      # if any are unknown, only promote smaller or rank 1s
+      all_known = !arg_types.any?(&:is_unknown)
+      if all_known || arg_types[0].dim <= arg_types[1].dim
+        promote_levels[0] += 1
+      end
+      if all_known || arg_types[1].dim <= arg_types[0].dim
+        promote_levels[1] += 1
+      end
   end
 
+  # auto unvectorize
   nargs.times{|i|
-    if deficits[i]>0
-      if deficits[i] > vec_levels[i] || node.args[i].op.name == "vectorize"
-        if node.op.no_promote
-          return node.type_error "rank too low for arg #{i+1}"
-        elsif node.args[i].op.name == "vectorize"
-          promote_levels[i] += deficits[i]
-          deficits[i] = 0
-        else
-          promote_levels[i] += deficits[i] - vec_levels[i]
-          deficits[i] = vec_levels[i]
-        end
-      end
-    elsif deficits[i] < 0
-      rep_levels[i] -= deficits[i]
+    unvec = node.args[i].op.name == "vectorize" ? 0 : [[vec_levels[i], deficits[i]].min, 0].max
+    unvec -= 1 if node.op.name == "build" && unvec > 0
+    vec_levels[i] -= unvec
+    deficits[i] -= unvec
+  }
+
+  # auto promote
+  nargs.times{|i|
+    promote = [0, deficits[i]].max
+    if node.op.name == "build" && promote == 0 && deficits[1-i]<0
+      promote_levels[i] += 1
+      deficits[1-i] += 1
+    elsif promote > 0 && node.op.no_promote
+      return node.type_error "rank too low for arg #{i+1}"
+    else
+      promote_levels[i] += promote
+      deficits[i] -= promote
     end
+  }
+
+  # auto vectorize
+  nargs.times{|i|
     vec_levels[i] -= deficits[i]
   }
+
   zip_level = vec_levels.max || 0
   nargs.times{|i|
-    rep_levels[i] += zip_level - vec_levels[i] - rep_levels[i]
+    rep_levels[i] = zip_level - vec_levels[i]
     return node.type_error "rank too high for arg #{i+1}" if rep_levels[i] > zip_level
+    arg_types[i] += promote_levels[i]
   }
+
   node.zip_level = zip_level
   node.rep_levels = rep_levels
   node.promote_levels = promote_levels
 
+  vars = solve_type_vars(arg_types, fn_type.specs)
+  t = spec_to_type(fn_type.ret, vars)
   t.vec_level += zip_level
   t
 end

@@ -13,7 +13,7 @@ Strings are just lists of characters.
     12.3 -- This is a float
     'x -- This is a char
     "abc" -- This is a string, aka list of chars
-    1,2,3 -- This is a list of integers constructed via the snoc (cons on end) operator.
+    1,2,3 -- This is a list of integers constructed via the build operator twice.
     () p -- This is an empty list pretty printed
     ──────────────────────────────────
     123

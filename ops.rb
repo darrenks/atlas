@@ -390,26 +390,26 @@ OpsList = [
   .add_test('5;`"a" -> ["a","5"]')
   .add_test('\'b`\'a -> "ab"'),
 create_op(
-    name: "snoc",
-    desc: "rear cons, promote of first arg will happen if equal rank (for easy list construction)",
+    name: "build",
     sym: ",",
     example: '1,2,3 -> [1,2,3]',
-    type: { [[A],A] => [A],
-            [Anum,Achar] => [Achar],
-            [[[Achar]],Anum] => [[Achar]] },
-    type_summary: "[*a] *a -> a",
+    type: { [[A],[A]] => [A],
+            [Anum,[Achar]] => [Achar],
+            [[Achar],Anum] => [Achar] },
+    type_summary: "*a *a -> [a]\n[*a] *a -> [a]\n*a [*a] -> [a]",
     poly_impl: -> ta,tb {-> a,b {
-    append(coerce2s(ta,a,tb+1),[coerce2s(tb,b,ta-1),Null].const) }}
+    append(coerce2s(ta,a,tb),coerce2s(tb,b,ta))
+    }}
   ).add_test("2,1 -> [2,1]")
   .add_test('(2,3),1 -> [2,3,1]')
   .add_test('(2,3),(4,5),1 -> <[2,3,1],[4,5,1]>')
-  .add_test('2,(1,0) -> [[2],[1,0]]')
+  .add_test('2,(1,0) -> [2,1,0]')
   .add_test('(2,3),(1,0) -> [[2,3],[1,0]]')
   .add_test('(2,3).,1 -> <[2,1],[3,1]>')
   .add_test('(2,3),(4,5).,1 -> <[2,3,1],[4,5,1]>')
   .add_test('2,(1,0.) ->  <[2,1],[2,0]>')
   .add_test('(2,3),(1,0.) -> <[2,3,1],[2,3,0]>')
-  .add_test('\'a,5 -> ["a","5"]')
+  .add_test('\'a,5 -> "a5"')
   .add_test('5,\'a -> "5a"')
   .add_test('5,"a" -> ["5","a"]')
   .add_test('\'b,\'a -> "ba"'),
@@ -721,7 +721,7 @@ ActualOpsList.each{|op|
   raise "name conflict #{op.name}" if AllOps.include? op.name
   AllOps[op.name] = AllOps[op.sym] = op
 }
-ImplicitOp = Ops2["snoc"]
+ImplicitOp = Ops2["build"]
 AllOps[""]=Ops2[""]=ImplicitOp # allow @ to flip the implicit op (todo pointless for multiplication)
 EmptyOp = create_op(
   name: "empty",

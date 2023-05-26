@@ -1,4 +1,5 @@
 require 'stringio'
+require 'timeout'
 require "./repl.rb"
 
 symbols = "~`!@#$%^&*()_-+={[}]|\\'\";:,<.>/?"
@@ -12,7 +13,7 @@ spaces = " \n\n\n\n" # twice as likely
 # Just the interesting characters to focus on testing parse
 # all = "[! \n()'\"1\\:?ab".chars.to_a + [':=','a:=',"seeParse","seeInference","seeType"]
 
-all = (symbols+numbers+letters+spaces).chars+['"ab12"','p','print','help','ops','version','type','1.2']
+all = (symbols+numbers+letters+spaces).chars+['"ab12"','p','print','help','ops','version','type','1.2','()',',']
 
 ReadStdin = Promise.new{ str_to_lazy_list("ab12") }
 
@@ -37,9 +38,11 @@ end
     begin
       puts program
       $reductions = 0
-      repl(program_io)
+      Timeout::timeout(0.2) {
+        repl(program_io)
+      }
 #       puts "output: ", output_io.string
-    rescue AtlasError => e
+    rescue AtlasError,Timeout::Error => e
 
     rescue => e
       STDERR.puts "failed, program was"

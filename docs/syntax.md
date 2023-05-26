@@ -27,12 +27,12 @@ Since all ops are overloaded as both unary and binary operators if there are mul
 
 The `+` was a binary op, and the `-` and `|` are unary.
 
-Two expressions in a row without an explicit operation do an implicit op. This uses the `snoc` operator.  You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
+Two expressions in a row without an explicit operation do an implicit op. This uses the `build` operator.  You don't necessarily need a space to use this. This implicit operation is still left to right and equal precedence to other operations.
 
     1+1 3*4
     -- Is parsed as:
     ((1+1) 3)*4
-    -- And does a snoc
+    -- And does a build
     ──────────────────────────────────
     8 12
     8 12
