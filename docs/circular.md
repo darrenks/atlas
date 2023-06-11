@@ -30,7 +30,7 @@ The next row should be the heads of the tails:
 And the next row would be the head of the tail of the tails. So essentially to transpose we want the heads of the repeated tailings of a 2D list, which we can do with circular programming of course.
 
     a=(1,2,3,4),(5,6,7,8)
-    tails=tails..tail%%`a
+    tails=tails.tail%`a
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
@@ -47,7 +47,7 @@ And the next row would be the head of the tail of the tails. So essentially to t
 
 
 
-    2:14 (tail) tail on empty list (DynamicError)
+    2:13 (tail) tail on empty list (DynamicError)
 
 Here the `..tail%%` means perform the tail operation two levels deep. See the Vectorization section for more info.
 
@@ -60,8 +60,8 @@ Also note the error. It would occur for the same program in Haskell too:
 Anytime we see something of the form `var = something : var` it is defining an infinite list. This list clearly can't be infinite though, hence the error. It can be avoided by taking elements of length equal to the first row.
 
     a=(1,2,3,4),(5,6,7,8)
-    tails=tails..tail%%`a
-    tails take (a head len)
+    tails=tails.tail%`a
+    tails% take (a head len)
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
@@ -82,8 +82,8 @@ I have some ideas about creating an op to catch errors and truncate lists, but f
 To get the transpose now we just need to take the heads of each list:
 
     a=(1,2,3,4),(5,6,7,8)
-    tails=tails..tail%%`a
-    tails take (a head len)..head
+    tails=tails.tail%`a
+    tails% take (a head len)..head
     ──────────────────────────────────
     1 5
     2 6
@@ -95,8 +95,8 @@ To get the transpose now we just need to take the heads of each list:
 We've seen how to do scanl on a list, but how does it work on 2D lists?
 
     a=(1,2,3,4),(5,6,7,8)
-    b=a+b%%`(0,)
-    b. take 10
+    b=a+b%`(0,)
+    b take 10
     ──────────────────────────────────
     0 0 0 0 0 0 0 0 0 0
     1 2 3 4

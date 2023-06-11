@@ -270,6 +270,21 @@ OpsList = [
             Char => v(Char) },
     impl: -> a { range_from(a.value) }),
   create_op(
+    name: "cons",
+    sym: "`",
+    example: '1`2`3 -> <3,2,1>',
+    type: { [v(A),A] => v(A),
+            [Anum,Achar] => v(Achar),
+            [v([Achar]),Anum] => v([Achar]) },
+    type_summary: "<*a> *a -> <a>",
+    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
+  .add_test('\'a`5 -> <"5","a">')
+  .add_test('"a"`(5) -> <"5","a">')
+  .add_test('"a";;`(5;) -> <["5"],["a"]>')
+  .add_test("5`\'a -> <'a,'5>")
+  .add_test('5;`"a" -> <"a","5">')
+  .add_test('\'b`\'a% -> "ab"'),
+  create_op(
     name: "consDefault",
     sym: "^",
     example: '2,3^ -> <0,2,3>',
@@ -374,21 +389,6 @@ OpsList = [
     impl: -> a,b { append(a,b) },
     coerce: true)
   .add_test('1_"a" -> "1a"'),
-  create_op(
-    name: "cons",
-    sym: "`",
-    example: '"abc"`\'d -> "dabc"',
-    type: { [[A],A] => [A],
-            [Anum,Achar] => [Achar],
-            [[[Achar]],Anum] => [[Achar]] },
-    type_summary: "[*a] *a -> a",
-    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
-  .add_test('\'a`5 -> ["5","a"]')
-  .add_test('"a"`(5) -> ["5","a"]')
-  .add_test('"a";;`(5;) -> [["5"],["a"]]')
-  .add_test('5`\'a -> "a5"')
-  .add_test('5;`"a" -> ["a","5"]')
-  .add_test('\'b`\'a -> "ab"'),
 create_op(
     name: "build",
     sym: ",",
@@ -424,7 +424,7 @@ create_op(
     impl: -> a { occurence_count(a) }
   ).add_test('"ab","a","ab" count -> [0,0,1]'),
   create_op(
-    name: "filter",
+    name: "filterFrom",
     sym: "~",
     example: '0,1,1,0 ~ "abcd" -> "bc"',
     type: { [v(A),[B]] => [B] },
@@ -438,7 +438,7 @@ create_op(
     no_promote: true,
     poly_impl: -> at { -> a { sort(a,at-1) }}
   ), create_op(
-    name: "sortBy",
+    name: "sortFrom",
     desc: "stable O(n log n) sort - not optimized for lazy O(n) min/max yet todo",
     sym: "!",
     example: '3,1,4 ! "abc" -> "bac"',
@@ -454,7 +454,7 @@ create_op(
     type: { [A] => [[A]] },
     poly_impl: -> at { -> a { chunk_while(a,a,at-1) } }),
   create_op(
-    name: "chunkBy",
+    name: "chunkFrom",
     desc: "chunk while first arg is truthy",
     sym: "?",
     example: '"11 1" ? "abcd" -> ["ab","d"]',
@@ -656,7 +656,7 @@ create_op(
     example: '2-\\5 -> 3',
     ref_only: true,
     type: :unused,
-    type_summary: "op₂ (before)",
+    type_summary: "op/",
     impl: MacroImpl,
   ), create_op(
     name: "apply",
@@ -664,7 +664,7 @@ create_op(
     desc: "increase precedence, apply next op before previous op",
     example: '2*3@+4 -> 14',
     type: {:unused => :unused},
-    type_summary: "op (after)",
+    type_summary: "@op",
     impl_with_loc: ->from{raise ParseError.new("apply needs a right hand side if used on a binary op",from)}, # this can occur from something like 13@@
   ),
 ]

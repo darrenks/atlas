@@ -15,7 +15,7 @@ U = Unknown
 # todo test VecOf
 # what other things can gen errors? are many errors impossible?
 
-# => zip_level, rep_level, return type
+# => zip_level, rep_level, promote_levels, return type
 tests = {
   # [int]
   [[T.new(Num+0,0)],{[Num]=>Num}] => [0,[0],[1],"Num"],
