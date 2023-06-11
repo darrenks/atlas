@@ -89,25 +89,10 @@ def check_missing(node,context,been)
     name = node.from.token.str
     if !context.include? name
       warn("unset identifier %p" % name, node.from.token) if $repl_mode
-      if (numeral = to_roman_numeral(name))
-        return IR.new(create_op(
-          name: "data",
-          type: Num,
-          impl: numeral),[],node.from)
-      elsif name.size>1
-        return IR.new(create_op(
-          name: "data",
-          type: Str,
-          impl: str_to_lazy_list(name)),[],node.from)
-      else
-        return IR.new(create_op(
-          name: "data",
-          type: Char,
-          impl: name[0].ord),[],node.from)
-      end
+      node
+    else
+      check_missing(context[name],context,been)
     end
-    #raise(ParseError.new("trivial self dependency is nonsensical", node.from.token)) if context[name] == node
-    check_missing(context[name],context,been)
   else
     node.args.map!{|arg| check_missing(arg, context,been) }
     node
@@ -119,8 +104,30 @@ def lookup_vars(node,context,been)
   been[node.id]=true if node.op.name != "var"
   node.args.map!{|arg| lookup_vars(arg, context,been) }
   if node.op.name == "var"
-    return IR.new(UnknownOp,[],node.from) if context[node.from.token.str] == node
-    lookup_vars(context[node.from.token.str],context,been)
+    name = node.from.token.str
+    val = context[name]
+    if val == nil
+      if (numeral = to_roman_numeral(name))
+        IR.new(create_op(
+          name: "data",
+          type: Num,
+          impl: numeral),[],node.from)
+      elsif name.size>1
+        IR.new(create_op(
+          name: "data",
+          type: Str,
+          impl: str_to_lazy_list(name)),[],node.from)
+      else
+        IR.new(create_op(
+          name: "data",
+          type: Char,
+          impl: name[0].ord),[],node.from)
+      end
+    elsif context[node.from.token.str] == node
+      IR.new(UnknownOp,[],node.from)
+    else
+      lookup_vars(context[node.from.token.str],context,been)
+    end
   else
     node
   end
