@@ -1,18 +1,18 @@
 [33m ᐳ [0m1+2*4  -- That is an up arrow (prev command 1+2)followed by *4
-Num
 [33m ᐳ [0m1,2 tail -- Two tabs to complete tail
-12
-[Num]
 [33m ᐳ [0m
 [33m ᐳ [0m5
-2
-Num
 [33m ᐳ [0ma,z@a
 5:3 (z) unset identifier "z" ([31mWarning[0m)
-5
-[Char]
 ?:? infinite loop detected ([31mInfiniteLoopError[0m)
 [33m ᐳ [0ma
 6:1 (a) unset identifier "a" ([31mWarning[0m)
-Char
-[33m ᐳ [0ma
+[33m ᐳ [0m[38;5;243mNum[0m
+12
+[38;5;243m[Num][0m
+2
+[38;5;243mNum[0m
+5
+[38;5;243m[Char][0m
+[38;5;243mChar[0m
+a

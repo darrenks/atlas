@@ -114,6 +114,6 @@ def printit(ir,context)
   s=context['S'].get_str_value || [32.const,Null]
 
   infer(ir)
-  p ir.type_with_vec_level if $repl_mode
+  puts "\e[38;5;243m#{ir.type_with_vec_level.inspect}\e[0m" if $repl_mode
   run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode,n,s) }
 end
