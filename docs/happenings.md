@@ -8,7 +8,7 @@
 
 Bug reports, design thoughts, op ideas, painpoints, feedback, etc. would be greatly appreciated. Please raise an issue or email me with your thoughts. `<name of this lang> at golfscript.com`.
 
-There is also a google group for discussing the ongoing design of the language: [atlas-lang](https://groups.google.com/g/atlas-lang). Please ask to join with a message (this is just to prevent spam, all are welcome).
+There is also a [chatroom](https://chat.stackexchange.com/rooms/145966/golfscript-com) for discussing Atlas.
 
 Please contact me if you would like any Atlas related things linked to from here
 

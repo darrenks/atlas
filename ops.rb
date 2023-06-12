@@ -234,12 +234,14 @@ OpsList = [
     name: "fromBase",
     sym: ";",
     type: { [[Num],Num] => Num,
-            [Str,Num] => Num },
+            [Str,Num] => Num,
+            [Str,Char] => Num },
     example: '0,1,1;2 -> 6',
     impl: -> a,b { from_base(a,b.value) })
    .add_test('0,1,1,1-%;(2-) -> 6')
    .add_test('0,1,1-%;2 -> -6')
-   .add_test('1.5,0.0,1.0;2 -> 5.5'),
+   .add_test('1.5,0.0,1.0;2 -> 5.5')
+   .add_test('"abc";\'d -> 999897'),
   "vector",
   create_op(
     name: "unvec",
