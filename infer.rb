@@ -65,7 +65,7 @@ end
 def calc_type(node)
   node.last_error = nil
   fn_type = match_type(node.op.type, node.args.map(&:type))
-  return node.type_error "op is not definied for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',' if !fn_type
+  return node.type_error "op is not defined for arg types: " + node.args.map{|arg|arg.type_with_vec_level.inspect}*',' if !fn_type
   node.type_with_vec_level = possible_types(node,fn_type)
 end
 
@@ -95,14 +95,14 @@ def possible_types(node, fn_type)
 
   # auto promote both if equal
   if node.op.name == "build" && deficits[1]==0 && deficits[0]==0
-      # if any are unknown, only promote smaller or rank 1s
-      all_known = !arg_types.any?(&:is_unknown)
-      if all_known || arg_types[0].dim <= arg_types[1].dim
-        promote_levels[0] += 1
-      end
-      if all_known || arg_types[1].dim <= arg_types[0].dim
-        promote_levels[1] += 1
-      end
+    # if any are unknown, only promote smaller or rank 1s
+    all_known = !arg_types.any?(&:is_unknown)
+    if all_known || arg_types[0].dim <= arg_types[1].dim
+      promote_levels[0] += 1
+    end
+    if all_known || arg_types[1].dim <= arg_types[0].dim
+      promote_levels[1] += 1
+    end
   end
 
   # auto unvectorize

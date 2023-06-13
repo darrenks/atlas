@@ -149,16 +149,27 @@ def new_var
 end
 
 def balance_parens(tokens)
-  min=cur1=cur2=0
+  tokens,eof=tokens[0..-2],tokens[-1,1]
+  paren_stack = []
+  implicit_lefts = []
+  implicit_rights = []
   tokens.each{|t|
-    (cur1 += 1; cur2 += 1) if t.str == '('
-    (cur1 -= 1; cur2 -= 1) if t.str == ')'
-    min = cur1 if cur1 < min
-    cur2 = 0 if cur2 < 0
-
+    if t.str == '('
+      paren_stack << t
+    elsif t.str == ')'
+      if paren_stack.empty?
+        warn("imbalanced ), missing (", t) if $repl_mode
+        implicit_lefts<<Token.new('(')
+      else
+        paren_stack.pop
+      end
+    end
   }
-  tokens = [Token.new('(')] * -min + tokens[0..-2] + [Token.new(')')] * cur2 + tokens[-1,1]
-  tokens
+  paren_stack.each{|t|
+    warn("imbalanced (, missing )", t) if $repl_mode
+    implicit_rights<<Token.new(')')
+  }
+  implicit_lefts + tokens + implicit_rights + eof
 end
 
 # this handles roman numerals in standard form

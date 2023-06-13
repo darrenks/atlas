@@ -2,4 +2,4 @@
 'a + 'b
 
 [stderr]
-1:4 (+) op is not definied for arg types: Char,Char (TypeError)
+1:4 (+) op is not defined for arg types: Char,Char (TypeError)
