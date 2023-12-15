@@ -45,7 +45,6 @@ def repl(input=nil)
     }
   end
 
-  ast = nil
   file_args = !ARGV.empty?
   assignment = false
   stop = false
@@ -57,9 +56,7 @@ def repl(input=nil)
       if line==nil # eof
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
-          # FYI there is a bug where type errors will be printed twice this way.
-          # for example the program: a=a`1+'c
-          ir = to_ir(ast,context)
+          ir = to_ir(parse_line(assignment, stack, last),context)
           printit(ir,context)
         end
         break
@@ -76,7 +73,7 @@ def repl(input=nil)
           tokens.delete_at(-2)
           command[2][tokens, stack, last, context]
         elsif tokens.size > 3 && tokens[1].str=="=" && tokens[0].is_name && !is_op(tokens[2])
-          assignment = true
+          assignment = [tokens[0],tokens[-1]] # code to then get value of this var
           ast = parse_line(tokens[2..-1], stack, last)
           set(tokens[0], ast, context)
         else
