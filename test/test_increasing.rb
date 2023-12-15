@@ -44,7 +44,6 @@ Ops1.values.each{|op|
 
 Ops2.values.each{|op|
   next if op.sym == ";" # to/fromBase is special, I am ok with this causing issues if used in circular programming as it is unlikely to be used that way, this exception allows it to be overloaded for to or from a base.
-  next if op.sym == "`" # this op is unsound because if vec level is 0 it will auto unvec, lowering list rank.
   Types.each{|t1|
     Types.each{|t2|
       r = calc(op, [t1,t2])
@@ -70,7 +69,6 @@ Ops2.values.each{|op|
 
 #1 arg
 Ops1.values.each{|op|
-  next if op.name == "consDefault" # this op is unsound because if vec level is 0 it will auto unvec, lowering list rank.
   Types.each{|t1|
     r = calc(op, [t1])
     next unless r
@@ -87,7 +85,6 @@ Ops1.values.each{|op|
 }
 
 Ops2.values.each{|op|
-  next if op.sym == "`" # this op is unsound because if vec level is 0 it will auto unvec, lowering list rank.
   Types.each{|t1|
     Types.each{|t2|
       r = calc(op, [t1,t2])

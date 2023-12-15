@@ -72,11 +72,13 @@ end
 def possible_types(node, fn_type)
   arg_types = node.args.map(&:type)
   vec_levels = node.args.map(&:vec_level)
+  unvec_at_end = false
 
   vec_levels = vec_levels.zip(fn_type.specs,0..).map{|vec_level,spec,i|
     if spec.vec_of
       if vec_level == 0
         return node.type_error "vec level is 0, cannot lower" if node.op.name == "unvec"
+        unvec_at_end = true if node.op.name == 'consDefault' && arg_types[0].dim > 0
         arg_types[i]-=1 # auto vec
         0
       else
@@ -146,6 +148,10 @@ def possible_types(node, fn_type)
   vars = solve_type_vars(arg_types, fn_type.specs)
   t = spec_to_type(fn_type.ret, vars)
   t.vec_level += zip_level
+  if unvec_at_end
+    t.vec_level -= 1
+    t.type.dim += 1
+  end
   t
 end
 

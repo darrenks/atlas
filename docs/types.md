@@ -45,7 +45,7 @@ So long as there is no oscillation between types this process will eventually te
 
 -   Base elements could actually oscillate, consider the code `'b-a`, it will return an int if `a` is a char, but a char if `a` is an int. However this doesn't matter because any circular program at the scalar level would definitely be an infinite loop.
 -   List rank can only increase or stay the same if their argument's list rank increase.
--   Vector rank can only increase or stay the same if their argument's vector ranks increase. And they may not change the list rank of the result. Currently the cons ops do not obey this invariant (they will automatically unvectorize if given a vector of scalars, this decreases list rank).
+-   Vector rank can only increase or stay the same if their argument's vector ranks increase. And they may not change the list rank of the result.
 
 This last bullet is important since decreasing list rank can increase vector rank. Consider the code:
 
@@ -63,6 +63,6 @@ The result has the same list rank (0), but a lower vector rank. But since there 
 
 This invariants are chosen because changing list rank could increase the resulting vector rank (e.g. scalar ops that auto vectorize) or decrease vector rank (e.g. the equality test mentioned above).
 
-There is also a flaw in the current inference algorithm in that it simultaneously finds the list and vector ranks, whereas it should find the list rank and then the vector rank, since the vector rank could temporarily be higher than the lowest possible while finding the minimum list ranks. In practice this flaw is very rarely encountered and could be worked around, although it would be very annoying. TODO fix it.
+There is a flaw in the current inference algorithm in that it simultaneously finds the list and vector ranks, whereas it should find the list rank and then the vector rank, since the vector rank could temporarily be higher than the lowest possible while finding the minimum list ranks. In practice this flaw is very rarely encountered and could be worked around, although it would be very annoying. TODO fix it.
 
 One could easily violate these invariants when designing op behavior and auto vectorization rules. For example suppose you created an op that removed all vectorization (2d vector would return a 2d list for example). This would violate a rule because changing vector rank would change the resulting list rank. The current `unvec` op always removes exactly 1 layer.

@@ -272,26 +272,14 @@ OpsList = [
             Char => v(Char) },
     impl: -> a { range_from(a.value) }),
   create_op(
-    name: "cons",
-    sym: "`",
-    example: '1`2`3 -> <3,2,1>',
-    type: { [v(A),A] => v(A),
-            [Anum,Achar] => v(Achar),
-            [v([Achar]),Anum] => v([Achar]) },
-    type_summary: "<*a> *a -> <a>",
-    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
-  .add_test('\'a`5 -> <"5","a">')
-  .add_test('"a"`(5) -> <"5","a">')
-  .add_test('"a";;`(5;) -> <["5"],["a"]>')
-  .add_test("5`\'a -> <'a,'5>")
-  .add_test('5;`"a" -> <"a","5">')
-  .add_test('\'b`\'a% -> "ab"'),
-  create_op(
     name: "consDefault",
     sym: "^",
-    example: '2,3^ -> <0,2,3>',
+    example: '2,3.^ -> <0,2,3>',
     type: { v(A) => v(A) },
-    poly_impl: -> at { d=(at-1).default_value.const; -> a { [d,a] }}),
+    type_summary: "<a> -> <a>\n[a] -> [a]",
+    poly_impl: -> at { d=(at-1).default_value.const; -> a { [d,a] }})
+    .add_test("1,2^ -> [0,1,2]")
+    .add_test("1^ -> <0,1>"),
   "basic list",
   create_op(
     name: "head",
@@ -391,6 +379,21 @@ OpsList = [
     impl: -> a,b { append(a,b) },
     coerce: true)
   .add_test('1_"a" -> "1a"'),
+  create_op(
+    name: "cons",
+    sym: "`",
+    example: '1`2`3 -> [3,2,1]',
+    type: { [[A],A] => [A],
+            [Anum,Achar] => [Achar],
+            [[[Achar]],Anum] => [[Achar]] },
+    type_summary: "[*a] *a -> [a]",
+    poly_impl: -> ta,tb {-> a,b { [coerce2s(tb,b,ta-1),coerce2s(ta,a,tb+1)] }})
+  .add_test('\'a`5 -> ["5","a"]')
+  .add_test('"a"`(5) -> ["5","a"]')
+  .add_test('"a";;`(5;) -> [["5"],["a"]]')
+  .add_test("5`\'a -> \"a5\"")
+  .add_test('5;`"a" -> ["a","5"]')
+  .add_test('\'b`\'a -> "ab"'),
 create_op(
     name: "build",
     sym: ",",

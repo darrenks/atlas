@@ -117,20 +117,20 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
 This code can be tested by changing `s` and the initial state to see if it behaves correctly generating the next state. Once that is confirmed, we just need to set it up so that each state value is a circular vector based on its next state and initial value.
 
         s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    c=c2`s
+    c=c2%`s.
     ml=ml2^
-    mr=mr2`(0,)
+    mr=mr2%`(0,).
     m=m2^
     b=b2^
 
     z=c[,.="><+-]["
     r=z%/.
-    b2=r~(m&(S,c;_b);,b@>)[|b
+    b2=r~(m&b@`c@`S;,b@>)[|b
     next=(`0+('\-c{|<2&}))?[#]\c
     c2=r~(m~&next,b@[)[|c>
     m2= z~(mr[;,ml@[,m@+1,m@-1),m [
-    ml2=z~(m,ml,ml@>)         , ml[
-    mr2=z~(mr>,m@,mr)         , mr[
+    ml2=z~(ml`m,ml@>)         , ml[
+    mr2=z~(mr>,mr@`m)         , mr[
     c[='.~(c?m[)+'\0
     ──────────────────────────────────
     Hello World!
@@ -139,10 +139,10 @@ The last line collect the output, chunk it while the code that remains is not em
 
 ### Golfed
 
-A bit of golfing gets it down to 159 characters, likely less readable than brainfuck itself.
+A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself.
 
     s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    >,m@,r~\z,r[`0@,@r)[,(m,l,l@>~\z,l[^@l)@[,m@+1m@-1~\z,m[^@m~&((`0+('\-c{|<2&}))?[#]\c)(c[,.="><+-]["@z%/.{~(m&(S,c;_b);,b@>)[|b^@b)@[~\}[|c>`s@c[='.~(c?m[+'\0
+    >,r@`m~\z,r[%`0@,.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&}))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b^@b)@[~\}[|c>%`s.@c[='.~(c?m[+'\0
     ──────────────────────────────────
     Hello World!
 
