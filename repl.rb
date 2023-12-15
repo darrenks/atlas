@@ -57,6 +57,8 @@ def repl(input=nil)
       if line==nil # eof
         stop = true # incase error is caught we still wish to stop
         if assignment # was last
+          # FYI there is a bug where type errors will be printed twice this way.
+          # for example the program: a=a`1+'c
           ir = to_ir(ast,context)
           printit(ir,context)
         end

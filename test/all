@@ -5,6 +5,7 @@ ruby test/test_behavior.rb
 ruby test/test_examples.rb
 ruby test/test_op_examples.rb
 ruby test/test_docs.rb
+ruby test/test_increasing.rb
 sh test/test_repl.sh
 ruby test/update_date.rb
 ruby web/quickref.rb > web/site/quickref.html
