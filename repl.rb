@@ -3,8 +3,8 @@ Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 
 def repl(input=nil)
   context={}
-  context["last ans"]=to_ir(AST.new(Ops0['readLines'],[],Token.new("bof")),context)
-  last=AST.new(Var,[],Token.new("last ans"))
+  context["last_ans"]=to_ir(AST.new(Ops0['readLines'],[],Token.new("bof")),context)
+  last=AST.new(Var,[],Token.new("last_ans"))
 
   stack=[]
   line_no = 1
@@ -67,7 +67,7 @@ def repl(input=nil)
           command[2][tokens, stack, last, context]
         elsif tokens[0].str=="let" || possible_assignment(tokens) && !context[tokens[0].str]
           if tokens[0].str == "let"
-            raise "let syntax is: let var = value" unless tokens.size > 4 && tokens[2].str=="=" && tokens[1].is_name
+            raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 4 && tokens[2].str=="=" && tokens[1].is_name
             offset = 1
           else
             offset = 0
@@ -80,7 +80,7 @@ def repl(input=nil)
             warn("interpreting as equality check, to override name use let var=value", tokens[1])
           end
           ir = to_ir(parse_line(tokens, stack, last),context)
-          context["last ans"]=ir
+          context["last_ans"]=ir
           printit(ir,context)
         end
       }

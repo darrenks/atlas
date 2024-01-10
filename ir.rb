@@ -62,7 +62,7 @@ def check_missing(node,context,been)
   if node.op.name == "var"
     name = node.from.token.str
     if !context.include? name
-      warn("unset identifier %p" % name, node.from.token) if $repl_mode && context.keys.any?{|v|!v[' '] && v.size > 1} # space is to not count
+      warn("unset identifier %p" % name, node.from.token) if context.keys.any?{|v|!v['_'] && v.size > 1} # "_" is to not count internal vars
       node
     else
       check_missing(context[name],context,been)
