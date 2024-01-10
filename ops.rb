@@ -616,13 +616,11 @@ create_op(
   create_op(
     name: "readLines",
     desc: "all lines of stdin",
-    sym: "R",
     type: v(Str),
     impl: -> { lines(ReadStdin) }),
   create_op(
     name: "firstNums",
     desc: "first num column from stdin",
-    sym: "F",
     type: v(Num),
     impl: -> { num_col },
   ),

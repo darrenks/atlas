@@ -3,7 +3,9 @@ Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 
 def repl(input=nil)
   context={}
-  context["last_ans"]=to_ir(AST.new(Ops0['readLines'],[],Token.new("bof")),context)
+
+  bof = Token.new("bof")
+  context["last_ans"]=to_ir(AST.new(Ops0['readLines'],[],bof),context)
   last=AST.new(Var,[],Token.new("last_ans"))
 
   stack=[]
@@ -12,8 +14,10 @@ def repl(input=nil)
   { "N" => "'\n",
     "S" => "' ",
   }.each{|name,val|
-    context[name]=to_ir(AST.new(create_char(val),[],Token.new("bof")),context)
+    context[name]=to_ir(AST.new(create_char(val),[],bof),context)
   }
+  context["R"]=to_ir(AST.new(Ops0['readLines'],[],bof),context)
+  context["F"]=to_ir(AST.new(Ops0['firstNums'],[],bof),context)
 
   if input
     input_fn = lambda { input.gets(nil) }

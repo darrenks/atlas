@@ -1,6 +1,9 @@
 require "./repl.rb"
 require 'cgi'
 
+OpsList.find{|o|!(String === o) && o.name == "readLines"}.sym = "R"
+OpsList.find{|o|!(String === o) && o.name == "firstNums"}.sym = "F"
+
 class String
   def td(_class=nil)
     "<td #{'class='+_class.inspect if _class}>"+self.escape+"</td>"
@@ -73,16 +76,16 @@ Commands.each{|str,data|
 "misc".ref
 puts "<tr>"
 puts "S".td("code")
-puts "space".td("code"),"Char".td("code")
+puts "".td("code"),"Char".td("code"),"space".td
 puts "</tr>"
 puts "<tr>"
 puts "N".td("code")
-puts "'\\n".td("code"),"Char".td("code")
+puts "".td("code"),"Char".td("code"),"newline".td
 puts "</tr>"
 puts "<tr>"
 puts "unset id".td
 puts "".td("code"),"Num".td("code")
-puts '<td>Roman numerals<span class="right"><span class="code">MIX → 1009</code></span></td>'
+puts '<td>Roman Numerals<span class="right"><span class="code">MIX → 1009</code></span></td>'
 puts "</tr>"
 puts "<tr>"
 puts "unset id".td
