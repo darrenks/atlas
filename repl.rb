@@ -3,17 +3,10 @@ Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 
 def repl(input=nil)
   context={}
-  context["last ans"]=to_ir(AST.new(Ops0['readlines'],[],Token.new("bof")),context)
+  context["last ans"]=to_ir(AST.new(Ops0['readLines'],[],Token.new("bof")),context)
   last=AST.new(Var,[],Token.new("last ans"))
 
-  stack=3.downto(0).map{|i|
-    AST.new(create_op(
-      name: "col#{i}",
-      type: VecOf.new(Num),
-      impl: num_col(i)
-    ),[])
-  }
-
+  stack=[]
   line_no = 1
 
   { "N" => "'\n",

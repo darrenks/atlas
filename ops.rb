@@ -88,13 +88,11 @@ def create_op(
   Op.new(name,sym,type,type_summary,examples,desc,ref_only,no_promote,built_impl,[])
 end
 
-def num_col(n)
-  -> {
-    map(lines(ReadStdin).const){|v|
-      v=drop(n,Promise.new{split_non_digits(v)})
-      raise DynamicError.new "num col: empty list",nil if v==[]
-      v[0].value
-    }
+def num_col
+  map(lines(ReadStdin).const){|v|
+    v = split_non_digits(v)
+    raise DynamicError.new "num col: empty list",nil if v==[]
+    v[0].value
   }
 end
 
@@ -622,12 +620,12 @@ create_op(
     type: v(Str),
     impl: -> { lines(ReadStdin) }),
   create_op(
-    name: "unmatched }",
-    desc: "next column from stdin",
-    sym: "}",
-    ref_only: true,
+    name: "firstNums",
+    desc: "first num column from stdin",
+    sym: "F",
     type: v(Num),
-    impl: MacroImpl),
+    impl: -> { num_col },
+  ),
   create_op(
     name: "read",
     sym: "`",
