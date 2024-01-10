@@ -1,5 +1,5 @@
-def run(root,n=[10.const,Null],s=[32.const,Null])
-  v = Promise.new{yield(make_promises(root), n, s)}
+def run(root)
+  v = Promise.new{yield(make_promises(root))}
   print_string(v)
 end
 
@@ -54,6 +54,10 @@ class Object
   def const
     Const.new(self)
   end
+end
+
+def newline
+  n=[10.const,Null]
 end
 
 def take(n, a)
@@ -385,12 +389,12 @@ def coerce2s(ta, a, tb)
   end
 end
 
-def to_string(t, value, repl_mode, n, s)
-  added_newline = t.string_dim + (repl_mode ? 0 : 1) < 2 && !value.empty ? n.const : Null
-  to_string_h(t,value,t.string_dim, added_newline, repl_mode, n, s)
+def to_string(t, value, repl_mode)
+  added_newline = t.string_dim + (repl_mode ? 0 : 1) < 2 && !value.empty ? newline.const : Null
+  to_string_h(t,value,t.string_dim, added_newline, repl_mode)
 end
 
-def to_string_h(t, value, orig_dim, rhs, repl_mode, n, s)
+def to_string_h(t, value, orig_dim, rhs, repl_mode)
   if t == Num
     inspect_value_h(t, value, rhs, 0)
   elsif t == Char
@@ -399,12 +403,12 @@ def to_string_h(t, value, orig_dim, rhs, repl_mode, n, s)
     # print 1d lists on new lines if not in repl mode
     dim = !repl_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
     # print newline separators after every element for better interactive io
-    separator1 = dim == 2 ? n : []
+    separator1 = dim == 2 ? newline : []
     # but don't do this for separators like space, you would end up with trailing space in output
-    separator2 = [[],s,[]][dim] || n
+    separator2 = [[],[32.const,Null],[]][dim] || newline
 
     concat_map(value,rhs){|v,r,first|
-      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{append(separator1.const, r)}, repl_mode, n, s) }
+      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{append(separator1.const, r)}, repl_mode) }
       first ? svalue.value : append(separator2.const, svalue)
     }
   end

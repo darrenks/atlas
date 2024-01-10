@@ -115,10 +115,7 @@ def possible_assignment(tokens)
 end
 
 def printit(ir,context)
-  n=context['N'].get_str_value || [10.const,Null]
-  s=context['S'].get_str_value || [32.const,Null]
-
   infer(ir)
   puts "\e[38;5;243m#{ir.type_with_vec_level.inspect}\e[0m" if $repl_mode
-  run(ir,n,s) {|v,n,s| to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode,n,s) }
+  run(ir) {|v| to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode) }
 end

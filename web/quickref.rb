@@ -74,12 +74,10 @@ Commands.each{|str,data|
 puts "<tr>"
 puts "S".td("code")
 puts "space".td("code"),"Char".td("code")
-puts "1st print separator (overridable)".td
 puts "</tr>"
 puts "<tr>"
 puts "N".td("code")
 puts "'\\n".td("code"),"Char".td("code")
-puts "2nd print separator (overridable)".td
 puts "</tr>"
 puts "<tr>"
 puts "unset id".td
