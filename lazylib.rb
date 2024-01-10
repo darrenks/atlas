@@ -515,15 +515,11 @@ end
 FalseChars = {0=>1,9=>1,10=>1,11=>1,12=>1,13=>1,32=>1}
 
 def truthy(type, value)
-  begin
-    if type == Num
-      value.value > 0
-    elsif type == Char
-      !FalseChars.include?(value.value)
-    else # List
-      !value.empty
-    end
-  rescue AtlasError => e # dynamic and inf loop
-    return false
+  if type == Num
+    value.value > 0
+  elsif type == Char
+    !FalseChars.include?(value.value)
+  else # List
+    !value.empty
   end
 end

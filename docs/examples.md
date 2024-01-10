@@ -90,9 +90,9 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
     r=z%/.  -- reverse order of z
 
     -- next state
-    b2=r~(m&(c,S;_b);,b@>)[|b
+    b2=r~(m&(c,S;_b);,b@>)[|b catch,b[
     next=(`0+('\-c{|<2&}))?[#]\c  -- the next code after matching ]
-    c2=r~(m~&next;,b@[)[|c>
+    c2=r~(m~&next;,b@[)[|c catch,c[ >
     m2= z~(mr[;,ml@[,m@+1,m@-1),m [
     ml2=z~(m,ml,ml@>)         , ml[
     mr2=z~(mr>,m@,mr)         , mr[
@@ -116,7 +116,7 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
 
 This code can be tested by changing `s` and the initial state to see if it behaves correctly generating the next state. Once that is confirmed, we just need to set it up so that each state value is a circular vector based on its next state and initial value.
 
-        s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+            s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
     c=c2%`s.
     ml=ml2^
     mr=mr2%`(0,).
@@ -125,9 +125,9 @@ This code can be tested by changing `s` and the initial state to see if it behav
 
     z=c[,.="><+-]["
     r=z%/.
-    b2=r~(m&b@`c@`S;,b@>)[|b
+    b2=r~(m&b@`c@`S;,b@>)@f[|b catch,b[
     next=(`0+('\-c{|<2&}))?[#]\c
-    c2=r~(m~&next,b@[)[|c>
+    c2=r~(m~&next,b@[)[|c catch,c[ >
     m2= z~(mr[;,ml@[,m@+1,m@-1),m [
     ml2=z~(ml`m,ml@>)         , ml[
     mr2=z~(mr>,mr@`m)         , mr[
@@ -139,10 +139,10 @@ The last line collect the output, chunk it while the code that remains is not em
 
 ### Golfed
 
-A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself.
+A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself. (Note actually this is longer for now since behavior of `|` has changed and catch is manually needed, but surely could be golfed out.
 
     s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    >,r@`m~\z,r[%`0@,.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&}))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b^@b)@[~\}[|c>%`s.@c[='.~(c?m[+'\0
+    >,r@`m~\z,r[%`0@,.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&}))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b catch,b[^@b)@[~\}[|c catch,c[>%`s.@c[='.~(c?m[+'\0
     ──────────────────────────────────
     Hello World!
 

@@ -600,11 +600,25 @@ create_op(
    .add_test('0|"b" -> "b"')
    .add_test('""|2 -> "2"')
    .add_test(' 0|\'c -> "c"'),
+  create_op(
+    name: "catch",
+    sym: "tbd",
+    example: '1/0 catch -> []',
+    example2: '1/1 catch -> [1]',
+    type: { A => [A] },
+    impl: -> a {
+      begin
+        a.value
+        [a, Null]
+      rescue AtlasError # dynamic and inf loop
+        []
+      end
+    }),
   '"io"',
   create_op(
-    name: "input",
+    name: "readLines",
     desc: "all lines of stdin",
-    sym: "$",
+    sym: "R",
     type: v(Str),
     impl: -> { lines(ReadStdin) }),
   create_op(

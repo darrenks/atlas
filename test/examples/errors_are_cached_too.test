@@ -1,5 +1,5 @@
 [prog]
 -- this would take minutes if errors were recomputed unlike values
-1/0_(1,)[1000+a`0@a],[1000,[100..|5++
+1/0_(1,)[1000+a`0@a],[1000,[100..catch,5[++
 [output]
 500000

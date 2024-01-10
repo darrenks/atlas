@@ -8,7 +8,7 @@ class Token<Struct.new(:str,:char_no,:line_no)
 end
 
 AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.to_a
-UnmodableSymbols='()\'"{}$'.chars.to_a # these cannot have op modifiers
+UnmodableSymbols='()\'"{}'.chars.to_a # these cannot have op modifiers
 FlipModifier="\\"
 FlipRx=Regexp.escape FlipModifier
 ApplyModifier="@"
