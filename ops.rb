@@ -542,7 +542,7 @@ create_op(
     example2: '3=0 -> []',
     sym: "=",
     type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [b,Null] : [] } })
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 0 ? [a,Null] : [] } })
   .add_test("3=2 -> []")
   .add_test("1=2 -> []")
   .add_test("1=1 -> [1]")
@@ -555,19 +555,19 @@ create_op(
   .add_test('"abc".="abd" -> <"a","b","">'),
   create_op(
     name: "lessThan",
-    example: '4<5 -> [5]',
+    example: '4<5 -> [4]',
     example2: '5<4 -> []',
     sym: "<",
     type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [b,Null] : [] } }
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == -1 ? [a,Null] : [] } }
   ).add_test("5<4 -> []"),
   create_op(
     name: "greaterThan",
-    example: '5>4 -> [4]',
+    example: '5>4 -> [5]',
     example2: '4>5 -> []',
     sym: ">",
     type: { [A,A] => [A] },
-    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [b,Null] : [] } }
+    poly_impl: -> ta,tb {-> a,b { spaceship(a,b,ta) == 1 ? [a,Null] : [] } }
   ).add_test("4>5 -> []"),
   create_op(
     name: "not",
