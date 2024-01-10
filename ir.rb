@@ -69,7 +69,7 @@ def set(t,ast,context)
 end
 
 def create_ir(node,context) # and register_vars
-  if node.op.name == "let"
+  if node.op.name == "set"
     raise ParseError.new("only identifiers may be set",node) if node.args[1].op.name != "var"
     set(node.args[1].token, node.args[0], context)
   else
@@ -88,7 +88,7 @@ def check_missing(node,context,been)
   if node.op.name == "var"
     name = node.from.token.str
     if !context.include? name
-      warn("unset identifier %p" % name, node.from.token) if $repl_mode
+      warn("unset identifier %p" % name, node.from.token) if $repl_mode && context.keys.any?{|v|!v[' '] && v.size > 1} # space is to not count
       node
     else
       check_missing(context[name],context,been)

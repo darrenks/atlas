@@ -51,7 +51,7 @@ def get_expr(tokens,delimiter,implicit_value=nil)
       if DelimiterPriority[t.str]
         nodes << AST.new(EmptyOp,[],t) if nodes.empty?
         if implicit_var
-          nodes << AST.new(Ops2['let'], [], t) << implicit_var
+          nodes << AST.new(Ops2["set"], [], t) << implicit_var
           implicit_var = nil
         end
         break
@@ -64,7 +64,7 @@ def get_expr(tokens,delimiter,implicit_value=nil)
   atoms=[]
   until nodes.empty?
     o = nodes.pop
-    if o.token.str[/^#{ApplyRx}/] && (o.op.name != "let" || o.token.str==ApplyModifier*2) && o.args.size < o.op.narg
+    if o.token.str[/^#{ApplyRx}/] && (o.op.name != "set" || o.token.str==ApplyModifier*2) && o.args.size < o.op.narg
       x = nodes[-1]
       while nodes[-1].args.size<nodes[-1].op.narg
         nodes.pop.args << nodes[-1]
@@ -132,7 +132,7 @@ end
 def handle_push_pops(ast, stack)
   ast.args[0] = handle_push_pops(ast.args[0], stack) if ast.args.size > 0
   if ast.op.name == "push"
-    ast = AST.new(Ops2["let"], [ast.args[0], new_var], ast.token)
+    ast = AST.new(Ops2["set"], [ast.args[0], new_var], ast.token)
     stack.push ast
   elsif ast.op.name == "pop"
     raise ParseError.new("pop on empty stack", ast) if stack.empty?

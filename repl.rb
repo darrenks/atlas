@@ -65,11 +65,20 @@ def repl(input=nil)
         elsif !command && (command=Commands[tokens[-2].str])
           tokens.delete_at(-2)
           command[2][tokens, stack, last, context]
-        elsif tokens.size > 3 && tokens[1].str=="=" && tokens[0].is_name && !is_op(tokens[2])
-          assignment = [tokens[0],tokens[-1]] # code to then get value of this var
-          ast = parse_line(tokens[2..-1], stack, last)
-          set(tokens[0], ast, context)
+        elsif tokens[0].str=="let" || possible_assignment(tokens) && !context[tokens[0].str]
+          if tokens[0].str == "let"
+            raise "let syntax is: let var = value" unless tokens.size > 4 && tokens[2].str=="=" && tokens[1].is_name
+            offset = 1
+          else
+            offset = 0
+          end
+          assignment = [tokens[offset],tokens[-1]] # code to then get value of this var
+          ast = parse_line(tokens[offset+2..-1], stack, last)
+          set(tokens[offset], ast, context)
         else
+          if $repl_mode && possible_assignment(tokens)
+            warn("interpreting as equality check, to override name use let var=value", tokens[1])
+          end
           ir = to_ir(parse_line(tokens, stack, last),context)
           context["last ans"]=ir
           printit(ir,context)
@@ -99,6 +108,10 @@ def repl(input=nil)
       raise e
     end
   end # until
+end
+
+def possible_assignment(tokens)
+  (tokens.size > 3 && tokens[1].str=="=" && tokens[0].is_name && !is_op(tokens[2]))
 end
 
 def printit(ir,context)

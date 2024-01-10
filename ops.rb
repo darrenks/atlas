@@ -642,7 +642,7 @@ create_op(
   "syntactic sugar",
   # Macros, type only used to specify number of args
   create_op(
-    name: "let",
+    name: "set",
     desc: "save to a variable without consuming it",
     example: '5@a+a -> 10',
     sym: ApplyModifier,

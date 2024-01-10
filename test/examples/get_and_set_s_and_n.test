@@ -1,6 +1,6 @@
 [prog]
 N p
-S=", "
+let S=", "
 1,2,3;
 [output]
 '\n

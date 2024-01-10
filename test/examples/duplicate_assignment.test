@@ -1,7 +1,10 @@
 [prog]
 a=5
-a=3
+a=5# -- check that it doesn't warn in normal mode and is equality test
+let a=3
 a
 
 [stdout]
+1
 3
+[stderr]
