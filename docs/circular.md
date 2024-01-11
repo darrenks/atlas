@@ -197,9 +197,9 @@ Note for code golfers, the left `,` isn't needed since it knows it needs a 2D li
     2 4 6
     3 6 9
 
-or even shorter by pushing and popping the 1,2,3
+or even shorter by saving the 1,2,3 to the next available var
 
-    1,2,3{.,*}
+    1,2,3{.,*a
     ──────────────────────────────────
     1 2 3
     2 4 6

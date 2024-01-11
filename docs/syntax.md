@@ -104,12 +104,6 @@ Both of these modifiers can be used on the implicit op.
     there hi
     5 7
 
-`{` and `}` may seem special syntactically, but they are not. `{` is a unary op that "pushes" on to a stack (that only exists at parse time) so that the next `}` (which is just an atom) can access the same value. It is equivalent to using assignment or `@`, but shorter when a value is reused only once. It has a nice appearance in that visually matching brackets will tell you which one corresponds to which.
-
-    5*2{*}
-    ──────────────────────────────────
-    100
-
 The curly brackets are nice for avoiding normal variable assignments, but cannot help you write a circular program since they always copy the left value. To do that just use parenthesis with an implicit value. Instead of writing `a cons 1@a` we could just write:
 
     (cons 1)

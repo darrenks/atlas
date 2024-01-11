@@ -1,9 +1,8 @@
 AST = Struct.new(:op,:args,:token)
 
-def parse_line(tokens, stack, last=nil)
+def parse_line(tokens, last=nil)
   tokens = balance_parens(tokens)
-  ast = get_expr(tokens,:EOL, last)
-  handle_push_pops(ast, stack)
+  get_expr(tokens,:EOL, last)
 end
 
 DelimiterPriority = {:EOL => 0, ')' => 1}
@@ -127,20 +126,6 @@ end
 
 def is_op(t)
   AllOps.include?(t.name) && !Ops0.include?(t.name)
-end
-
-def handle_push_pops(ast, stack)
-  ast.args[0] = handle_push_pops(ast.args[0], stack) if ast.args.size > 0
-  if ast.op.name == "push"
-    ast = AST.new(Ops2["set"], [ast.args[0], new_var], ast.token)
-    stack.push ast
-  elsif ast.op.name == "pop"
-    raise ParseError.new("pop on empty stack", ast) if stack.empty?
-    ast = stack.pop
-  end
-  ast.args[1] = handle_push_pops(ast.args[1], stack) if ast.args.size > 1
-
-  ast
 end
 
 $new_vars = 0

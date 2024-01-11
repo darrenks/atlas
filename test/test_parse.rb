@@ -86,10 +86,10 @@ tests.lines.each{|test|
   o.strip!
   begin
     tokens,lines = lex(i)
-    found = parse_line(tokens[0],[])
+    found = parse_line(tokens[0])
 
     tokens,lines = lex(o)
-    expected = parse_line(tokens[0],[])
+    expected = parse_line(tokens[0])
   rescue Exception
     found = $!
   end

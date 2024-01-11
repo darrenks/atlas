@@ -31,8 +31,8 @@ end
 
 def doit(source,limit)
   tokens,lines = lex(source)
-  root = parse_line(tokens[0],[])
-  ir = to_ir(root,{})
+  root = parse_line(tokens[0])
+  ir = to_ir(root,{},[])
   infer(ir)
   v=make_promises(ir)
   v=inspect_value(ir.type+ir.vec_level,v,ir.vec_level)

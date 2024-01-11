@@ -647,21 +647,12 @@ create_op(
     type: { [A,:id] => A },
     impl: MacroImpl,
   ), create_op(
-    name: "push",
-    desc: "duplicate arg onto a lexical stack",
-    example: '5{,1,},2 -> [5,1,5,2]',
+    name: "save",
+    desc: "save to next available var (a,b,c,...)",
+    example: '5{,1,a,2 -> [5,1,5,2]',
     sym: "{",
     type: { A => A },
-    impl: MacroImpl)
-  .add_test('2{3+} -> <4,5>'),
-  create_op(
-    name: "pop",
-    desc: "pop last push arg from a lexical stack",
-    example: '5{,1,},2 -> [5,1,5,2]',
-    sym: "}",
-    type: A,
-    impl: MacroImpl,
-  ),
+    impl: MacroImpl),
 
   # These are here purely for quickref purposes
   create_op(
@@ -671,7 +662,7 @@ create_op(
     example: '2-\\5 -> 3',
     ref_only: true,
     type: :unused,
-    type_summary: "op/",
+    type_summary: "op\\",
     impl: MacroImpl,
   ), create_op(
     name: "apply",
@@ -776,7 +767,7 @@ def create_char(str)
 end
 
 Commands = {
-  "help" => ["see op's info", "op", -> tokens, stack, last, context {
+  "help" => ["see op's info", "op", -> tokens, last, context, saves {
     raise ParseError.new("usage: help <op>, see golfscript.com/atlas for tutorial",tokens[0]) if tokens.size != 2
     relevant = ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}
     if !relevant.empty?
@@ -785,22 +776,22 @@ Commands = {
       puts "no such op: #{tokens[0].str}"
     end
   }],
-  "version" => ["see atlas version", nil, -> tokens, stack, last, context {
+  "version" => ["see atlas version", nil, -> tokens, last, context, saves {
     raise ParseError.new("usage: version",tokens[0]) if tokens.size != 1
     puts $version
   }],
-  "type" => ["see expression type", "a", -> tokens, stack, last, context {
-    p infer(to_ir(tokens.size<2 ? last : parse_line(tokens, stack, last),context)).type_with_vec_level
+  "type" => ["see expression type", "a", -> tokens, last, context, saves {
+    p infer(to_ir(tokens.size<2 ? last : parse_line(tokens, last),context,saves)).type_with_vec_level
   }],
-  "p" => ["pretty print value", "a", -> tokens, stack, last, context {
-    ast = tokens.size<2 ? last : parse_line(tokens, stack, last)
-    ir=infer(to_ir(ast,context))
+  "p" => ["pretty print value", "a", -> tokens, last, context, saves {
+    ast = tokens.size<2 ? last : parse_line(tokens, last)
+    ir=infer(to_ir(ast,context,saves))
     run(ir) {|v,n,s| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
     puts
   }],
-  "print" => ["print value (implicit)", "a", -> tokens, stack, last, context {
-    ast = tokens.size<2 ? last : parse_line(tokens, stack, last)
-    ir=infer(to_ir(ast,context))
+  "print" => ["print value (implicit)", "a", -> tokens, last, context, saves {
+    ast = tokens.size<2 ? last : parse_line(tokens, last)
+    ir=infer(to_ir(ast,context,saves))
     run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false,n,s) }
   }],
 

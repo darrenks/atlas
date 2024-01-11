@@ -219,10 +219,9 @@ a`0+1@a=10#&a|(b%>+1)@b[ -> 19
 
 -- Test unary op not used as binary op
 2 . 4 -> <[2,4]>
-'a{\'b -> "ba"
 
 -- Test @ can be applied to { (it is unmodifiable for flip)
-1+2@{,} -> [3,2]
+1+2@{,a -> [3,2]
 
 -- implicit value is circular program
 (+1`0)[5 -> [0,1,2,3,4]

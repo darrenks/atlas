@@ -48,13 +48,13 @@ Now to golf it.
 
 -   The parens can be removed by adding a `@` before the op to increase its precedence.
 -   `101` can be replaced by `CI` the roman numeral
--   The `r` is only used twice, so we can push a copy with `{` and get it with `}`
+-   The `r` is only used twice, so we can save it to next available var with `{` and get it with `a`
 -   The quotes around `"Fizz"` and `"Buzz"` can be removed since unset identifiers default to their string value.
 -   The `,` can be removed in `3@,5` since it is implicit. It can't between Fizz and Buzz because it would think we want to assign to the identifier Buzz.
 
 And we get:
 
-    1:CI{,%3@5~^Fizz@,Buzz_|}
+    1:CI{,%3@5~^Fizz@,Buzz_|a
     ──────────────────────────────────
     1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
 
@@ -91,7 +91,7 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
 
     -- next state
     b2=r~(m&(c,S;_b);,b@>)[|b catch,b[
-    next=(`0+('\-c{|<2&}))?[#]\c  -- the next code after matching ]
+    next=(`0+('\-c{|<2&a))?[#]\c  -- the next code after matching ]
     c2=r~(m~&next;,b@[)[|c catch,c[ >
     m2= z~(mr[;,ml@[,m@+1,m@-1),m [
     ml2=z~(m,ml,ml@>)         , ml[
@@ -126,7 +126,7 @@ This code can be tested by changing `s` and the initial state to see if it behav
     z=c[,.="><+-]["
     r=z%/.
     b2=r~(m&b@`c@`S;,b@>)@f[|b catch,b[
-    next=(`0+('\-c{|<2&}))?[#]\c
+    next=(`0+('\-c{|<2&a))?[#]\c
     c2=r~(m~&next,b@[)[|c catch,c[ >
     m2= z~(mr[;,ml@[,m@+1,m@-1),m [
     ml2=z~(ml`m,ml@>)         , ml[
@@ -142,7 +142,7 @@ The last line collect the output, chunk it while the code that remains is not em
 A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself. (Note actually this is longer for now since behavior of `|` has changed and catch is manually needed, but surely could be golfed out.
 
     s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    >,r@`m~\z,r[%`0@,.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&}))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b catch,b[^@b)@[~\}[|c catch,c[>%`s.@c[='.~(c?m[+'\0
+    >,r@`m~\z,r[%`0@,.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&a))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b catch,b[^@b)@[~\d[|c catch,c[>%`s.@c[='.~(c?m[+'\0
     ──────────────────────────────────
     Hello World!
 

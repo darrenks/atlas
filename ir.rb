@@ -31,29 +31,44 @@ class IR < Struct.new(
 end
 
 # creates an IR from an AST, replacing vars
-def to_ir(ast,context)
-  ir = create_ir(ast,context)
+def to_ir(ast,context,saves)
+  ir = create_ir(ast,context,saves)
+  set_saves(context,saves)
   ir = check_missing(ir,context,{})
   ir = lookup_vars(ir,context,{})
   ir
 end
 
-def set(t,ast,context)
-  context[t.str] = create_ir(ast, context)
+def set(t,ast,context,saves)
+  context[t.str] = create_ir(ast, context,saves)
 end
 
-def create_ir(node,context) # and register_vars
+def create_ir(node,context,saves) # and register_vars
   if node.op.name == "set"
     raise ParseError.new("only identifiers may be set",node) if node.args[1].op.name != "var"
-    set(node.args[1].token, node.args[0], context)
+    set(node.args[1].token, node.args[0], context, saves)
+  elsif node.op.name == "save"
+    # we don't know what future vars will be set, we don't want to use those names, so don't do anything yet
+    v = create_ir(node.args[0], context, saves)
+    saves << v
+    v
   else
-    args=node.args.map{|arg|create_ir(arg,context)}
+    args=node.args.map{|arg|create_ir(arg,context,saves)}
     op = node.op.dup
     if node.token && node.token.str =~ /#{FlipRx}$/
       args.reverse!
     end
     IR.new(op,args,node)
   end
+end
+
+def set_saves(context,saves)
+  vars = [*'a'..'z'] - context.keys
+  saves.each{|node|
+    raise(ParseError.new("out of vars", node)) if vars.empty?
+    context[vars.shift] = node
+  }
+  saves.replace([])
 end
 
 def check_missing(node,context,been)
