@@ -9,8 +9,8 @@
 "\n\\".; -> <"\n","\\">
 "\x02\x20\xaa".; -> <"\x02"," ","\xaa">
 
--- test utf8 encoding chars
-"├───╯".; -> <"\{9500}","\{9472}","\{9472}","\{9472}","\{9583}">
+-- test utf8 encoding chars as bytes
+"├───╯".; -> <"\xe2","\x94","\x9c","\xe2","\x94","\x80","\xe2","\x94","\x80","\xe2","\x94","\x80","\xe2","\x95","\xaf">
 
 -- test char and escapes
 'a -> 'a
@@ -275,7 +275,7 @@ a;@a -> AtlasTypeError
 -- test laziness of chunk while using collatz conjecture problem
 a%2&(3*a+1)|(a/2)`8@a=.~%?a[ -> [8,4,2,1]
 
-5@λ*λ -> 25
+-- 5@λ*λ -> 25 -- todo reenable when things other than a-z can be long ids
 
 1,2+0# -> 2
 -- test will not unvectorize after vec op

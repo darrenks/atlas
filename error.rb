@@ -1,5 +1,5 @@
 def warn(msg, from=nil)
-  STDERR.puts to_location(from) + " " + msg + " (\e[31mWarning\e[0m)"
+  STDERR.puts to_location(from) + msg + " (\e[31mWarning\e[0m)"
 end
 
 def to_location(from)
@@ -17,9 +17,9 @@ def to_location(from)
   end
 
   if token
-    "%s:%s (%s)" % [token.line_no||"?", token.char_no||"?", token.str]
+    "%s:%s (%s) " % [token.line_no||"?", token.char_no||"?", token.str]
   else
-    "?:?"
+    ""
   end
 end
 
@@ -29,7 +29,7 @@ class AtlasError < StandardError
     @from = from
   end
   def message
-    to_location(@from) + " " + @message + " (\e[31m#{class_name}\e[0m)"
+    to_location(@from) + @message + " (\e[31m#{class_name}\e[0m)"
   end
   def class_name
     self.class.to_s

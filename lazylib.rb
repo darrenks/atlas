@@ -416,7 +416,10 @@ end
 
 def print_string(value)
   while !value.empty
-    putc value.value[0].value
+    v = value.value[0].value
+    # raw print, multiple bytes will show up as one if utf is used. output will match source code so will look correct if editor encoding=terminal encoding
+    raise DynamicError.new("char value, %s, outside of byte range" % v, nil) if v<0 || v>255
+    putc v
     value = value.value[1]
   end
 end

@@ -22,7 +22,10 @@ def repl(input=nil)
   if input
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
-    input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift, :encoding => 'iso-8859-1') }
+    input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift,
+      # treat file as byte characters
+      :encoding => 'iso-8859-1'
+    ) }
   else
     $repl_mode = true if $repl_mode.nil?
     hist_file = Dir.home + "/.atlas_history"
@@ -37,7 +40,8 @@ def repl(input=nil)
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
-      all = context.keys + ActualOpsList.filter(&:name).map(&:name) + Commands.keys
+      var_names = context.keys.grep(/^[^_]*$/) # hide internal vars
+      all = var_names + ActualOpsList.filter(&:name).map(&:name) + Commands.keys
       all.grep(/^#{Regexp.escape(s)}/).reject{|name|name =~ / /}
     }
   end

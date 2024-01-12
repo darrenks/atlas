@@ -1,9 +1,10 @@
 [prog]
 "├───╯"
-
+"├───╯"p
 'a-1000
-
+-- not really a test of utf8 so much as it is a test that binary characters don't cause problems, since we input/output bytes
 [stdout]
 ├───╯
-y
-
+"\xe2\x94\x9c\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x95\xaf"
+[stderr]
+char value, -903, outside of byte range (DynamicError)
