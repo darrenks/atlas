@@ -15,10 +15,6 @@ ApplyModifier="@"
 ApplyRx=Regexp.escape ApplyModifier
 ModableSymbols=AllSymbols-UnmodableSymbols-[FlipModifier,ApplyModifier]
 
-
-
-# todo gsub \r\n -> \n and \t -> 8x" " and \r -> \n
-
 NumRx = /([0-9]+([.][0-9]+)?(e-?[0-9]+)?)|([.][0-9]+(e-?[0-9]+)?)/
 CharRx = /'(\\n|\\0|\\x[0-9a-fA-F][0-9a-fA-F]|.)/m
 StrRx = /"(\\.|[^"])*"?/
@@ -30,21 +26,24 @@ OpRx = /#{ApplyRx}\{|#{IdRx}|#{ApplyRx}?#{SymRx}#{FlipRx}?|#{FlipRx}|#{ApplyRx}{
 OtherRx = /#{UnmodableSymbols.map{|c|Regexp.escape c}*'|'}/
 CommentRx = /--.*/
 IgnoreRx = /#{CommentRx}|[ \t]+/
+NewlineRx = /\r\n|\r|\n/
 
 def lex(code,line_no=1) # returns a list of lines which are a list of tokens
 	tokens = [[]]
   char_no = 1
-  code.scan(/#{AtomRx}|#{CommentRx}|#{OpRx}|#{OtherRx}|#{IgnoreRx}|./m) {|matches|
+  code.scan(/#{AtomRx}|#{CommentRx}|#{OpRx}|#{OtherRx}|#{NewlineRx}|#{IgnoreRx}|./m) {|matches|
     $from=token=Token.new($&,char_no,line_no)
-    line_no += $&.count("\n")
-    if $&["\n"]
-      char_no = $&.size-$&.rindex("\n")
+    match=$&
+    line_no += $&.scan(NewlineRx).size
+    if match[NewlineRx]
+      char_no = match.size-match.rindex(NewlineRx)
     else
-      char_no += $&.size
+      # FYI this counts tab as 1, and utf8 characters as len of their bytes, could be misleading
+      char_no += match.size
     end
     if token.str =~ /^#{IgnoreRx}$/
       # pass
-    elsif token.str == "\n"
+    elsif token.str =~ /^#{NewlineRx}$/
       tokens[-1] << Token.new(:EOL,char_no,line_no)
       tokens << []
     else
