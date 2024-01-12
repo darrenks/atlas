@@ -13,6 +13,4 @@ elsif ARGV.delete("-no_repl_mode")
   $repl_mode = false
 end
 
-# Encoding.default_external="ASCII-8BIT"
-
 repl

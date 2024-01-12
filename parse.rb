@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 AST = Struct.new(:op,:args,:token)
 
 def parse_line(tokens, last=nil)

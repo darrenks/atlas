@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 def infer(root)
   all = all_nodes(root)
   q=[]

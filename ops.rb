@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 require_relative "./type.rb"
 require_relative "./spec.rb"
 
@@ -24,11 +25,11 @@ class Op < Struct.new(
       out.puts type_summary
     else
       type.each{|t|
-        out.puts t.inspect.gsub('->','→').gsub('[Char]','Str')
+        out.puts t.inspect.gsub('->',"\xE2\x86\x92").gsub('[Char]','Str')
       }
     end
     (examples+tests).each{|example|
-      out.puts example.gsub('->','→')
+      out.puts example.gsub('->',"\xE2\x86\x92")
     }
     misc = []
     out.puts

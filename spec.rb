@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 # general type vars
 A = :a
 B = :b

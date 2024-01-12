@@ -10,7 +10,7 @@ def failit(filename,line,prog,expected,output)
 end
 
 (Dir['docs/*.md']<<"README.md").each{|doc|
-  file = File.read(doc)
+  file = File.read(doc, :encoding => "utf-8")
   tests = 0
   file.scan(/((?:    .*\n+)+)    ───+\n((:?    .*\n+)+)/){|a|
     tests += 1

@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 require "./test/check_example.rb"
 
 line = 1

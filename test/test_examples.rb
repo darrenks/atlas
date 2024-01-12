@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 require 'open3'
 runs = 0
 def failit(filename,test, reason)

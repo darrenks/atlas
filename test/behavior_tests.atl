@@ -275,7 +275,7 @@ a;@a -> AtlasTypeError
 -- test laziness of chunk while using collatz conjecture problem
 a%2&(3*a+1)|(a/2)`8@a=.~%?a[ -> [8,4,2,1]
 
--- 5@λ*λ -> 25 -- todo reenable when things other than a-z can be long ids
+5@λ*λ -> 25
 
 1,2+0# -> 2
 -- test will not unvectorize after vec op

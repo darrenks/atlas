@@ -1,4 +1,13 @@
+# -*- coding: ISO-8859-1 -*-
+# Set ruby file coding (with top comment) and IO to operate on bytes.
+# This is done so that everything is simply bytes in Atlas, but will display
+# properly even if using fancy unicode chars in another encoding (lengths/etc will be off though).
+# It is important for all encodings to match otherwise will get runtime errors when using
+# fancy characters.
+Encoding.default_external="iso-8859-1"
+Encoding.default_internal="iso-8859-1"
 require "readline"
+
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 
 def repl(input=nil)
@@ -22,10 +31,7 @@ def repl(input=nil)
   if input
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
-    input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift,
-      # treat file as byte characters
-      :encoding => 'iso-8859-1'
-    ) }
+    input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift) }
   else
     $repl_mode = true if $repl_mode.nil?
     hist_file = Dir.home + "/.atlas_history"
@@ -33,16 +39,16 @@ def repl(input=nil)
       Readline::HISTORY.push *File.read(hist_file).split("\n")
     end
     input_fn = lambda {
-      line = Readline.readline("\e[33m ᐳ \e[0m", true)
+      line = Readline.readline("\e[33m \xE1\x90\xB3 \e[0m".force_encoding("utf-8"), true)
       File.open(hist_file,'a'){|f|f.puts line} unless !line || line.empty?
       line
     }
     Readline.completion_append_character = " "
     Readline.basic_word_break_characters = " \n\t1234567890~`!@\#$%^&*()_-+={[]}\\|:;'\",<.>/?"
     Readline.completion_proc = lambda{|s|
-      var_names = context.keys.grep(/^[^_]*$/) # hide internal vars
+      var_names = context.keys.reject{|k|k['_']} # hide internal vars
       all = var_names + ActualOpsList.filter(&:name).map(&:name) + Commands.keys
-      all.grep(/^#{Regexp.escape(s)}/).reject{|name|name =~ / /}
+      all.filter{|name|name.index(s)==0}.reject{|name|name['_']}
     }
   end
 
@@ -62,6 +68,7 @@ def repl(input=nil)
         end
         break
       end
+
       token_lines,line_no=lex(line, line_no)
       token_lines.each{|tokens| # each line
         next if tokens[0].str == :EOL

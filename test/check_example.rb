@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 require "./repl.rb"
 
 def check_example(test)

@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 def run(root)
   v = Promise.new{yield(make_promises(root))}
   print_string(v)

@@ -1,1 +1,2 @@
-$version="Atlas Beta (Jan 11, 2024)"
+# -*- coding: ISO-8859-1 -*-
+$version="Atlas Beta (Jan 14, 2024)"

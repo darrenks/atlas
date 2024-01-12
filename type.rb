@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 Inf = 2**61 # for max_pos_dim
 Type = Struct.new(:dim,:base_elem) # base is :num, :char, or :a
 # :a means unknown type, it could be any type with dim >= 0

@@ -42,8 +42,8 @@ a_a -> a_a
 A_ A -> A_ A
 
 -- Test binary character identifiers
-->    -- chr two char 127 in a row
-λλ -> λ λ -- two unicode chars in a row
+->   -- chr two char 127 in a row
+λλ -> λλ -- two unicode chars in a row
 
 1; head -> 1;[
 

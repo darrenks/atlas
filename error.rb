@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 def warn(msg, from=nil)
   STDERR.puts to_location(from) + msg + " (\e[31mWarning\e[0m)"
 end

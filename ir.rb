@@ -1,3 +1,4 @@
+# -*- coding: ISO-8859-1 -*-
 $ir_node_count = 0
 class IR < Struct.new(
     :op,                  # these set during construction
