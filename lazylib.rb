@@ -13,7 +13,7 @@ def make_promises(node)
   }
   args = node.args.zip(0..).map{|arg,i|
     promoted = promoten(arg.vec_level, node.promote_levels[i], make_promises(arg))
-    repn([node.zip_level-node.rep_levels[i],arg.vec_level].min, node.rep_levels[i], promoted)
+    repn(node.rep_levels[i], promoted)
   }
   node.promise
 end
@@ -264,13 +264,11 @@ def repeat(a)
   ret
 end
 
-def repn(vec_level,n,a)
+def repn(n,a)
   if n<=0
     a
   else
-    Promise.new{zipn(vec_level,[a],-> av {
-      repeat(repn(0,n-1,av))
-    })}
+    Promise.new{ repeat(repn(n-1,a)) }
   end
 end
 

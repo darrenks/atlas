@@ -95,7 +95,7 @@ To get the transpose now we just need to take the heads of each list:
 We've seen how to do scanl on a list, but how does it work on 2D lists?
 
     a=(1,2,3,4),(5,6,7,8)
-    b=a+b%%`(0,)
+    b=a+b%%`(0,%)
     b. take 10
     ──────────────────────────────────
     0 0 0 0 0 0 0 0 0 0
@@ -167,9 +167,9 @@ The reason is because vectorization zips instead of doing a 'cartesian product'.
 
 Doing a cartesian product is easy though. We just replicate each list in a different dimension
 
-    1,2,3, take 3
+    1,2,3,% take 3
     " and "
-    1,2,3., take 3
+    1,2,3.,% take 3
     ──────────────────────────────────
     1 2 3
     1 2 3

@@ -81,7 +81,7 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
     -- initial state
     c=s
     ml=()   -- memory to left of pointer (reversed)
-    mr=0,   -- memory to the right of pointer
+    mr=0,%  -- memory to the right of pointer
     m=0     -- value at pointer
     b=()    -- stack of code at ['s that we have entered
 
@@ -119,11 +119,11 @@ This code can be tested by changing `s` and the initial state to see if it behav
             s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
     c=c2%`s.
     ml=ml2^
-    mr=mr2%`(0,).
+    mr=mr2%`(0,%).
     m=m2^
     b=b2^
 
-    z=c[,.="><+-]["
+    z=c[,="><+-]["
     r=z%/.
     b2=r~(m&b@`c@`S;,b@>)@f[|b catch,b[
     next=(`0+('\-c{|<2&a))?[#]\c
@@ -142,7 +142,7 @@ The last line collect the output, chunk it while the code that remains is not em
 A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself. (Note actually this is longer for now since behavior of `|` has changed and catch is manually needed, but surely could be golfed out.
 
     s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    >,r@`m~\z,r[%`0@,.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&a))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b catch,b[^@b)@[~\d[|c catch,c[>%`s.@c[='.~(c?m[+'\0
+    >,r@`m~\z,r[%`0,@%.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&a))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b catch,b[^@b)@[~\d[|c catch,c[>%`s.@c[='.~(c?m[+'\0
     ──────────────────────────────────
     Hello World!
 

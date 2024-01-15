@@ -264,6 +264,12 @@ OpsList = [
    .add_test("5:3 -> <>")
    .add_test("1.5:5 -> <1.5,2.5,3.5,4.5>"),
   create_op(
+    name: "repeat",
+    sym: ",",
+    example: '2, -> <2,2,2,2,2...',
+    type: { A => v(A) },
+    impl: -> a { repeat(a) }),
+  create_op(
     name: "from",
     sym: ":",
     example: '3: -> <3,4,5,6,7,8...',
@@ -354,12 +360,6 @@ OpsList = [
     example: '2; -> [2]',
     type: { A => [A] },
     impl: -> a { [a,Null] }),
-  create_op(
-    name: "repeat",
-    sym: ",",
-    example: '2, -> [2,2,2,2,2...',
-    type: { A => [A] },
-    impl: -> a { repeat(a) }),
   create_op(
     name: "concat",
     sym: "_",
