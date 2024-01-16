@@ -769,7 +769,7 @@ end
 
 Commands = {
   "help" => ["see op's info", "op", -> tokens, last, context, saves {
-    raise ParseError.new("usage: help <op>, see golfscript.com/atlas for tutorial",tokens[0]) if tokens.size != 2
+    raise ParseError.new("usage: help <op>, see #$site for tutorial",tokens[0]) if tokens.size != 2
     relevant = ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}
     if !relevant.empty?
       relevant.each(&:help)

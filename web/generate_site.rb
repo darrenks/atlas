@@ -63,3 +63,7 @@ end
 (allFiles<<"README.md").each{|f|
   convertMd(f)
 }
+
+`ruby web/package.rb > web/site/atlas && chmod +x web/site/atlas`
+raise "problem with atlas package" if `echo 1+2 > test/temp.atl; web/site/atlas test/temp.atl` != "3\n"
+
