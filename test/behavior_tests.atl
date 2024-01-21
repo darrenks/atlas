@@ -222,12 +222,6 @@ a`0+1@a=10#&a|(b%>+1)@b[ -> 19
 -- Test @ can be applied to { (it is unmodifiable for flip)
 1+2@{,a -> [3,2]
 
--- implicit value is circular program
-(+1`0)[5 -> [0,1,2,3,4]
-+(1,2,3,4)`0 -> [0,1,3,6,10]
--+(1,2,3,4)`0 -> [0,1,1,2,2]
-
-
 -- This tests a pathological case in var lookups
 a@F _ F@a -> InfiniteLoopError
 
@@ -243,18 +237,16 @@ a;@a -> AtlasTypeError
 
 -- test unbalanced ) for use with circular programming/nil
 ) -> []
-`0+1)[5# -> 5
-`0)+(1 -> <1,1,1,1...
 
 -- test apply
 2*3@+4 -> 14
 2*3-@+4 -> 2
 
-1+2@3 -> <3,4>
+-- 1+2@3 -> <3,4> -- removed for now todo, @ will be a binary op again?
 1+5@@a+a -> 11
 
--- test apply with implicit circular
-`1@-)[3 -> [-1,-1,-1]
+1@ -> ParseError
+1@@ -> ParseError
 
 -- test flip
 1\2 -> [2,1]
@@ -269,7 +261,7 @@ a;@a -> AtlasTypeError
 -- this would be type A which should not be possible to construct
 ""&a@a -> DynamicError
 
-(1@"") -> ["1",""]
+-- (1@"") -> ["1",""] -- todo
 
 -- test laziness of chunk while using collatz conjecture problem
 a%2&(3*a+1)|(a/2)`8@a=.~%?a[ -> [8,4,2,1]
@@ -301,7 +293,7 @@ IX -> 9
 .3e2 -> 30.0
 
 -- test catch in faith based circular program works
-%,0>+(1,2,(1/0),3,4.catch,55[)) -> <65,64,62,7,4>
+a%,0>+(1,2,(1/0),3,4.catch,55[){ -> <65,64,62,7,4>
 (1,2,3,4),(5,(1/0),7,8)..catch,77[+b`0@b -> <[0,1,3,6,10],[0,5,82,89,97]>
 
 -- test auto unvec

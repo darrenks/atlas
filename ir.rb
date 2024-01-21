@@ -56,9 +56,7 @@ def create_ir(node,context,saves) # and register_vars
   else
     args=node.args.map{|arg|create_ir(arg,context,saves)}
     op = node.op.dup
-    if node.token && node.token.str =~ /#{FlipRx}$/
-      args.reverse!
-    end
+    args.reverse! if node.is_flipped
     IR.new(op,args,node)
   end
 end

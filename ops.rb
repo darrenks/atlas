@@ -97,6 +97,8 @@ def num_col
   }
 end
 
+ApplyModifier = "@"
+FlipModifier = "\\"
 OpsList = [
   "math",
   create_op(
@@ -672,7 +674,7 @@ create_op(
     example: '2*3@+4 -> 14',
     type: {:unused => :unused},
     type_summary: "@op",
-    impl_with_loc: ->from{raise ParseError.new("apply needs a right hand side if used on a binary op",from)}, # this can occur from something like 13@@
+    impl_with_loc: ->from{raise ParseError.new("@ must be followed by an op or atom",from)}, # this can occur from something like 1@@ or 1@
   ),
 ]
 ActualOpsList = OpsList.reject{|o|String===o}

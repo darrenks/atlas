@@ -1,104 +1,78 @@
 # -*- coding: ISO-8859-1 -*-
-AST = Struct.new(:op,:args,:token)
+AST = Struct.new(:op,:args,:token,:is_flipped)
 
 def parse_line(tokens, last=nil)
-  tokens = balance_parens(tokens)
-  get_expr(tokens,:EOL, last)
-end
-
-DelimiterPriority = {:EOL => 0, ')' => 1}
-LBrackets = {"(" => ")"}
-
-def get_expr(tokens,delimiter,implicit_value=nil)
-  lastop = implicit_var = nil
-  nodes = []
-  loop {
-    atom,t = get_atom(tokens)
-    if atom
-      if lastop #binary op
-        nodes << (implicit_value || implicit_var = new_var) if nodes.empty?
-        if lastop.str == ApplyModifier && atom.op.name == "var"
-          # would register as a modifier to implicit op, override this
-          nodes << AST.new(Ops2[ApplyModifier], [], lastop) << atom
-        elsif !Ops2[lastop.name]&&Ops1[lastop.name] # the symbol can only be used as unary, do that plus implicit
-          nodes << make_op1(lastop) << AST.new(ImplicitOp,[],t) << atom
-        else
-          nodes << make_op2(lastop) << atom
-        end
-      elsif nodes.empty? #first atom
-        nodes << atom
-      else # implict op
-        nodes << AST.new(ImplicitOp,[],t) << atom
+  stacks = [[]]
+  x=tokens.pop # eof # todo fixup
+  tokens.unshift x
+  next_atom_pops = false
+  loop{ # main loop, expecing a value at start of each loop
+    peek = tokens[-1].str
+    if false && peek=="(" # ()
+      stacks[-1] = AST.new(EmptyOp,[],tokens.pop)
+    elsif peek==")"
+      tokens.pop; stacks << []
+    elsif Ops1.include? peek
+      next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks)
+      stacks[-1] << make_op1(tokens.pop)
+    else
+      if peek == "(" || peek == :EOL # implicit value needed
+        atom = stacks[-1].empty? ? AST.new(EmptyOp,[],tokens[-1]) : last
+      else
+        atom = make_op0(tokens.pop)
       end
-      lastop = nil
-    else # not an atom
-      if lastop
-        nodes << (implicit_value || implicit_var = new_var) if nodes.empty?
-        if lastop.str =~ /(.*)(#{FlipRx})$/
-          if !$1.empty? # lexer falsely thought it was an op modifier, split it into 2 tokens
-            z=lastop.dup
-            z.str = $1
-            nodes << make_op1(z)
-            lastop.char_no += $1.size
-            lastop.str = $2
-          end
-          nodes << AST.new(Ops1[FlipModifier], [], lastop)
-        else
-          nodes << make_op1(lastop)
-        end
+      while tokens[-1].str == "("
+        atom = pop_stack(stacks, atom)
+        tokens.pop
+        stacks = [[]] if stacks.empty? # more ( than )
+      end
+      if next_atom_pops == true
+        next_atom_pops = false
+        atom = pop_stack(stacks, atom)
       end
 
-      if DelimiterPriority[t.str]
-        nodes << AST.new(EmptyOp,[],t) if nodes.empty?
-        if implicit_var
-          nodes << AST.new(Ops2["set"], [], t) << implicit_var
-          implicit_var = nil
-        end
-        break
+      # now expecing a binary op, since have value
+      if tokens[-1].str == :EOL
+        # could error if more than 1 because that is uselss
+        atom=pop_stack(stacks, atom) until stacks.empty?
+        return atom
       end
-      lastop = t
+      is_flipped = tokens[-1].str == FlipModifier && (tokens.pop; true)
+      next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks)
+      if Ops2.include? tokens[-1].str
+        stacks[-1] << op = make_op2(tokens.pop,is_flipped)
+        op.args = [atom]
+      else # implicit op
+        stacks[-1] << op = AST.new(ImplicitOp,[atom],tokens[-1],is_flipped)
+      end
     end
   }
-
-  ops=[]
-  atoms=[]
-  until nodes.empty?
-    o = nodes.pop
-    if o.token.str[/^#{ApplyRx}/] && (o.op.name != "set" || o.token.str==ApplyModifier*2) && o.args.size < o.op.narg
-      x = nodes[-1]
-      while nodes[-1].args.size<nodes[-1].op.narg
-        nodes.pop.args << nodes[-1]
-      end
-      nodes.pop
-      o.args << x
-      (o.op.narg-1).times{ o.args << atoms.pop }
-    end
-
-    if o.args.size==o.op.narg
-      atoms << o
-    else
-      ops << o
-    end
-  end
-
-  v=atoms.pop
-  until ops.empty?
-    n=ops[-1].op.narg
-    ops[-1].args << v
-    v = ops.pop
-    (n-1).times{ v.args << atoms.pop }
-  end
-  v
 end
 
-# return atom or nil
-def get_atom(tokens)
-  t = tokens.shift
+# todo handle invalid symbol lookup
+
+def check_for_apply_modifier(tokens, next_atom_pops, stacks)
+  if tokens[-2].str == ApplyModifier
+    at=tokens.delete_at(-2)
+    stacks << []
+    raise ParseError.new("redundant apply modifer", at) if next_atom_pops
+    true
+  else
+    next_atom_pops
+  end
+end
+
+def pop_stack(stacks, atom)
+  stacks.pop.reverse_each{|node|
+    node.args.unshift atom
+    atom = node
+  }
+  atom
+end
+
+def make_op0(t)
   str = t.str
-  [if LBrackets.include? t.str
-    rb = LBrackets[t.str]
-    get_expr(tokens,rb)
-  elsif str =~ /^#{NumRx}$/
+  if str =~ /^#{NumRx}$/
     AST.new(create_num(str),[],t)
   elsif str[0] == '"'
     AST.new(create_str(str),[],t)
@@ -106,13 +80,9 @@ def get_atom(tokens)
     AST.new(create_char(str),[],t)
   elsif (op=Ops0[t.name])
     AST.new(op,[],t)
-  elsif is_op(t)
-    nil
-  elsif DelimiterPriority[str]
-    nil
   else
     AST.new(Var,[],t)
-  end,t]
+  end
 end
 
 def make_op1(t)
@@ -120,42 +90,14 @@ def make_op1(t)
   AST.new(op, [], t)
 end
 
-def make_op2(t)
+def make_op2(t,is_flipped) # todo error check not needed since already checked in parse?
   op = Ops2[t.name] || raise(ParseError.new("op not defined for binary operations",t))
-  AST.new(op,[],t)
+  AST.new(op,[],t,is_flipped)
 end
 
+# todo rm
 def is_op(t)
   AllOps.include?(t.name) && !Ops0.include?(t.name)
-end
-
-$new_vars = 0
-def new_var
-  AST.new(Var,[],Token.new("_T#{$new_vars+=1}"))
-end
-
-def balance_parens(tokens)
-  tokens,eof=tokens[0..-2],tokens[-1,1]
-  paren_stack = []
-  implicit_lefts = []
-  implicit_rights = []
-  tokens.each{|t|
-    if t.str == '('
-      paren_stack << t
-    elsif t.str == ')'
-      if paren_stack.empty?
-        warn("imbalanced ), missing (", t) if $repl_mode
-        implicit_lefts<<Token.new('(')
-      else
-        paren_stack.pop
-      end
-    end
-  }
-  paren_stack.each{|t|
-    warn("imbalanced (, missing )", t) if $repl_mode
-    implicit_rights<<Token.new(')')
-  }
-  implicit_lefts + tokens + implicit_rights + eof
 end
 
 # this handles roman numerals in standard form
