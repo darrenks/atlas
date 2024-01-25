@@ -1,25 +1,22 @@
 # -*- coding: ISO-8859-1 -*-
 AST = Struct.new(:op,:args,:token,:is_flipped)
 
-def parse_line(tokens, last=nil)
+def parse_line(tokens, implicit_value=nil)
   stacks = [[]]
-  x=tokens.pop # eof # todo fixup
-  tokens.unshift x
+  tokens.unshift Token.new(:BOL)
   next_atom_pops = false
   loop{ # main loop, expecing a value at start of each loop
     peek = tokens[-1].str
-    if false && peek=="(" # ()
-      stacks[-1] = AST.new(EmptyOp,[],tokens.pop)
-    elsif peek==")"
+    if peek==")"
       tokens.pop; stacks << []
-    elsif Ops1.include? peek
+    elsif (op=Ops1[peek])
       next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks)
-      stacks[-1] << make_op1(tokens.pop)
+      stacks[-1] << AST.new(op, [], tokens.pop)
     else
-      if peek == "(" || peek == :EOL # implicit value needed
-        atom = stacks[-1].empty? ? AST.new(EmptyOp,[],tokens[-1]) : last
+      if peek == "(" || peek == :BOL # implicit value needed
+        atom = stacks[-1].empty? ? AST.new(EmptyOp,[],tokens[-1]) : implicit_value
       else
-        atom = make_op0(tokens.pop)
+        atom = make_op0(tokens.pop) # todo would make a var out of "add"
       end
       while tokens[-1].str == "("
         atom = pop_stack(stacks, atom)
@@ -32,24 +29,19 @@ def parse_line(tokens, last=nil)
       end
 
       # now expecing a binary op, since have value
-      if tokens[-1].str == :EOL
-        # could error if more than 1 because that is uselss
+      if tokens[-1].str == :BOL
+        # we could error instead if more than 1 because that is uselss
         atom=pop_stack(stacks, atom) until stacks.empty?
         return atom
       end
       is_flipped = tokens[-1].str == FlipModifier && (tokens.pop; true)
       next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks)
-      if Ops2.include? tokens[-1].str
-        stacks[-1] << op = make_op2(tokens.pop,is_flipped)
-        op.args = [atom]
-      else # implicit op
-        stacks[-1] << op = AST.new(ImplicitOp,[atom],tokens[-1],is_flipped)
-      end
+      op=Ops2[tokens[-1].str]
+      stacks[-1] << AST.new(op||ImplicitOp ,[atom],tokens[-1],is_flipped)
+      tokens.pop if op
     end
   }
 end
-
-# todo handle invalid symbol lookup
 
 def check_for_apply_modifier(tokens, next_atom_pops, stacks)
   if tokens[-2].str == ApplyModifier
@@ -78,26 +70,11 @@ def make_op0(t)
     AST.new(create_str(str),[],t)
   elsif str[0] == "'"
     AST.new(create_char(str),[],t)
-  elsif (op=Ops0[t.name])
+  elsif (op=Ops0[str])
     AST.new(op,[],t)
   else
     AST.new(Var,[],t)
   end
-end
-
-def make_op1(t)
-  op = Ops1[t.name] || raise(ParseError.new("op not defined for unary operations",t))
-  AST.new(op, [], t)
-end
-
-def make_op2(t,is_flipped) # todo error check not needed since already checked in parse?
-  op = Ops2[t.name] || raise(ParseError.new("op not defined for binary operations",t))
-  AST.new(op,[],t,is_flipped)
-end
-
-# todo rm
-def is_op(t)
-  AllOps.include?(t.name) && !Ops0.include?(t.name)
 end
 
 # this handles roman numerals in standard form

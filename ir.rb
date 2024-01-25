@@ -41,12 +41,18 @@ def to_ir(ast,context,saves)
 end
 
 def set(t,ast,context,saves)
+  raise ParseError.new("cannot set %p, it is not a name" % t.str) unless IdRx =~ t.str
+  Ops0.delete(t.str)
+  Ops1.delete(t.str)
+  Ops2.delete(t.str)
+  AllOps.delete(t.str)
+  Commands.delete(t.str)
   context[t.str] = create_ir(ast, context,saves)
 end
 
 def create_ir(node,context,saves) # and register_vars
   if node.op.name == "set"
-    raise ParseError.new("only identifiers may be set",node) if node.args[1].op.name != "var"
+    raise ParseError.new("only identifiers may be set",node) if node.args[1].op.name != "var" # todo similar check to let in repl but done differently
     set(node.args[1].token, node.args[0], context, saves)
   elsif node.op.name == "save"
     # we don't know what future vars will be set, we don't want to use those names, so don't do anything yet

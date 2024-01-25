@@ -16,6 +16,7 @@ class Op < Struct.new(
     :impl,
     :tests)
   def narg
+    return 0 if Proc === type # Proc only used for input
     type ? type[0].specs.size : 0
   end
   def help(out=STDOUT)
@@ -87,14 +88,6 @@ def create_op(
   end
 
   Op.new(name,sym,type,type_summary,examples,desc,ref_only,no_promote,built_impl,[])
-end
-
-def num_col
-  map(lines(ReadStdin).const){|v|
-    v = split_non_digits(v)
-    raise DynamicError.new "num col: empty list",nil if v==[]
-    v[0].value
-  }
 end
 
 ApplyModifier = "@"
@@ -603,7 +596,7 @@ create_op(
    .add_test(' 0|\'c -> "c"'),
   create_op(
     name: "catch",
-    sym: "tbd",
+    sym: "}",
     example: '1/0 catch -> []',
     example2: '1/1 catch -> [1]',
     type: { A => [A] },
@@ -617,16 +610,18 @@ create_op(
     }),
   '"io"',
   create_op(
-    name: "readLines",
-    desc: "all lines of stdin",
-    type: v(Str),
-    impl: -> { lines(ReadStdin) }),
-  create_op(
-    name: "firstNums",
-    desc: "first num column from stdin",
-    type: v(Num),
-    impl: -> { num_col },
-  ),
+    name: "input",
+    sym: "$",
+    desc: "parsed input or raw input if first program token is {",
+    type: lambda{
+      if $raw_input_mode
+        Str
+      else
+        parse_input if !$input_type
+        $input_type
+      end
+    },
+    impl: -> { $raw_input_mode ? ReadStdin.value : $input_value }),
   create_op(
     name: "read",
     sym: "`",
@@ -771,7 +766,7 @@ end
 
 Commands = {
   "help" => ["see op's info", "op", -> tokens, last, context, saves {
-    raise ParseError.new("usage: help <op>, see #$site for tutorial",tokens[0]) if tokens.size != 2
+    raise ParseError.new("usage: help <op>, see #$site for tutorial",tokens[0]) if tokens.size != 1
     relevant = ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}
     if !relevant.empty?
       relevant.each(&:help)
@@ -780,22 +775,22 @@ Commands = {
     end
   }],
   "version" => ["see atlas version", nil, -> tokens, last, context, saves {
-    raise ParseError.new("usage: version",tokens[0]) if tokens.size != 1
+    raise ParseError.new("usage: version",tokens[0]) if !tokens.empty?
     puts $version
   }],
   "type" => ["see expression type", "a", -> tokens, last, context, saves {
-    p infer(to_ir(tokens.size<2 ? last : parse_line(tokens, last),context,saves)).type_with_vec_level
+    p infer(to_ir(tokens.empty? ? last : parse_line(tokens, last),context,saves)).type_with_vec_level
   }],
   "p" => ["pretty print value", "a", -> tokens, last, context, saves {
-    ast = tokens.size<2 ? last : parse_line(tokens, last)
+    ast = tokens.empty? ? last : parse_line(tokens, last)
     ir=infer(to_ir(ast,context,saves))
     run(ir) {|v,n,s| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
     puts
   }],
   "print" => ["print value (implicit)", "a", -> tokens, last, context, saves {
-    ast = tokens.size<2 ? last : parse_line(tokens, last)
+    ast = tokens.empty? ? last : parse_line(tokens, last)
     ir=infer(to_ir(ast,context,saves))
-    run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false,n,s) }
+    run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false) }
   }],
 
 }

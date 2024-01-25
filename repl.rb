@@ -15,18 +15,9 @@ def repl(input=nil)
   saves = []
 
   bof = Token.new("bof")
-  context["last_ans"]=to_ir(AST.new(Ops0['readLines'],[],bof),context,saves)
+  context["last_ans"]=to_ir(AST.new(Ops0['input'],[],bof),context,saves)
   last=AST.new(Var,[],Token.new("last_ans"))
-
   line_no = 1
-
-  { "N" => "'\n",
-    "S" => "' ",
-  }.each{|name,val|
-    context[name]=to_ir(AST.new(create_char(val),[],bof),context,saves)
-  }
-  context["R"]=to_ir(AST.new(Ops0['readLines'],[],bof),context,saves)
-  context["F"]=to_ir(AST.new(Ops0['firstNums'],[],bof),context,saves)
 
   if input
     input_fn = lambda { input.gets(nil) }
@@ -61,20 +52,28 @@ def repl(input=nil)
       break if line==nil # eof
 
       token_lines,line_no=lex(line, line_no)
+      if $raw_input_mode.nil? && token_lines.size > 0
+        if token_lines[0][0].str == "}"
+          token_lines[0].shift
+          $raw_input_mode = true
+        else
+          $raw_input_mode = false
+        end
+      end
+
       token_lines.each{|tokens| # each line
-        next if tokens[0].str == :EOL
+        next if tokens.empty?
 
         if (command=Commands[tokens[0].str])
           tokens.shift
           command[2][tokens, last, context, saves]
-        elsif !command && (command=Commands[tokens[-2].str])
-          tokens.delete_at(-2)
+        elsif !command && (command=Commands[tokens[-1].str])
+          tokens.pop
           command[2][tokens, last, context, saves]
         elsif tokens[0].str=="let"
-          raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 4 && tokens[2].str=="=" && tokens[1].is_name
-          name = tokens[1]
+          raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 3 && tokens[2].str=="="
           ast = parse_line(tokens[3..-1], last)
-          set(name, ast, context, saves)
+          set(tokens[1], ast, context, saves)
         else
           ir = to_ir(parse_line(tokens, last),context,saves)
           context["last_ans"]=ir

@@ -1,12 +1,5 @@
 # -*- coding: ISO-8859-1 -*-
-class Token<Struct.new(:str,:char_no,:line_no)
-  def name
-    str
-  end # todo
-  def is_name
-    !(SymRx=~str) && !AllOps[str]
-  end
-end
+Token = Struct.new(:str,:char_no,:line_no)
 
 AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.map{|c|Regexp.escape c}
 
@@ -36,13 +29,11 @@ def lex(code,line_no=1) # returns a list of lines which are a list of tokens
     if token.str =~ /^#{IgnoreRx}$/
       # pass
     elsif token.str =~ /^#{NewlineRx}$/
-      tokens[-1] << Token.new(:EOL,char_no,line_no)
       tokens << []
     else
   	  tokens[-1] << token
   	end
   }
-  tokens[-1]<<Token.new(:EOL,char_no,line_no)
   [tokens,line_no+1]
 end
 

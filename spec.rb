@@ -46,6 +46,8 @@ def create_specs(raw_spec)
       }
   when Type, Array, VecOf, Symbol
     [FnType.new([],raw_spec,[],raw_spec)]
+  when Proc # lazy type
+    lambda{ create_specs(raw_spec.call) }
   else
     raise "unknown fn type format"
   end

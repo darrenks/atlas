@@ -49,6 +49,7 @@ end
 
 # finds best matching type for a spec (multiple would be possible if overloading by rank)
 def match_type(types, arg_types)
+  types = types.call if Proc === types
   fn_types = types.select{|fn_type|
     check_base_elem_constraints(fn_type.specs, arg_types)
   }
