@@ -15,9 +15,9 @@ def repl(input=nil)
   saves = []
 
   bof = Token.new("bof")
-  context["last_ans"]=to_ir(AST.new(Ops0['input'],[],bof),context,saves)
-  last=AST.new(Var,[],Token.new("last_ans"))
+  last=nil
   line_no = 1
+  first_input = true
 
   if input
     input_fn = lambda { input.gets(nil) }
@@ -52,35 +52,38 @@ def repl(input=nil)
       break if line==nil # eof
 
       token_lines,line_no=lex(line, line_no)
-      if $raw_input_mode.nil? && token_lines.size > 0
-        if token_lines[0][0].str == "}"
-          token_lines[0].shift
-          $raw_input_mode = true
-        else
-          $raw_input_mode = false
+      if first_input
+        if $raw_input_mode.nil? && token_lines.size > 0
+          if token_lines[0][0].str == "}"
+            token_lines[0].shift
+            $raw_input_mode = true
+          else
+            $raw_input_mode = false
+            last = to_ir(AST.new(Ops0['input'],[],bof),context,saves,nil) if !$repl_mode # && not used...
+          end
         end
+        first_input = false
       end
 
       token_lines.each{|tokens| # each line
         next if tokens.empty?
 
+        exe = lambda{ last = tokens.empty? ? last : infer(to_ir(parse_line(tokens),context,saves,last)) }
+
         if (command=Commands[tokens[0].str])
           tokens.shift
-          command[2][tokens, last, context, saves]
+          command[2][tokens, exe]
         elsif !command && (command=Commands[tokens[-1].str])
           tokens.pop
-          command[2][tokens, last, context, saves]
+          command[2][tokens, exe]
         elsif tokens[0].str=="let"
           raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 3 && tokens[2].str=="="
-          ast = parse_line(tokens[3..-1], last)
-          set(tokens[1], ast, context, saves)
+          set(tokens[1], parse_line(tokens[3..-1]), context, saves)
         else
-          ir = to_ir(parse_line(tokens, last),context,saves)
-          context["last_ans"]=ir
-          infer(ir)
-          puts "\e[38;5;243m#{ir.type_with_vec_level.inspect}\e[0m" if $repl_mode
-          run(ir) {|v|
-            to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode)
+          exe.call
+          puts "\e[38;5;243m#{last.type_with_vec_level.inspect}\e[0m" if $repl_mode
+          run(last) {|v|
+            to_string(last.type+last.vec_level,v,$repl_mode||$doc_mode)
           }
         end
       }

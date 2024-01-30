@@ -4,7 +4,7 @@ SepRx = /, | |,/
 BetweenRx = /#{SepRx}|#{NewlineRx}|#{SepRx}#{NewlineRx}/
 
 def parse_input
-  input = STDIN.gets(nil) # todo test with other encodings
+  input = STDIN.gets(nil)||"" # todo test with other encodings
   # convert back to lazy so that we can use our lib function for parsing nums
   lazy_input = lines(str_to_lazy_list(input).const)
   # is it just numbers?
@@ -29,6 +29,9 @@ def parse_input
     if input =~ /#{NewlineRx}./m # multi line
       $input_value = lazy_input
       $input_type = v(Str)
+    elsif lazy_input.empty?
+      $input_value = []
+      $input_type = Empty
     else
       $input_value = lazy_input[0].value
       $input_type = Str

@@ -765,7 +765,7 @@ def create_char(str)
 end
 
 Commands = {
-  "help" => ["see op's info", "op", -> tokens, last, context, saves {
+  "help" => ["see op's info", "op", -> tokens, ir_cb {
     raise ParseError.new("usage: help <op>, see #$site for tutorial",tokens[0]) if tokens.size != 1
     relevant = ActualOpsList.filter{|o|[o.name, o.sym].include?(tokens[0].str)}
     if !relevant.empty?
@@ -774,22 +774,21 @@ Commands = {
       puts "no such op: #{tokens[0].str}"
     end
   }],
-  "version" => ["see atlas version", nil, -> tokens, last, context, saves {
+  "version" => ["see atlas version", nil, -> tokens, ir_cb {
     raise ParseError.new("usage: version",tokens[0]) if !tokens.empty?
     puts $version
   }],
-  "type" => ["see expression type", "a", -> tokens, last, context, saves {
-    p infer(to_ir(tokens.empty? ? last : parse_line(tokens, last),context,saves)).type_with_vec_level
+  "type" => ["see expression type", "a", -> tokens, ir_cb {
+    p ir_cb.call.type_with_vec_level
   }],
-  "p" => ["pretty print value", "a", -> tokens, last, context, saves {
-    ast = tokens.empty? ? last : parse_line(tokens, last)
-    ir=infer(to_ir(ast,context,saves))
+  # todo update others and use a proc rather that pass this syntax
+  "p" => ["pretty print value", "a", -> tokens, ir_cb {
+    ir = ir_cb.call
     run(ir) {|v,n,s| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
     puts
   }],
-  "print" => ["print value (implicit)", "a", -> tokens, last, context, saves {
-    ast = tokens.empty? ? last : parse_line(tokens, last)
-    ir=infer(to_ir(ast,context,saves))
+  "print" => ["print value (implicit)", "a", -> tokens, ir_cb {
+    ir = ir_cb.call
     run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false) }
   }],
 

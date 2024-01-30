@@ -1,41 +1,45 @@
 # -*- coding: ISO-8859-1 -*-
 AST = Struct.new(:op,:args,:token,:is_flipped)
 
-def parse_line(tokens, implicit_value=nil)
-  stacks = [[]]
+def parse_line(tokens)
+  stacks = []
+  paren_values = []
   tokens.unshift Token.new(:BOL)
+  push_stack(stacks,paren_values,tokens[0])
   next_atom_pops = false
+  # parse right to left so that op arity is always unambiguous
   loop{ # main loop, expecing a value at start of each loop
     peek = tokens[-1].str
     if peek==")"
-      tokens.pop; stacks << []
+      push_stack(stacks,paren_values,tokens.pop)
     elsif (op=Ops1[peek])
-      next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks)
+      next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks, paren_values)
       stacks[-1] << AST.new(op, [], tokens.pop)
     else
       if peek == "(" || peek == :BOL # implicit value needed
-        atom = stacks[-1].empty? ? AST.new(EmptyOp,[],tokens[-1]) : implicit_value
+        atom = stacks[-1].empty? ? AST.new(EmptyOp,[],tokens[-1]) : paren_values[-1]
       else
         atom = make_op0(tokens.pop) # todo would make a var out of "add"
       end
       while tokens[-1].str == "("
+        paren_values.pop
         atom = pop_stack(stacks, atom)
-        tokens.pop
-        stacks = [[]] if stacks.empty? # more ( than )
+        token = tokens.pop
+        push_stack(stacks,paren_values,token) if stacks.empty? # more ( than )
       end
       if next_atom_pops == true
         next_atom_pops = false
+        paren_values.pop
         atom = pop_stack(stacks, atom)
       end
 
       # now expecing a binary op, since have value
       if tokens[-1].str == :BOL
-        # we could error instead if more than 1 because that is uselss
-        atom=pop_stack(stacks, atom) until stacks.empty?
-        return atom
+        raise ParseError.new("unbalanced )", nil) if stacks.size != 1 # todo show where the ) is
+        return pop_stack(stacks, atom)
       end
       is_flipped = tokens[-1].str == FlipModifier && (tokens.pop; true)
-      next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks)
+      next_atom_pops = check_for_apply_modifier(tokens, next_atom_pops, stacks, paren_values)
       op=Ops2[tokens[-1].str]
       stacks[-1] << AST.new(op||ImplicitOp ,[atom],tokens[-1],is_flipped)
       tokens.pop if op
@@ -43,10 +47,21 @@ def parse_line(tokens, implicit_value=nil)
   }
 end
 
-def check_for_apply_modifier(tokens, next_atom_pops, stacks)
+def push_stack(stacks,paren_values,token)
+    paren_values << val = new_paren_var
+    stacks << [AST.new(Ops2["set"], [val], token)]
+end
+
+$paren_vars = 0
+def new_paren_var
+  AST.new(Var,[],Token.new("paren_var#{$paren_vars+=1}"))
+end
+
+def check_for_apply_modifier(tokens, next_atom_pops, stacks, paren_values)
   if tokens[-2].str == ApplyModifier
     at=tokens.delete_at(-2)
     stacks << []
+    paren_values << "errorz"
     raise ParseError.new("redundant apply modifer", at) if next_atom_pops
     true
   else

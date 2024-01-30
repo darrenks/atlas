@@ -32,11 +32,20 @@ class IR < Struct.new(
 end
 
 # creates an IR from an AST, replacing vars
-def to_ir(ast,context,saves)
+def to_ir(ast,context,saves,last)
   ir = create_ir(ast,context,saves)
   set_saves(context,saves)
-  ir = check_missing(ir,context,{})
-  ir = lookup_vars(ir,context,{})
+  warn_unset = context.keys.any?{|v|!v['_'] && v.size > 1} # "_" is to not count internal vars
+  used = {}
+  ir = check_missing(ir,context,{},warn_unset,used)
+#   p context.keys - used.keys
+  must_use_vals = context.keys.select{|k|!k['_']} - used.keys
+  if last
+    must_use_vals.unshift "last_ans"
+    context["last_ans"] = last
+  end
+  ir = lookup_vars(ir,context,{},must_use_vals)
+#   warn("there are unused must use vals") if !must_use_vals.empty? # todo
   ir
 end
 
@@ -76,28 +85,32 @@ def set_saves(context,saves)
   saves.replace([])
 end
 
-def check_missing(node,context,been)
+# todo why must this be separate from lookup, it also does lookup in args.map!
+def check_missing(node,context,been,warn_unset,used)
   return node if been[node.id]
   been[node.id]=true
-  if node.op.name == "var"
+  if node.op.name == "var" && !node.from.token.str[/^paren_var/]
     name = node.from.token.str
+    used[name] = true
     if !context.include? name
-      warn("unset identifier %p" % name, node.from.token) if context.keys.any?{|v|!v['_'] && v.size > 1} # "_" is to not count internal vars
+      warn("unset identifier %p" % name, node.from.token) if warn_unset
       node
     else
-      check_missing(context[name],context,been)
+      check_missing(context[name],context,been,warn_unset,used)
     end
   else
-    node.args.map!{|arg| check_missing(arg, context,been) }
+    node.args.map!{|arg| check_missing(arg,context,been,warn_unset,used) }
     node
   end
 end
 
-def lookup_vars(node,context,been)
+def lookup_vars(node,context,been,must_use_vals)
   return node if been[node.id]
   been[node.id]=true if node.op.name != "var"
-  node.args.map!{|arg| lookup_vars(arg, context,been) }
-  if node.op.name == "var"
+  node.args.map!{|arg| lookup_vars(arg, context,been,must_use_vals) }
+  if node.op.name == "var" && !must_use_vals.empty? && node.from.token.str =~ /^paren_var/
+    context[must_use_vals.shift]
+  elsif node.op.name == "var"
     name = node.from.token.str
     val = context[name]
     if val == nil
@@ -120,7 +133,7 @@ def lookup_vars(node,context,been)
     elsif context[node.from.token.str] == node
       IR.new(UnknownOp,[],node.from)
     else
-      lookup_vars(context[node.from.token.str],context,been)
+      lookup_vars(context[node.from.token.str],context,been,must_use_vals)
     end
   else
     node
