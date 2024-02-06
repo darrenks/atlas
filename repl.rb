@@ -6,24 +6,39 @@
 # fancy characters.
 Encoding.default_external="iso-8859-1"
 Encoding.default_internal="iso-8859-1"
-require "readline"
 
 Dir[__dir__+"/*.rb"].each{|f| require_relative f }
 
 def repl(input=nil)
   context={}
-  saves = []
 
-  bof = Token.new("bof")
-  last=nil
+  { "N" => "'\n",
+    "S" => "' ",
+  }.each{|name,val|
+    context[name]=to_ir(AST.new(create_char(Token.new(val)),[]),{},nil)
+  }
+  context["r"]=to_ir(AST.new(Ops0['inputRaw'],[]),{},nil)
+  context["l"]=to_ir(AST.new(Ops0['inputLines'],[]),{},nil)
+  context["v"]=to_ir(AST.new(Ops0['inputVector'],[]),{},nil)
+  context["m"]=to_ir(AST.new(Ops0['inputMatrix'],[]),{},nil)
+  # hold off on these, should it be vec or list?
+#   context["W"]=to_ir(AST.new(Ops0['wholeNumbers'],[]),{},nil)
+#   context["Z"]=to_ir(AST.new(Ops0['positiveIntegers'],[]),{},nil)
+
   line_no = 1
-  first_input = true
+  last = nil
 
   if input
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
-    input_fn = lambda { ARGV.empty? ? nil : File.read(ARGV.shift) }
+    input_fn = lambda {
+      return nil if ARGV.empty? # no more files
+      filename = ARGV.shift
+      raise AtlasError.new("no such file %p" % filename, nil) unless File.exists? filename
+      File.read(filename)
+    }
   else
+    require "readline"
     $repl_mode = true if $repl_mode.nil?
     hist_file = Dir.home + "/.atlas_history"
     if File.exist? hist_file
@@ -45,30 +60,20 @@ def repl(input=nil)
 
   file_args = !ARGV.empty?
   loop {
-    prev_context = context.dup
+#     prev_context = context.dup # this has to go
     begin
       line=nil
       line=input_fn.call
       break if line==nil # eof
 
       token_lines,line_no=lex(line, line_no)
-      if first_input
-        if $raw_input_mode.nil? && token_lines.size > 0
-          if token_lines[0][0].str == "}"
-            token_lines[0].shift
-            $raw_input_mode = true
-          else
-            $raw_input_mode = false
-            last = to_ir(AST.new(Ops0['input'],[],bof),context,saves,nil) if !$repl_mode # && not used...
-          end
-        end
-        first_input = false
-      end
 
       token_lines.each{|tokens| # each line
         next if tokens.empty?
 
-        exe = lambda{ last = tokens.empty? ? last : infer(to_ir(parse_line(tokens),context,saves,last)) }
+        exe = lambda{
+          last = tokens.empty? ? last : infer(to_ir(parse_line(tokens),context,last))
+        }
 
         if (command=Commands[tokens[0].str])
           tokens.shift
@@ -78,18 +83,18 @@ def repl(input=nil)
           command[2][tokens, exe]
         elsif tokens[0].str=="let"
           raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 3 && tokens[2].str=="="
-          set(tokens[1], parse_line(tokens[3..-1]), context, saves)
+          set(tokens[1], parse_line(tokens[3..-1]), context,last)
         else
-          exe.call
-          puts "\e[38;5;243m#{last.type_with_vec_level.inspect}\e[0m" if $repl_mode
-          run(last) {|v|
-            to_string(last.type+last.vec_level,v,$repl_mode||$doc_mode)
+          ir = exe.call
+          puts "\e[38;5;243m#{ir.type_with_vec_level.inspect}\e[0m" if $repl_mode
+          run(ir) {|v|
+            to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode)
           }
         end
       }
     rescue AtlasError => e
       STDERR.puts e.message
-      context = prev_context
+#       context = prev_context
     # TODO there are some errors that could come from floats like
     # 0.0^(1.0-)+'a RangeError
     # converting inf to int FloatDomainError
@@ -101,7 +106,7 @@ def repl(input=nil)
       puts
     rescue SystemStackError => e
       STDERR.puts DynamicError.new("stack overflow error", nil).message
-      context = prev_context
+#       context = prev_context
     rescue Errno::EPIPE
       exit
     rescue => e

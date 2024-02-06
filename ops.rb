@@ -45,7 +45,7 @@ class String
   def help(unused=true)
     puts
     puts "#"*(self.size+4)
-    puts "# "+self+" #"
+    puts "#"+" "+self+" #"
     puts "#"*(self.size+4)
     puts
   end
@@ -322,7 +322,7 @@ OpsList = [
     }}
   ), create_op(
     name: "len",
-    example: '"asdf"# -> 4',
+    example: '"asdf"#'+' -> 4',
     sym: "#",
     type: { [A] => Num },
     no_promote: true,
@@ -483,11 +483,11 @@ create_op(
     type: { [[A],[Num]] => [[A]],
             [[Num],[Achar]] => [[A]] },
     poly_impl: ->at,bt { flipif bt.is_char, -> a,b { reshape(a,b) }})
-   .add_test('"abc" # 2 -> ["ab","c"]')
-   .add_test('"abcd" # (2,1) -> ["ab","c","d"]')
+   .add_test('"abc"#2 -> ["ab","c"]')
+   .add_test('"abcd"#(2,1) -> ["ab","c","d"]')
    .add_test('"."^10#2.5*" " -> ".. ... .. ..."')
    .add_test('2#"abcd" -> ["ab","cd"]')
-   .add_test('"" # 2 -> []'),
+   .add_test('""#2 -> []'),
   "string",
   create_op(
     name: "join",
@@ -610,18 +610,25 @@ create_op(
     }),
   '"io"',
   create_op(
-    name: "input",
-    sym: "$",
-    desc: "parsed input or raw input if first program token is {",
-    type: lambda{
-      if $raw_input_mode
-        Str
-      else
-        parse_input if !$input_type
-        $input_type
-      end
-    },
-    impl: -> { $raw_input_mode ? ReadStdin.value : $input_value }),
+    name: "inputRaw",
+    type: Str,
+    impl: -> { ReadStdin.value }),
+  create_op(
+    name: "inputLines",
+    type: v(Str),
+    impl: -> { lines(ReadStdin) }),
+  create_op(
+    name: "inputVector",
+    type: v(Num),
+    impl: -> { split_non_digits(ReadStdin) }),
+  create_op(
+    name: "inputMatrix",
+    type: v([Num]),
+    impl: -> { map(lines(ReadStdin).const){|v|split_non_digits(v)} }),
+  create_op(
+    name: "ans",
+    type: A,
+    impl: MacroImpl),
   create_op(
     name: "read",
     sym: "`",
@@ -738,29 +745,29 @@ UnknownOp = create_op(
 )
 Var = Op.new("var")
 
-def create_num(str)
+def create_num(t)
   create_op(
     name: "data",
     type: Num,
-    impl: str[/[.e]/] ? str.to_f : str.to_i
+    impl: t.str[/[.e]/] ? t.str.to_f : t.str.to_i
   )
 end
 
-def create_str(str)
-  raise LexError.new("unterminated string") if str[-1] != '"' || str.size==1
+def create_str(t)
+  raise LexError.new("unterminated string",t) if t.str[-1] != '"' || t.str.size==1
   create_op(
     name: "data",
     type: Str,
-    impl: str_to_lazy_list(parse_str(str[1...-1]))
+    impl: str_to_lazy_list(parse_str(t.str[1...-1]))
   )
 
 end
-def create_char(str)
-  raise LexError.new("empty char") if str.size < 2
+def create_char(t)
+  raise LexError.new("empty char",t) if t.str.size < 2
   create_op(
     name: "data",
     type: Char,
-    impl: parse_char(str[1..-1]).ord
+    impl: parse_char(t.str[1..-1]).ord
   )
 end
 

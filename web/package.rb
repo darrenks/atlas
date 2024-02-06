@@ -10,6 +10,7 @@ source['Dir[__dir__+"/*.rb"].each{|f| require_relative f }'] = ''
 source.gsub!(/require_relative.*/,'')
 source.gsub!(/^\s*/,'')
 source.gsub!(/^#.*/,'')
+source.gsub!(/# .*/,'')
 source = "#!/usr/bin/env ruby\n# -*- coding: ISO-8859-1 -*-\n" + source
 source.gsub!(/\n\n+/,"\n")
 puts source

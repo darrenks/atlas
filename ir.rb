@@ -2,12 +2,13 @@
 $ir_node_count = 0
 class IR < Struct.new(
     :op,                  # these set during construction
-    :args,
-    :from,
+    :from,                # ast
+    :raw_args,            # args with vars not expanded
+    :args,                # args with vars expanded
     :type_with_vec_level, # this and rest calculted in infer
     :zip_level,
     :promise,
-    :id,
+    :id, # set during init
     :in_q,
     :used_by,
     :rep_levels,
@@ -31,144 +32,88 @@ class IR < Struct.new(
   end
 end
 
-# creates an IR from an AST, replacing vars
-def to_ir(ast,context,saves,last)
-  ir = create_ir(ast,context,saves)
-  set_saves(context,saves)
-  warn_unset = context.keys.any?{|v|!v['_'] && v.size > 1} # "_" is to not count internal vars
-  used = {}
-  ir = check_missing(ir,context,{},warn_unset,used)
-#   p context.keys - used.keys
-  must_use_vals = context.keys.select{|k|!k['_']} - used.keys
-  if last
-    must_use_vals.unshift "last_ans"
-    context["last_ans"] = last
+# todo check this logic
+# does do more work, as internal paren vars are created even if they can't be reached
+def update(new,old,context,parents)
+  if old.op.name == "var"
+    name = old.from.token.str
+    return false if parents[name]
+    parents[name] = true
+    ans = new != context[old.from.token.str] || update(new,new,context,parents)
+    parents[name] = false
+    ans
+  elsif old.op.name == "ans"
+    false
+  else
+    changed = !new.args || new.args.zip(old.raw_args).any?{|new_arg,old_arg|
+      update(new_arg,old_arg,context,parents)
+    }
+    old.args = old.promise = old.type_with_vec_level = nil if changed
+    changed
   end
-  ir = lookup_vars(ir,context,{},must_use_vals)
-#   warn("there are unused must use vals") if !must_use_vals.empty? # todo
-  ir
 end
 
-def set(t,ast,context,saves)
-  raise ParseError.new("cannot set %p, it is not a name" % t.str) unless IdRx =~ t.str
-  Ops0.delete(t.str)
-  Ops1.delete(t.str)
-  Ops2.delete(t.str)
-  AllOps.delete(t.str)
-  Commands.delete(t.str)
-  context[t.str] = create_ir(ast, context,saves)
+def to_ir(ast,context,last)
+  context.each{|k,v| update(v,v,context,{}) }
+  ir=create_ir_and_set_vars(ast,context,last)
+  lookup_vars(ir,context)
 end
 
-def create_ir(node,context,saves) # and register_vars
+def create_ir_and_set_vars(node,context,last)
   if node.op.name == "set"
     raise ParseError.new("only identifiers may be set",node) if node.args[1].op.name != "var" # todo similar check to let in repl but done differently
-    set(node.args[1].token, node.args[0], context, saves)
+    set(node.args[1].token, node.args[0], context,last)
   elsif node.op.name == "save"
-    # we don't know what future vars will be set, we don't want to use those names, so don't do anything yet
-    v = create_ir(node.args[0], context, saves)
-    saves << v
-    v
-  else
-    args=node.args.map{|arg|create_ir(arg,context,saves)}
-    op = node.op.dup
-    args.reverse! if node.is_flipped
-    IR.new(op,args,node)
-  end
-end
-
-def set_saves(context,saves)
-  vars = [*'a'..'z'] - context.keys
-  saves.each{|node|
+    vars = [*'a'..'z']-context.keys
     raise(ParseError.new("out of vars", node)) if vars.empty?
-    context[vars.shift] = node
-  }
-  saves.replace([])
+    set(Token.new(vars[0]),node.args[0],context,last)
+  elsif node.op.name == "ans"
+    raise ParseError.new("there is no last ans to refer to",node) if !last
+    last
+  else
+    args=node.args.map{|arg|create_ir_and_set_vars(arg,context,last)}
+    op = node.op.dup # todo why dup??
+    args.reverse! if node.is_flipped
+    IR.new(op,node,args)
+  end
 end
 
-# todo why must this be separate from lookup, it also does lookup in args.map!
-def check_missing(node,context,been,warn_unset,used)
-  return node if been[node.id]
-  been[node.id]=true
-  if node.op.name == "var" && !node.from.token.str[/^paren_var/]
+def lookup_vars(node,context)
+  return node if node.args
+  if node.op.name == "var"
     name = node.from.token.str
-    used[name] = true
-    if !context.include? name
-      warn("unset identifier %p" % name, node.from.token) if warn_unset
-      node
-    else
-      check_missing(context[name],context,been,warn_unset,used)
-    end
+    val = get(context, name, node.from)
+    val = IR.new(UnknownOp,node.from,[]) if val == node # todo this isn't actually useful is it?
+    lookup_vars(val,context)
   else
-    node.args.map!{|arg| check_missing(arg,context,been,warn_unset,used) }
+    node.args = :processing
+    node.args = node.raw_args.map{|arg| lookup_vars(arg,context) }
     node
   end
 end
 
-def lookup_vars(node,context,been,must_use_vals)
-  return node if been[node.id]
-  been[node.id]=true if node.op.name != "var"
-  node.args.map!{|arg| lookup_vars(arg, context,been,must_use_vals) }
-  if node.op.name == "var" && !must_use_vals.empty? && node.from.token.str =~ /^paren_var/
-    context[must_use_vals.shift]
-  elsif node.op.name == "var"
-    name = node.from.token.str
-    val = context[name]
-    if val == nil
-      if (numeral = to_roman_numeral(name))
-        IR.new(create_op(
-          name: "data",
-          type: Num,
-          impl: numeral),[],node.from)
-      elsif name.size>1
-        IR.new(create_op(
-          name: "data",
-          type: Str,
-          impl: str_to_lazy_list(name)),[],node.from)
-      else
-        IR.new(create_op(
-          name: "data",
-          type: Char,
-          impl: name[0].ord),[],node.from)
-      end
-    elsif context[node.from.token.str] == node
-      IR.new(UnknownOp,[],node.from)
-    else
-      lookup_vars(context[node.from.token.str],context,been,must_use_vals)
-    end
+def set(t,ast,context,last)
+  name = t.str
+  raise ParseError.new("cannot set %p, it is not a name" % name, t) unless IdRx =~ name
+  Ops0.delete(name)
+  Ops1.delete(name)
+  Ops2.delete(name)
+  AllOps.delete(name)
+  Commands.delete(name)
+  context[name] = create_ir_and_set_vars(ast,context,last)
+end
+
+def get(context,name,from)
+  return context[name] if context[name]
+  if numeral = to_roman_numeral(name)
+    type = Num
+    impl = numeral
+  elsif name.size>1
+    type = Str
+    impl = str_to_lazy_list(name)
   else
-    node
+    type = Char
+    impl = name[0].ord
   end
+  IR.new(create_op(name: "data",type: type,impl: impl),from,[])
 end
-
-def all_nodes(root)
-  all = []
-  dfs(root){|node| all << node}
-  all
-end
-
-module Status
-  UNSEEN = 1 # in practice nil will be used
-  PROCESSING = 2
-  SEEN = 3
-end
-
-def dfs(root,cycle_fn:->_{},&post_fn)
-  dfs_helper(root,[],cycle_fn,post_fn)
-end
-
-def dfs_helper(node,been,cycle_fn,post_fn)
-  if been[node.id] == Status::SEEN
-
-  elsif been[node.id] == Status::PROCESSING # cycle
-    cycle_fn[node]
-  else
-    been[node.id] = Status::PROCESSING
-    node.args.each{|arg|
-      dfs_helper(arg,been,cycle_fn,post_fn)
-    }
-    post_fn[node]
-  end
-  been[node.id] = Status::SEEN
-  return
-end
-

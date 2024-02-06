@@ -62,7 +62,4 @@ class ParseError < StaticError
 end
 
 class LexError < StaticError
-  def initialize(message)
-    super(message,$from)
-  end
 end

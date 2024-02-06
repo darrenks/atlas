@@ -17,7 +17,7 @@ def lex(code,line_no=1) # returns a list of lines which are a list of tokens
 	tokens = [[]]
   char_no = 1
   code.scan(/#{AtomRx}|#{CommentRx}|#{SymRx}|#{NewlineRx}|#{IgnoreRx}|#{IdRx}/m) {|matches|
-    $from=token=Token.new($&,char_no,line_no)
+    token=Token.new($&,char_no,line_no)
     match=$&
     line_no += $&.scan(NewlineRx).size
     if match[NewlineRx]
