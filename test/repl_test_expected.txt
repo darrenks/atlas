@@ -1,29 +1,6 @@
 [33m ᐳ [0m1+2*4  -- That is an up arrow (prev command 1+2)followed by *4
-[33m ᐳ [0m1,2 tail -- Two tabs to complete tail
-[33m ᐳ [0m
-[33m ᐳ [0m5
-[33m ᐳ [0masdf -- doesn't warn since no 2 char vars set yet
-[33m ᐳ [0mlongName = 5
-[33m ᐳ [0masdf2 -- does warn
-7:1 (asdf2) unset identifier "asdf2" ([31mWarning[0m)
-[33m ᐳ [0mlongName = 6 -- check that it warns possible mistake
-8:10 (=) interpreting as equality check, to override name use let var=value ([31mWarning[0m)
-[33m ᐳ [0ma,z@a -- test that it doesn't set a since it errors
-9:3 (z) unset identifier "z" ([31mWarning[0m)
-infinite loop detected ([31mInfiniteLoopError[0m)
-[33m ᐳ [0ma
-10:1 (a) unset identifier "a" ([31mWarning[0m)
+[33m ᐳ [0m1,2,3 tail -- One tab to complete tail
 [33m ᐳ [0m[38;5;243mNum[0m
 12
 [38;5;243m[Num][0m
-2
-[38;5;243mNum[0m
-5
-[38;5;243m[Char][0m
-asdf
-[38;5;243m[Char][0m
-asdf2
-[38;5;243m[Num][0m
-[38;5;243m[Char][0m
-[38;5;243mChar[0m
-a
+2 3

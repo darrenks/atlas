@@ -771,6 +771,11 @@ def create_char(t)
   )
 end
 
+IO_Vars = {"r" => 'inputRaw',
+           "l" => 'inputLines',
+           "v" => 'inputVector',
+           "m" => 'inputMatrix'}
+
 Commands = {
   "help" => ["see op's info", "op", -> tokens, ir_cb {
     raise ParseError.new("usage: help <op>, see #$site for tutorial",tokens[0]) if tokens.size != 1

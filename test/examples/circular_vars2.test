@@ -1,11 +1,12 @@
 [prog]
-a=b+(5@b)
+let a=b+(5@b)
 b
 a
-d=d
-c=c
+let d=d
+let c=c
+c
 [stdout]
 5
 10
 [stderr]
-5:3 (c) cannot use value of the unknown type (TypeError)
+5:7 (c) cannot use value of the unknown type (TypeError)

@@ -50,22 +50,34 @@ A_ A -> A_ A
 -- Test apply
 1+2@+3 -> 1+(2+3)
 1+2@+3@+4 -> 1+(2+(3+4))
-1+2~@+3 -> 1+(2~+3)
+1-2~@+3 -> 1-(2~+3)
 1+2~\@+3 -> 1+(2~\+3)
 1+2@~+3 -> 1+(2~)+3
-1+2@~@+3 -> ParseError
+1+2@~@+3 -> 1+(2~+3)
+-- 1+2@+3- -> 1+(2+3)-
+1+2@+3-4 -> 1+(2+3)-4
 1@+2 -> 1+2
 1@~ -> 1~
+1+(1+5-)@- -> 1+((1+5-)-)
+
+-- 1+2@3 -> 1+(2 3)
 --1@ -> ParseError
 1@1 -> 1@1
-1@a -> 1@a
+-- 1@a -> 1@a
 EOF
 
 require "./repl.rb"
 
 class AST
   def ==(rhs)
+    # ignore paren vars
+    return args[0]==rhs if self.op.name == "set" && args[1].token.str[/_/]
+    return rhs.args[0]==self if rhs.op.name == "set" && rhs.args[1].token.str[/_/]
     self.op == rhs.op && self.args.zip(rhs.args).all?{|s,r|s==r}
+  end
+  def inspect
+    return self.token.str if self.op.name == "data"
+    self.op.name + " " + self.args.map(&:inspect)*" "
   end
 end
 
@@ -98,10 +110,10 @@ tests.lines.each{|test|
     STDERR.puts "FAIL: #{name} test line #{start_line}"
     STDERR.puts i
     STDERR.puts "expected:"
-    STDERR.puts expected
+    STDERR.puts expected.inspect
     STDERR.puts "found:"
     raise found if Exception === found
-    STDERR.puts found
+    STDERR.puts found.inspect
     exit(1)
   end
 

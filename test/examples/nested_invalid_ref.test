@@ -1,5 +1,5 @@
 [prog]
-a=b
+let a=b
 a
 [output]
 b

@@ -1,6 +1,6 @@
 [prog]
 -- http://golf.shinh.org/p.rb?Range+Analysis
-[6_(R/'*`%{[.,*a]@,_!{[)',_(b])')
+l[6_(l/'*`%{[.,*a]@,_!{[)',_(b])')
 [input]
 range(2,4) * range(-5,-1)
 range(0,2) * range(-2,-1)

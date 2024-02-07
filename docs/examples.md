@@ -6,7 +6,7 @@ The intro gives a somewhat short implementation of FizzBuzz with no explanation,
 
 First we generate the numbers 1 to 100 then we want to mod each of those by 3 and 5. We need to repeat each number so that it mods by 3 and 5, if we didn't then it would only mod 1 by 3 and 2 by 5. Since both lists are 1d.
 
-    r=1:101
+    let r=1:101
     r,%(3,5)
     ──────────────────────────────────
     1 1
@@ -19,7 +19,7 @@ First we generate the numbers 1 to 100 then we want to mod each of those by 3 an
 
 Now we can just take the `not` of each value to check if it was divisible or not
 
-    r=1:101
+    let r=1:101
     r,%(3,5)~
     ──────────────────────────────────
     0 0
@@ -32,14 +32,14 @@ Now we can just take the `not` of each value to check if it was divisible or not
 
 Now we want to replicate the strings Fizz and Buzz that many times respectively. Here I have pretty printed it so that we can see the empty strings better.
 
-    r=1:101
+    let r=1:101
     r,%(3,5)~^("Fizz","Buzz") p
     ──────────────────────────────────
     <<"","">,<"","">,<"Fizz","">,<"","">,<"","Buzz">,<"Fizz","">,<"","">...
 
 No we just need to concatenate each sublist, and if empty use the number instead. There is an op for concatenating, and the latter can be done via an `or` op (which you can see from its type signature in the quickref will coerce the different types).
 
-    r=1:101
+    let r=1:101
     r,%(3,5)~^("Fizz","Buzz")_|r
     ──────────────────────────────────
     1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
@@ -54,7 +54,7 @@ Now to golf it.
 
 And we get:
 
-    1:CI{,%3@5~^Fizz@,Buzz_|a
+    1:CI{,%3@,5~^Fizz@,Buzz_|a
     ──────────────────────────────────
     1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
 
@@ -76,26 +76,26 @@ Note that you could use `$` for input rather than hard coding the input as `s=..
 
 Here is the code to calculate the next state (variables with `2` in the name) from the previous:
 
-    s="+[[-]]."
+    let s="+[[-]]."
 
     -- initial state
-    c=s
-    ml=()   -- memory to left of pointer (reversed)
-    mr=0,%  -- memory to the right of pointer
-    m=0     -- value at pointer
-    b=()    -- stack of code at ['s that we have entered
+    let c=s
+    let ml=()   -- memory to left of pointer (reversed)
+    let mr=0,%  -- memory to the right of pointer
+    let m=0     -- value at pointer
+    let b=()    -- stack of code at ['s that we have entered
 
     -- character matches (for use in filters to simulate case statements below)
-    z=c[,.="><+-]["
-    r=z%/.  -- reverse order of z
+    let z=c[,.="><+-]["
+    let r=z%/.  -- reverse order of z
 
     -- next state
-    b2=r~(m&(c,S;_b);,b@>)[|b catch,b[
-    next=(`0+('\-c{|<2&a))?[#]\c  -- the next code after matching ]
-    c2=r~(m~&next;,b@[)[|c catch,c[ >
-    m2= z~(mr[;,ml@[,m@+1,m@-1),m [
-    ml2=z~(m,ml,ml@>)         , ml[
-    mr2=z~(mr>,m@,mr)         , mr[
+    let b2=r~(m&(c,S;_b);,b@>)[|b catch,b[
+    let next=(`0+('\-c{|<2&a))?[#]\c  -- the next code after matching ]
+    let c2=r~(m~&next;,b@[)[|c catch,c[ >
+    let m2= z~(mr[;,ml@[,m@+1,m@-1),m [
+    let ml2=z~(m,ml,ml@>)         , ml[
+    let mr2=z~(mr>,m@,mr)         , mr[
 
     -- show result
     "code"
@@ -116,21 +116,21 @@ Here is the code to calculate the next state (variables with `2` in the name) fr
 
 This code can be tested by changing `s` and the initial state to see if it behaves correctly generating the next state. Once that is confirmed, we just need to set it up so that each state value is a circular vector based on its next state and initial value.
 
-            s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    c=c2%`s.
-    ml=ml2^
-    mr=mr2%`(0,%).
-    m=m2^
-    b=b2^
+    let s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+    let c=c2%`s.
+    let ml=ml2^
+    let mr=mr2%`(0,%).
+    let m=m2^
+    let b=b2^
 
-    z=c[,="><+-]["
-    r=z%/.
-    b2=r~(m&b@`c@`S;,b@>)@f[|b catch,b[
-    next=(`0+('\-c{|<2&a))?[#]\c
-    c2=r~(m~&next,b@[)[|c catch,c[ >
-    m2= z~(mr[;,ml@[,m@+1,m@-1),m [
-    ml2=z~(ml`m,ml@>)         , ml[
-    mr2=z~(mr>,mr@`m)         , mr[
+    let z=c[,="><+-]["
+    let r=z%/.
+    let b2=r~(m&b@`c@`S;,b@>)@f[|b catch,b[
+    let next=(`0+('\-c{|<2&a))?[#]\c
+    let c2=r~(m~&next,b@[)[|c catch,c[ >
+    let m2= z~(mr[;,ml@[,m@+1,m@-1),m [
+    let ml2=z~(ml`m,ml@>)         , ml[
+    let mr2=z~(mr>,mr@`m)         , mr[
     c[='.~(c?m[)+'\0
     ──────────────────────────────────
     Hello World!
@@ -139,10 +139,10 @@ The last line collect the output, chunk it while the code that remains is not em
 
 ### Golfed
 
-A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself. (Note actually this is longer for now since behavior of `|` has changed and catch is manually needed, but surely could be golfed out.
+A bit of golfing gets it down to 163 characters, likely less readable than brainfuck itself. (Note actually this is longer for now since behavior of `|` has changed and catch is manually needed, but surely could be golfed out, also saves can be used instead of sets).
 
-    s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
-    >,r@`m~\z,r[%`0,@%.@r)[;,(`m,l@>~\z,l[^@l)@[,m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&a))?[#]\c),(c[,.="><+-]["@z%/.{~(m&b@`c@`S;,b@>)[|b catch,b[^@b)@[~\d[|c catch,c[>%`s.@c[='.~(c?m[+'\0
+    let s="++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+    >,r@`m~\z,r[%`0,@%.@r)[;,(l`m,l@>~\z,l[^@l[),m@+1,m@-1~\z,m[^@m~&((`0+('\-c{|<2&a))?[#]\c),(c[,.="><+-]["@z%/.@d~(m&b@`c@`S;,b@>)[|b catch,b[^@b[)~\d[|c catch,c[>%`s.@c[='.~(c?m[+'\0
     ──────────────────────────────────
     Hello World!
 

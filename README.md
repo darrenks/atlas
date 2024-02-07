@@ -23,7 +23,7 @@ None [(see all)](docs/happenings.md)
 
 This page is intended to give you an overview of the main ideas while being easy to understand. Here's an example of the power of the language without such a limitation:
 
-    1:101{,%3@5~^Fizz@,Buzz_|a
+    1:101{,%3@,5~^Fizz@,Buzz_|a
     ──────────────────────────────────
     1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
 
@@ -77,7 +77,8 @@ For more information on laziness check [wikipedia](https://en.wikipedia.org/wiki
 
 Circular programming is the use of a value before it has been computed. It is something that you cannot do in an eager language. The simplest example would be this:
 
-    a=1_a
+    let a=1_a
+    a
     ──────────────────────────────────
     1 1 1 1 1 1 1 1 1 1 1 1 1...
 
@@ -87,7 +88,8 @@ Infinite lists are no problem so long as we don't try to access all elements, th
 
 Let's see a more complicated example:
 
-    a=0_(a+1)
+    let a=0_(a+1)
+    a
     ──────────────────────────────────
     0 1 2 3 4 5 6 7 8 9 10 11 12...
 
@@ -95,7 +97,8 @@ How does it work? It is just saying that `a` is 0 prepended to the vectorized ad
 
 We can even compute the fibonacci sequence this way:
 
-    f=1_1_(f tail+f)
+    let f=1_1_(f tail+f)
+    f
     ──────────────────────────────────
     1 1 2 3 5 8 13 21 34 55 89...
 
@@ -109,8 +112,9 @@ FYI circular programming can also refer to using tuples in a circular manner (th
 
 Circular programming can be used to do a scan or a fold. Here is an example of that:
 
-    x=1,2,3,4,5
-    a=0_(x+a)
+    let x=1,2,3,4,5
+    let a=0_(x+a)
+    a
     ──────────────────────────────────
     0 1 3 6 10 15
 

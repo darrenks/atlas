@@ -1,0 +1,12 @@
+[prog]
+1
+ans+ans
+ans+ans
+ans+ans
+ans+ans
+[stdout]
+1
+2
+4
+8
+16

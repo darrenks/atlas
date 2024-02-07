@@ -24,7 +24,7 @@ end
     truncate = expected =~ /\.\.\.$/
     expected.gsub!(/\.\.\.$/,'')
 
-    cmd = "./atlas -doc_mode test/prog.atl"
+    cmd = "./atlas -L test/prog.atl"
     if truncate
       stdout, stderr, status = Open3.capture3("#{cmd} | head -c #{truncate}")
     else

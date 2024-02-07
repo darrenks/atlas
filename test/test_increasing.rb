@@ -21,7 +21,7 @@ def calc(op, arg_types)
     arg.op = Op.new
     arg
   }
-  node = IR.new(op,args)
+  node = IR.new(op,nil,nil,args)
   calc_type(node)
   return (Memo[key] = node.last_error ? nil : node.type_with_vec_level)
 end

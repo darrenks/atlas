@@ -1,5 +1,5 @@
 [prog]
-a=a+1`0
+let a=a+1`0
 a take 10;
 a take 10;
 a take 10;

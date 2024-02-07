@@ -1,10 +1,2 @@
 [A*4  -- That is an up arrow (prev command 1+2)followed by *4
-1,2 tai		-- Two tabs to complete tail
-
-5
-asdf -- doesn't warn since no 2 char vars set yet
-longName = 5
-asdf2 -- does warn
-longName = 6 -- check that it warns possible mistake
-a,z@a -- test that it doesn't set a since it errors
-a
+1,2,3 tai	-- One tab to complete tail

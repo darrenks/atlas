@@ -61,20 +61,20 @@ end
 
 def create_ir_and_set_vars(node,context,last)
   if node.op.name == "set"
-    raise ParseError.new("only identifiers may be set",node) if node.args[1].op.name != "var" # todo similar check to let in repl but done differently
+    raise "only identifiers may be set" if node.args[1].op.name != "var"
     set(node.args[1].token, node.args[0], context,last)
   elsif node.op.name == "save"
+    ir = create_ir_and_set_vars(node.args[0],context,last)
     vars = [*'a'..'z']-context.keys
-    raise(ParseError.new("out of vars", node)) if vars.empty?
-    set(Token.new(vars[0]),node.args[0],context,last)
+    raise(StaticError.new("out of save vars", node)) if vars.empty?
+    set(Token.new(vars[0]),ir,context,last)
   elsif node.op.name == "ans"
-    raise ParseError.new("there is no last ans to refer to",node) if !last
+    raise StaticError.new("there is no last ans to refer to",node) if !last
     last
   else
     args=node.args.map{|arg|create_ir_and_set_vars(arg,context,last)}
-    op = node.op.dup # todo why dup??
     args.reverse! if node.is_flipped
-    IR.new(op,node,args)
+    IR.new(node.op,node,args)
   end
 end
 
@@ -92,15 +92,23 @@ def lookup_vars(node,context)
   end
 end
 
-def set(t,ast,context,last)
+def set(t,node,context,last)
   name = t.str
-  raise ParseError.new("cannot set %p, it is not a name" % name, t) unless IdRx =~ name
-  Ops0.delete(name)
-  Ops1.delete(name)
-  Ops2.delete(name)
-  AllOps.delete(name)
-  Commands.delete(name)
-  context[name] = create_ir_and_set_vars(ast,context,last)
+  raise "cannot set %p, it is not a name" % name unless IdRx =~ name
+  if Commands[name] || AllOps[name]
+    warn("overwriting %p even though it is an op" % name, t)
+    Ops0.delete(name)
+    Ops1.delete(name)
+    Ops2.delete(name)
+    AllOps.delete(name)
+    Commands.delete(name)
+  end
+  if AST === node
+    ir = create_ir_and_set_vars(node,context,last)
+  else # IR
+    ir = node
+  end
+  context[name] = ir
 end
 
 def get(context,name,from)
@@ -109,6 +117,9 @@ def get(context,name,from)
     type = Num
     impl = numeral
   elsif name.size>1
+    if Commands[name] || AllOps[name]
+      warn("using %p as identifier string even though it is an op" % name, from)
+    end
     type = Str
     impl = str_to_lazy_list(name)
   else
@@ -117,3 +128,21 @@ def get(context,name,from)
   end
   IR.new(create_op(name: "data",type: type,impl: impl),from,[])
 end
+
+# this handles roman numerals in standard form
+# a gimmick to provide a nice way of reprsenting some common numbers in few characters
+RN = {"I"=>1,"V"=>5,"X"=>10,"L"=>50,"C"=>100,"D"=>500,"M"=>1000}
+def to_roman_numeral(s)
+  return nil if s.chars.any?{|c|!RN[c]} || !(s =~ /^M{0,3}(CM|CD|D?C?{3})(XC|XL|L?X?{3})(IX|IV|V?I?{3})$/)
+  sum=0
+  s.length.times{|i|
+    v=RN[s[i]]
+    if i < s.length-1 && RN[s[i+1]] > v
+      sum-=v
+    else
+      sum+=v
+    end
+  }
+  sum
+end
+

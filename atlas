@@ -2,15 +2,13 @@
 
 require_relative "repl.rb"
 
-# only intended for docs test to print things like it was in repl
-if ARGV.delete("-doc_mode")
-  $doc_mode = true
+if ARGV.delete("-l")
+  # [Num] prints as 1\n2\n3 (default from file)
+  $line_mode = true
 end
-
-if ARGV.delete("-repl_mode")
-  $repl_mode = true
-elsif ARGV.delete("-no_repl_mode")
-  $repl_mode = false
+if ARGV.delete("-L")
+  # [Num] prints as 1 2 3 (default in repl)
+  $line_mode = false
 end
 
 repl

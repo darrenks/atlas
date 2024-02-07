@@ -1,10 +1,11 @@
 [prog]
-a=5
-a=5# -- check that it doesn't warn in normal mode and is equality test
-let a=3
-a
+let a=5
+let b=a+1
+b
+let a=6
+b
 
 [stdout]
-1
-3
+6
+7
 [stderr]

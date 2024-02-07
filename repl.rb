@@ -17,10 +17,9 @@ def repl(input=nil)
   }.each{|name,val|
     context[name]=to_ir(AST.new(create_char(Token.new(val)),[]),{},nil)
   }
-  context["r"]=to_ir(AST.new(Ops0['inputRaw'],[]),{},nil)
-  context["l"]=to_ir(AST.new(Ops0['inputLines'],[]),{},nil)
-  context["v"]=to_ir(AST.new(Ops0['inputVector'],[]),{},nil)
-  context["m"]=to_ir(AST.new(Ops0['inputMatrix'],[]),{},nil)
+
+  IO_Vars.each{|k,v| context[k] = to_ir(AST.new(Ops0[v],[]),{},nil) }
+
   # hold off on these, should it be vec or list?
 #   context["W"]=to_ir(AST.new(Ops0['wholeNumbers'],[]),{},nil)
 #   context["Z"]=to_ir(AST.new(Ops0['positiveIntegers'],[]),{},nil)
@@ -31,6 +30,7 @@ def repl(input=nil)
   if input
     input_fn = lambda { input.gets(nil) }
   elsif !ARGV.empty?
+    $line_mode = true if $line_mode.nil?
     input_fn = lambda {
       return nil if ARGV.empty? # no more files
       filename = ARGV.shift
@@ -39,7 +39,7 @@ def repl(input=nil)
     }
   else
     require "readline"
-    $repl_mode = true if $repl_mode.nil?
+    $repl_mode = true
     hist_file = Dir.home + "/.atlas_history"
     if File.exist? hist_file
       Readline::HISTORY.push *File.read(hist_file).split("\n")
@@ -58,11 +58,9 @@ def repl(input=nil)
     }
   end
 
-  file_args = !ARGV.empty?
   loop {
 #     prev_context = context.dup # this has to go
     begin
-      line=nil
       line=input_fn.call
       break if line==nil # eof
 
@@ -83,12 +81,13 @@ def repl(input=nil)
           command[2][tokens, exe]
         elsif tokens[0].str=="let"
           raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 3 && tokens[2].str=="="
+#           tokens[1].ensure_name
           set(tokens[1], parse_line(tokens[3..-1]), context,last)
         else
           ir = exe.call
           puts "\e[38;5;243m#{ir.type_with_vec_level.inspect}\e[0m" if $repl_mode
           run(ir) {|v|
-            to_string(ir.type+ir.vec_level,v,$repl_mode||$doc_mode)
+            to_string(ir.type+ir.vec_level,v)
           }
         end
       }
@@ -105,7 +104,7 @@ def repl(input=nil)
       STDERR.print "CTRL-D to exit" if !line
       puts
     rescue SystemStackError => e
-      STDERR.puts DynamicError.new("stack overflow error", nil).message
+      STDERR.puts DynamicError.new("Stack Overflow Error\nYou could increase depth by changing shell variable (or by compiling to haskell todo):\nexport RUBY_THREAD_VM_STACK_SIZE=<size in bytes>", nil).message
 #       context = prev_context
     rescue Errno::EPIPE
       exit

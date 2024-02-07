@@ -75,10 +75,8 @@ Parens do *not* need to be matched
 It can also be used on unary ops. It will be done implicitly on unary ops if used on a binary op right after it.
 
     2*1-@+1
-    2*1@-@+1
     2*((1-)+1)
     ──────────────────────────────────
-    0
     0
     0
 
@@ -96,13 +94,11 @@ It can also be used on unary ops. It will be done implicitly on unary ops if use
 
 The reason for it being after the op is so that it can also be used as a regular unary op as well (`transpose`).
 
-Both of these modifiers can be used on the implicit op.
+Flip can be used on the implicit op.
 
     "hi"\"there"
-    2+3@5
     ──────────────────────────────────
     there hi
-    5 7
 
 The curly brackets are nice for avoiding normal variable assignments, but cannot help you write a circular program since they always copy the left value. To do that just use parenthesis with an implicit value. Instead of writing `a cons 1@a` we could just write:
 
@@ -110,10 +106,10 @@ The curly brackets are nice for avoiding normal variable assignments, but cannot
     ──────────────────────────────────
     1 1 1 1 1 1...
 
-If an implicit value is used at the beginning a line it is the result of the previous line (or stdin if it is the first line).
+`ans` is a special op that is the result of the previous line.
 
     1+2
-    -
+    ans-
     ──────────────────────────────────
     3
     -3

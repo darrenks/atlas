@@ -1,6 +1,6 @@
 [prog]
 -- http://golf.shinh.org/p.rb?Stop+five+after+nonzero
-%[(F~5@:[
+l%[(v~5@:[
 [input]
 0
 0

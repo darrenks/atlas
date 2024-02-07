@@ -6,14 +6,15 @@ This doc is an unfinished state
 
 How can we transpose a list defined as so?
 
-    a=(1,2,3,4),(5,6,7,8)
+    let a=(1,2,3,4),(5,6,7,8)
+    a
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
 
 The first row will be the heads of each row of `a`, which can be gotten with `.` and `head`
 
-    a=(1,2,3,4),(5,6,7,8)
+    let a=(1,2,3,4),(5,6,7,8)
     a.head
     ──────────────────────────────────
     1 5
@@ -22,15 +23,16 @@ Note the `.` which takes one arg and vectorizes it. Just `head` would have given
 
 The next row should be the heads of the tails:
 
-    a=(1,2,3,4),(5,6,7,8)
+    let a=(1,2,3,4),(5,6,7,8)
     a.tail head
     ──────────────────────────────────
     2 6
 
 And the next row would be the head of the tail of the tails. So essentially to transpose we want the heads of the repeated tailings of a 2D list, which we can do with circular programming of course.
 
-    a=(1,2,3,4),(5,6,7,8)
-    tails=tails..tail%%`a
+    let a=(1,2,3,4),(5,6,7,8)
+    let tails=tails..tail%%`a
+    tails
     ──────────────────────────────────
     1 2 3 4
     5 6 7 8
@@ -47,7 +49,7 @@ And the next row would be the head of the tail of the tails. So essentially to t
 
 
 
-    2:14 (tail) tail on empty list (DynamicError)
+    2:18 (tail) tail on empty list (DynamicError)
 
 Here the `..tail%%` means perform the tail operation two levels deep. See the Vectorization section for more info.
 
@@ -59,8 +61,8 @@ Also note the error. It would occur for the same program in Haskell too:
 
 Anytime we see something of the form `var = something : var` it is defining an infinite list. This list clearly can't be infinite though, hence the error. It can be avoided by taking elements of length equal to the first row.
 
-    a=(1,2,3,4),(5,6,7,8)
-    tails=tails..tail%%`a
+    let a=(1,2,3,4),(5,6,7,8)
+    let tails=tails..tail%%`a
     tails take (a head len)
     ──────────────────────────────────
     1 2 3 4
@@ -81,8 +83,8 @@ I have some ideas about creating an op to catch errors and truncate lists, but f
 
 To get the transpose now we just need to take the heads of each list:
 
-    a=(1,2,3,4),(5,6,7,8)
-    tails=tails..tail%%`a
+    let a=(1,2,3,4),(5,6,7,8)
+    let tails=tails..tail%%`a
     tails take (a head len)..head
     ──────────────────────────────────
     1 5
@@ -94,8 +96,8 @@ To get the transpose now we just need to take the heads of each list:
 
 We've seen how to do scanl on a list, but how does it work on 2D lists?
 
-    a=(1,2,3,4),(5,6,7,8)
-    b=a+b%%`(0,%)
+    let a=(1,2,3,4),(5,6,7,8)
+    let b=a+b%%`(0,%)
     b. take 10
     ──────────────────────────────────
     0 0 0 0 0 0 0 0 0 0
@@ -108,15 +110,16 @@ That was easy, but what if we wanted to do it on rows instead of columns without
 
 We can do a zipped append:
 
-    a=(1,2,3,4),(5,6,7,8)
-    b=a+b`0
+    let a=(1,2,3,4),(5,6,7,8)
+    let b=a+b`0
+    b
     ──────────────────────────────────
     0 1 3 6 10
     0 5 11 18 26
 
 This doesn't work if we port it to Haskell! It infinitely loops:
 
-    b=zipWith (:) (repeat 0) (zipWith(zipWith (+))a b)
+    let b=zipWith (:) (repeat 0) (zipWith(zipWith (+))a b)
 
 The reason is because the first zipWith needs to know that both args are non empty for the result to be non empty. And when checking if the second arg is empty, that depends on if both `a` and `b` are non empty. But checking if `b` is non empty, is the very thing we were trying to decided in the first place since it is the result of the first zipWith. `b` is non empty if `a` and `b` are non empty. Haskell deals with this in the simplest way, but in this particular case it is definitely not the most useful way.
 
@@ -133,7 +136,7 @@ For example:
 
 In Atlas is:
 
-    a = 1,2,3
+    let a = 1,2,3
     a+2*3
     ──────────────────────────────────
     9 12 15
@@ -145,7 +148,7 @@ If you need to use the map arg multiple times, that is fine.
 
 In Atlas is:
 
-    a = 1,2,3
+    let a = 1,2,3
     a*(a-1)/2
     ──────────────────────────────────
     0 1 3

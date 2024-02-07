@@ -1,8 +1,9 @@
 require "./repl.rb"
 require 'cgi'
 
-OpsList.find{|o|!(String === o) && o.name == "readLines"}.sym = "R"
-OpsList.find{|o|!(String === o) && o.name == "firstNums"}.sym = "F"
+IO_Vars.each{|k,v|
+  OpsList.find{|o|!(String === o) && o.name == v}.sym = k
+}
 
 class String
   def td(_class=nil)
