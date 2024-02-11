@@ -42,7 +42,23 @@ No we just need to concatenate each sublist, and if empty use the number instead
     let r=1:101
     r,%(3,5)~^("Fizz","Buzz")_|r
     ──────────────────────────────────
-    1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
+    1
+    2
+    Fizz
+    4
+    Buzz
+    Fizz
+    7
+    8
+    Fizz
+    Buzz
+    11
+    Fizz
+    13
+    14
+    FizzBuzz
+    16
+    ...
 
 Now to golf it.
 
@@ -56,7 +72,23 @@ And we get:
 
     1:CI{,%3@,5~^Fizz@,Buzz_|a
     ──────────────────────────────────
-    1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
+    1
+    2
+    Fizz
+    4
+    Buzz
+    Fizz
+    7
+    8
+    Fizz
+    Buzz
+    11
+    Fizz
+    13
+    14
+    FizzBuzz
+    16
+    ...
 
 ## Brainfuck
 

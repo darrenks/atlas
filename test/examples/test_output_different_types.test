@@ -20,7 +20,7 @@
 "a1","b2","c"@v1,v1
 "(((str)))"
 v1,v1@v2,v2
-
+"end"
 
 [stdout]
 int
@@ -67,3 +67,4 @@ a1 b2 c
 
 a1 b2 c
 a1 b2 c
+end

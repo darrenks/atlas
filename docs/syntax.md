@@ -98,7 +98,8 @@ Flip can be used on the implicit op.
 
     "hi"\"there"
     ──────────────────────────────────
-    there hi
+    there
+    hi
 
 The curly brackets are nice for avoiding normal variable assignments, but cannot help you write a circular program since they always copy the left value. To do that just use parenthesis with an implicit value. Instead of writing `a cons 1@a` we could just write:
 

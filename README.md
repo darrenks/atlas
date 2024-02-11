@@ -25,7 +25,23 @@ This page is intended to give you an overview of the main ideas while being easy
 
     1:101{,%3@,5~^Fizz@,Buzz_|a
     ──────────────────────────────────
-    1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz 16 ...
+    1
+    2
+    Fizz
+    4
+    Buzz
+    Fizz
+    7
+    8
+    Fizz
+    Buzz
+    11
+    Fizz
+    13
+    14
+    FizzBuzz
+    16
+    ...
 
 And no, those brackets are not a block but their own instructions (push, pop).
 

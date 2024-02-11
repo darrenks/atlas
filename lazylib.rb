@@ -57,10 +57,6 @@ class Object
   end
 end
 
-def newline
-  n=[10.const,Null]
-end
-
 def take(n, a)
   return [] if n < 1 || a.empty
   [a.value[0], Promise.new{ take(n-1, a.value[1]) }]
@@ -389,26 +385,28 @@ def coerce2s(ta, a, tb)
 end
 
 def to_string(t, value)
-  added_newline = t.string_dim + ($line_mode ? 1 : 0) < 2 && !value.empty ? newline.const : Null
-  to_string_h(t,value,t.string_dim, added_newline)
+  # print 1d lists on new lines
+  dim = $line_mode && t == Num+1 || t == Str+1 ? 2 : t.string_dim
+  added_newline = dim <= 1 && !value.empty ? Newline : Null
+  to_string_h(t,value,dim,added_newline)
 end
 
-def to_string_h(t, value, orig_dim, rhs)
+def to_string_h(t, value, dim, rhs)
   if t == Num
     inspect_value_h(t, value, rhs, 0)
   elsif t == Char
     [value, rhs]
+  elsif t == Str
+    append(value, rhs)
   else # List
-    # print 1d lists on new lines if not in repl mode
-    dim = $line_mode && orig_dim == 1 && t.string_dim == 1 ? 2 : t.string_dim
-    # print newline separators after every element for better interactive io
-    separator1 = dim == 2 ? newline : []
-    # but don't do this for separators like space, you would end up with trailing space in output
-    separator2 = [[],[32.const,Null],[]][dim] || newline
+    # print separator1 after every element for better interactive io
+    separator1 = dim == 2 ? Newline : Null
+    # but don't do this for separators like space, you would end up with trailing space in output, print them between elements
+    separator2 = [Null,Space,Null][dim] || Newline
 
     concat_map(value,rhs){|v,r,first|
-      svalue = Promise.new{ to_string_h(t-1, v, orig_dim, Promise.new{append(separator1.const, r)}) }
-      first ? svalue.value : append(separator2.const, svalue)
+      svalue = Promise.new{ to_string_h(t-1, v, dim-1, Promise.new{append(separator1, r)}) }
+      first ? svalue.value : append(separator2, svalue)
     }
   end
 end
@@ -496,6 +494,8 @@ def read_stdin
 end
 
 Null = [].const
+Newline = [10.const,Null].const
+Space = [32.const,Null].const
 
 def str_to_lazy_list(s,rhs=Null)
   to_lazy_list(s.chars.map(&:ord), rhs)
