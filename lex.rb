@@ -1,6 +1,10 @@
 # -*- coding: ISO-8859-1 -*-
-Token = Struct.new(:str,:char_no,:line_no)
-
+class Token < Struct.new(:str,:char_no,:line_no)
+  def ensure_name
+    raise ParseError.new("cannot set %p (not an id)" % self.str, self) unless IdRx =~ str
+    self
+  end
+end
 AllSymbols='@!?`~#%^&*-_=+[]|;<,>.()\'"{}$/\\:'.chars.map{|c|Regexp.escape c}
 
 NumRx = /([0-9]+([.][0-9]+)?(e-?[0-9]+)?)|([.][0-9]+(e-?[0-9]+)?)/

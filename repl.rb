@@ -59,7 +59,6 @@ def repl(input=nil)
   end
 
   loop {
-#     prev_context = context.dup # this has to go
     begin
       line=input_fn.call
       break if line==nil # eof
@@ -70,7 +69,11 @@ def repl(input=nil)
         next if tokens.empty?
 
         exe = lambda{
-          last = tokens.empty? ? last : infer(to_ir(parse_line(tokens),context,last))
+          if tokens.empty?
+            raise ParseError.new("expecting an expression for command on line %d" % (line_no-1),nil)
+          else
+            last = tokens.empty? ? last : infer(to_ir(parse_line(tokens),context,last))
+          end
         }
 
         if (command=Commands[tokens[0].str])
@@ -81,19 +84,17 @@ def repl(input=nil)
           command[2][tokens, exe]
         elsif tokens[0].str=="let"
           raise ParseError.new("let syntax is: let var = value", tokens[0]) unless tokens.size > 3 && tokens[2].str=="="
-#           tokens[1].ensure_name
-          set(tokens[1], parse_line(tokens[3..-1]), context,last)
+          set(tokens[1].ensure_name, parse_line(tokens[3..-1]), context,last)
         else
           ir = exe.call
           puts "\e[38;5;243m#{ir.type_with_vec_level.inspect}\e[0m" if $repl_mode
           run(ir) {|v|
-            to_string(ir.type+ir.vec_level,v)
+            to_string(ir.type+ir.vec_level,v,$line_mode)
           }
         end
       }
     rescue AtlasError => e
       STDERR.puts e.message
-#       context = prev_context
     # TODO there are some errors that could come from floats like
     # 0.0^(1.0-)+'a RangeError
     # converting inf to int FloatDomainError
@@ -105,7 +106,6 @@ def repl(input=nil)
       puts
     rescue SystemStackError => e
       STDERR.puts DynamicError.new("Stack Overflow Error\nYou could increase depth by changing shell variable (or by compiling to haskell todo):\nexport RUBY_THREAD_VM_STACK_SIZE=<size in bytes>", nil).message
-#       context = prev_context
     rescue Errno::EPIPE
       exit
     rescue => e

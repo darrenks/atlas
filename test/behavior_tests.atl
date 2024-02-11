@@ -233,8 +233,6 @@ a@a;# -> 1
 -- infinite type
 a;@a -> AtlasTypeError
 
-'a-1000 -> '\{-903}
-
 -- test unbalanced ) for use with circular programming/nil
 ) -> []
 
@@ -265,7 +263,7 @@ a;@a -> AtlasTypeError
 -- this would be type A which should not be possible to construct
 ""&a@a -> DynamicError
 
--- (1@"") -> ["1",""] -- todo
+(1@"") -> ["1",""]
 
 -- test laziness of chunk while using collatz conjecture problem
 a%2&(3*a+1)|(a/2)`8@a=.~%?a[ -> [8,4,2,1]
@@ -323,3 +321,5 @@ a%,0>+(1,2,(1/0),3,4.catch,55[){ -> <65,64,62,7,4>
 1,2,(3,4),'a -> <<"1a","2a">,<"3a","4a">>
 
 a@b,b -> "aa"
+
+'a-1000 -> '\{-903}

@@ -793,7 +793,6 @@ Commands = {
   "type" => ["see expression type", "a", -> tokens, ir_cb {
     p ir_cb.call.type_with_vec_level
   }],
-  # todo update others and use a proc rather that pass this syntax
   "p" => ["pretty print value", "a", -> tokens, ir_cb {
     ir = ir_cb.call
     run(ir) {|v,n,s| inspect_value(ir.type+ir.vec_level,v,ir.vec_level) }
@@ -801,7 +800,7 @@ Commands = {
   }],
   "print" => ["print value (implicit)", "a", -> tokens, ir_cb {
     ir = ir_cb.call
-    run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,false) }
+    run(ir) {|v,n,s| to_string(ir.type+ir.vec_level,v,true) }
   }],
 
 }

@@ -1,0 +1,9 @@
+[prog]
+asdf -- doesn't warn since we haven't set a long id yet (assuming intentional)
+let ab=5
+qwerty
+[stdout]
+asdf
+qwerty
+[stderr]
+3:1 (qwerty) using unset var (Warning)

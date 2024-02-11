@@ -384,9 +384,9 @@ def coerce2s(ta, a, tb)
   end
 end
 
-def to_string(t, value)
+def to_string(t, value, line_mode)
   # print 1d lists on new lines
-  dim = $line_mode && t == Num+1 || t == Str+1 ? 2 : t.string_dim
+  dim = line_mode && t == Num+1 || t == Str+1 ? 2 : t.string_dim
   added_newline = dim <= 1 && !value.empty ? Newline : Null
   to_string_h(t,value,dim,added_newline)
 end

@@ -1,6 +1,13 @@
 [33m ᐳ [0m1+2*4  -- That is an up arrow (prev command 1+2)followed by *4
 [33m ᐳ [0m1,2,3 tail -- One tab to complete tail
+[33m ᐳ [0m4,5,6 print
+[33m ᐳ [0m7,8,9
 [33m ᐳ [0m[38;5;243mNum[0m
 12
 [38;5;243m[Num][0m
 2 3
+4
+5
+6
+[38;5;243m[Num][0m
+7 8 9

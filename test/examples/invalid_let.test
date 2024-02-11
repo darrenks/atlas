@@ -1,0 +1,4 @@
+[prog]
+let 5=4
+[stderr]
+1:5 (5) cannot set "5" (not an id) (ParseError)

@@ -70,7 +70,7 @@ Now to golf it.
 
 And we get:
 
-    1:CI{,%3@,5~^Fizz@,Buzz_|a
+    1:CI{,%3@5~^Fizz@,Buzz_|a
     ──────────────────────────────────
     1
     2

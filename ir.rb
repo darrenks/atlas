@@ -94,7 +94,7 @@ end
 
 def set(t,node,context,last)
   name = t.str
-  raise "cannot set %p, it is not a name" % name unless IdRx =~ name
+  $warn_on_unset_vars ||= name.size > 1 && !name[/_/]
   if Commands[name] || AllOps[name]
     warn("overwriting %p even though it is an op" % name, t)
     Ops0.delete(name)
@@ -113,6 +113,7 @@ end
 
 def get(context,name,from)
   return context[name] if context[name]
+  warn "using unset var",from if $warn_on_unset_vars
   if numeral = to_roman_numeral(name)
     type = Num
     impl = numeral
@@ -145,4 +146,3 @@ def to_roman_numeral(s)
   }
   sum
 end
-

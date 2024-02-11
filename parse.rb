@@ -30,6 +30,17 @@ def get_expr(tokens,apply,implicit_value)
     flipped = flip_check(tokens)
     from = tokens[-1]
     op=Ops2[from.str]
+    if op && op.name == "set"
+      if rhs.op.name == "var"
+        rhs.token.ensure_name
+      else
+        if tokens[-1].str == "@"
+          op=nil # allow it to mean apply implicit
+        else
+          raise ParseError.new("must set id's", tokens[-1])
+        end
+      end
+    end
     tokens.pop if op
     lhs = get_expr(tokens,apply_check(tokens),implicit_value)
     rhs = AST.new(op||ImplicitOp,[lhs,rhs],from,flipped)

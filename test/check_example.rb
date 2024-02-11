@@ -31,6 +31,7 @@ def check_example(test)
 end
 
 def doit(source,limit)
+  $warn_on_unset_vars = false
   tokens,lines = lex(source)
   root = parse_line(tokens[0])
   ir = to_ir(root,{},[])

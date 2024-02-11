@@ -1,0 +1,8 @@
+[prog]
+3@4
+7 set 6
+[stdout]
+3
+4
+[stderr]
+2:3 (set) must set id's (ParseError)
