@@ -2,6 +2,7 @@
 
 ## News
 
+-   Atlas no longer being maintained (March 31, 2025). I like Atlas but it does lack some polish / finalization and I instead put my effort into a very similar language [iogii](../iogii) (which I do plan on maintaining).
 -   Atlas available for use on [anarchy golf](http://golf.shinh.org/) in alpha mode (Jan 6, 2023)
 
 ## Community

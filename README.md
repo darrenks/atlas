@@ -5,7 +5,7 @@ This information is also available at [golfscript.com/atlas](http://www.golfscri
 Atlas is an esoteric programming language designed to show off the synergy between laziness and vectorization which allow for concise _circular programming_ - an unsung but powerful technique - nothing else is even needed!
 
 ## Latest news:
-None [(see all)](docs/happenings.md)
+Atlas no longer being maintained (March 31, 2025). [(see all/more info)](docs/happenings.md)
 
 ## Features
 
