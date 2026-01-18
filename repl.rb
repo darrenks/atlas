@@ -109,7 +109,7 @@ def repl(input=nil)
     rescue Errno::EPIPE
       exit
     rescue => e
-      STDERR.puts "!!!This is an internal Altas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!\n\n"
+      STDERR.puts "!!!This is an internal Atlas error, please report the bug (via github issue or email name of this lang at golfscript.com)!!!\n\n"
       raise e
     end
   } # loop
