@@ -34,7 +34,7 @@ def repl(input=nil)
     input_fn = lambda {
       return nil if ARGV.empty? # no more files
       filename = ARGV.shift
-      raise AtlasError.new("no such file %p" % filename, nil) unless File.exists? filename
+      raise AtlasError.new("no such file %p" % filename, nil) unless File.exist? filename
       File.read(filename)
     }
   else
